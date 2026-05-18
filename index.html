@@ -1466,7 +1466,7 @@ function cloudListen(){
       _lastSynced[part] = inJson;
       _applyingRemote = false;
       cacheSave();
-      if(typeof CUR_PAGE!=="undefined" && CUR_PAGE) render();
+      if(typeof ME!=="undefined" && ME && typeof CUR_PAGE!=="undefined" && CUR_PAGE) render();
       setConnState(true);
     };
     ref.on("value", handler, err=>{
@@ -1870,6 +1870,7 @@ async function init(){
    NAVIGATION + ROUTER
    ================================================================= */
 function navItems(){
+  if(!ME) return [];
   const items = [
     { id:"dash",    label:"Dashboard",     ic:"◆", sec:"Overview" },
     { id:"bets",    label:"Goals",      ic:"◎", sec:"Overview", count:visibleBets().length },
@@ -1920,6 +1921,7 @@ function go(page, arg){
   render();
 }
 function render(){
+  if(!ME) return;
   buildNav();
   const c = el("content");
   let crumb = "<b>"+ (navItems().find(i=>i.id===CUR_PAGE)?.label||"") +"</b>";
