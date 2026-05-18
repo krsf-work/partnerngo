@@ -924,6 +924,10 @@ window.FIREBASE_CONFIG = {
              onkeydown="if(event.key==='Enter')doLogin()">
       <div id="loginErr" class="login-err"></div>
       <button class="login-btn" onclick="doLogin()">Sign in →</button>
+      <div id="loginHint" style="font-size:11px;color:var(--ink-3);text-align:center;margin-top:14px;line-height:1.6"></div>
+      <div style="text-align:center;margin-top:8px">
+        <span onclick="loginRecovery()" style="font-size:11px;color:var(--ink-3);cursor:pointer;text-decoration:underline">Can't sign in?</span>
+      </div>
     </div>
   </div>
 </div>
@@ -1453,10 +1457,21 @@ function cloudListen(){
     const ref = fb.db.ref("tracker/"+part);
     const handler = snap=>{
       if(!snap.exists()) return;
+      if(!DB){ return; }   // DB not assigned yet — ignore until loadDB() finishes
       let incoming = snap.val();
       // Coerce array collections that Firebase may return as keyed objects
       if(["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles"].includes(part)){
         incoming = toArr(incoming);
+      }
+      // coerce arrays nested inside records too
+      if(part==="users"){
+        incoming.forEach(u=>{ u.ngoIds = toArr(u.ngoIds); });
+      }
+      if(part==="budgets" && incoming && typeof incoming==="object"){
+        Object.keys(incoming).forEach(k=>{
+          if(incoming[k] && incoming[k].monthlyPlan!==undefined)
+            incoming[k].monthlyPlan = toArr(incoming[k].monthlyPlan);
+        });
       }
       const inJson = JSON.stringify(incoming);
       // ignore the echo of our own just-written change
@@ -1493,11 +1508,11 @@ async function loadDB(){
     if(data){
       // We have live Firebase data — coerce and migrate it regardless of cache
       DB_PARTS.forEach(p=>{ _lastSynced[p] = JSON.stringify(data[p]); });
-      cloudListen();
       try{
         const merged = migrateDB(data);
-        DB = merged;
+        DB = merged;                 // assign DB FIRST, then attach listeners
         cacheSave();
+        cloudListen();
         return merged;
       }catch(e){
         // migrateDB failed — apply toArr manually and retry rather than dropping data
@@ -1507,6 +1522,7 @@ async function loadDB(){
         const merged = migrateDB(data);
         DB = merged;
         cacheSave();
+        cloudListen();
         return merged;
       }
     }
@@ -1591,12 +1607,39 @@ function migrateDB(db){
     .forEach(p=>{ db[p] = toArr(db[p]); });
   if(!db.scorecards || typeof db.scorecards!=="object" || Array.isArray(db.scorecards)) db.scorecards = {};
   if(!db.budgets   || typeof db.budgets  !=="object" || Array.isArray(db.budgets))   db.budgets   = {};
+  // ---- coerce arrays NESTED inside records (Firebase turns these into objects too) ----
+  db.users.forEach(u=>{
+    // ngoIds must be a real array or APL permission checks silently fail
+    u.ngoIds = toArr(u.ngoIds);
+  });
+  db.bigBets.forEach(b=>{
+    if(b && b.months && typeof b.months==="object" && Array.isArray(b.months))
+      b.months = {};                       // months is keyed by month string, never an array
+  });
+  // budget monthlyPlan must be a numeric array
+  Object.keys(db.budgets).forEach(k=>{
+    const bg = db.budgets[k];
+    if(bg && bg.monthlyPlan!==undefined) bg.monthlyPlan = toArr(bg.monthlyPlan);
+  });
   db.ngos.forEach(n=>{ if(!n.partnership) n.partnership = "Active"; });
   // every NGO must have a budget object so finance never crashes
   db.ngos.forEach(n=>{
     const b = db.budgets[n.id];
-    if(!b || !b.monthlyPlan || !b.annual) db.budgets[n.id] = emptyBudget();
+    if(!b || !b.monthlyPlan || !Array.isArray(b.monthlyPlan) || !b.annual)
+      db.budgets[n.id] = emptyBudget();
   });
+  // ---- SAFETY NET: there must always be a working PM login ----
+  // If an older/partial seed left no PM (or no usable credentials), restore the
+  // default admin account so the owner can never be locked out.
+  let pm = db.users.find(u=>u.role==="PM");
+  if(!pm){
+    pm = skeletonData().users[0];
+    db.users.unshift(pm);
+  }
+  if(!pm.username || !pm.password){
+    pm.username = pm.username || "admin";
+    pm.password = pm.password || "krsf@2026";
+  }
   return db;
 }
 /* a safe zero budget — used when an NGO has no plan yet */
@@ -1801,6 +1844,55 @@ async function doLogout(){
   el("login").style.display="flex";
   el("loginUser").value=""; el("loginPass").value=""; el("loginErr").textContent="";
 }
+
+/* recovery: show which logins exist in the connected database, and offer a
+   guarded full reset for when an old/partial seed left bad credentials */
+function loginRecovery(){
+  const users = (DB && DB.users) || [];
+  const list = users.length
+    ? users.map(u=>`• ${esc(u.username||'(no username)')} — ${esc(u.name)} (${esc(u.role)})`).join("<br>")
+    : "(no accounts found in the database)";
+  const pm = users.find(u=>u.role==="PM");
+  const msg =
+    `<div style="font-size:12.5px;line-height:1.7;color:var(--ink-2)">
+      <b>Connection:</b> ${CLOUD_OK?'<span style="color:var(--green)">live — connected to Firebase</span>':'<span style="color:var(--amber)">offline — not connected</span>'}<br><br>
+      <b>Logins in this database:</b><br>${list}<br><br>
+      ${pm
+        ? `Sign in with the Program Manager username shown above.
+           If you don't know the password, the database must be reset.`
+        : `<b style="color:var(--red)">No Program Manager account exists.</b> The database needs to be reset.`}
+      <br><br>
+      <b>Reset</b> wipes all data in Firebase and recreates a clean database with
+      the default login <b>admin / krsf@2026</b>. Use this only if you are locked
+      out and have no real data to lose.
+     </div>`;
+  showModal(modalShell("Sign-in help", "Account Recovery", msg,
+    `<button class="btn" onclick="closeModal()">Close</button>
+     <button class="btn danger" onclick="confirmResetDatabase()">Reset database</button>`));
+}
+function confirmResetDatabase(){
+  confirmAction("Reset the entire database?",
+    `This permanently erases <b>all data</b> in Firebase — every NGO, goal, debit
+     note, task and login — and recreates a clean database with the single
+     default login <b>admin / krsf@2026</b>. This cannot be undone.`,
+    async ()=>{
+      try{
+        if(fb && fb.ready){
+          const skeleton = skeletonData();
+          const updates = {};
+          DB_PARTS.forEach(p=>{ updates["tracker/"+p] = skeleton[p]; });
+          await fb.db.ref().update(updates);
+        }
+        try{ localStorage.removeItem(STORE_KEY); localStorage.removeItem(SESSION_KEY); }catch(e){}
+        closeModal();
+        toast("Database reset — reloading…");
+        setTimeout(()=>location.reload(), 900);
+      }catch(e){
+        console.error(e);
+        toast("Reset failed — check your connection");
+      }
+    }, "Erase & reset", true);
+}
 /* the latest FY month that actually has reported data (debit notes,
    bet actuals or scorecards) — used as the smart default reporting month */
 function latestDataMonth(){
@@ -1863,6 +1955,18 @@ async function init(){
     bootApp();
   } else {
     const u = el("loginUser"); if(u) u.focus();
+    // a quiet hint so the owner can confirm the app reached the database
+    const hint = el("loginHint");
+    if(hint){
+      if(CLOUD_OK){
+        const pm = (DB.users||[]).find(x=>x.role==="PM");
+        hint.innerHTML = pm
+          ? "Connected. Program Manager username: <b>"+esc(pm.username||"admin")+"</b>"
+          : "Connected, but no admin account was found — use “Can't sign in?”.";
+      } else {
+        hint.textContent = "Not connected to Firebase — see “Can't sign in?”.";
+      }
+    }
   }
 }
 
