@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program</title>
+<title>KRSF · NGO Partnership Program · V1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -913,7 +913,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Goals, budgets &amp; monthly delivery — one place.</div>
+    <div class="sub">Goals, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V1</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -926,7 +926,7 @@ window.FIREBASE_CONFIG = {
       <button class="login-btn" onclick="doLogin()">Sign in →</button>
       <div id="loginHint" style="font-size:11px;color:var(--ink-3);text-align:center;margin-top:14px;line-height:1.6"></div>
       <div style="text-align:center;margin-top:8px">
-        <span onclick="loginRecovery()" style="font-size:11px;color:var(--ink-3);cursor:pointer;text-decoration:underline">Can't sign in?</span>
+        <span onclick="loginRecovery()" style="font-size:11px;color:var(--accent);cursor:pointer;font-weight:600;text-decoration:underline">Can't sign in? Recover / reset access →</span>
       </div>
     </div>
   </div>
@@ -938,7 +938,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program</div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V1</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1511,8 +1511,11 @@ async function loadDB(){
       try{
         const merged = migrateDB(data);
         DB = merged;                 // assign DB FIRST, then attach listeners
+        // migrateDB may have patched the PM credentials — write the fix back
+        _lastSynced["users"] = "__stale__";
         cacheSave();
         cloudListen();
+        saveDB();                    // async, fire-and-forget — fixes credentials in Firebase
         return merged;
       }catch(e){
         // migrateDB failed — apply toArr manually and retry rather than dropping data
@@ -1521,8 +1524,10 @@ async function loadDB(){
           .forEach(p=>{ if(data[p] && !Array.isArray(data[p])) data[p] = Object.values(data[p]); });
         const merged = migrateDB(data);
         DB = merged;
+        _lastSynced["users"] = "__stale__";
         cacheSave();
         cloudListen();
+        saveDB();
         return merged;
       }
     }
@@ -1622,6 +1627,16 @@ function migrateDB(db){
     if(bg && bg.monthlyPlan!==undefined) bg.monthlyPlan = toArr(bg.monthlyPlan);
   });
   db.ngos.forEach(n=>{ if(!n.partnership) n.partnership = "Active"; });
+  // Ensure the PM user always has valid login credentials.
+  // If the database was seeded with seedData() (the demo dataset), the PM
+  // record has no username/password — restore the defaults so the owner
+  // can always sign in with admin / krsf@2026.
+  const pmUser = db.users.find(u=>u.role==="PM");
+  if(pmUser){
+    if(!pmUser.username) pmUser.username = "admin";
+    if(!pmUser.password) pmUser.password = "krsf@2026";
+    if(!pmUser.avatar)   pmUser.avatar   = pmUser.name ? pmUser.name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase() : "PM";
+  }
   // every NGO must have a budget object so finance never crashes
   db.ngos.forEach(n=>{
     const b = db.budgets[n.id];
