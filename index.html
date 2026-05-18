@@ -1427,7 +1427,7 @@ async function cloudSeedIfEmpty(){
   if(snap.exists()) return false;          // already initialised — nothing to do
   const skeleton = skeletonData();
   const updates = {};
-  DB_PARTS.forEach(part=>{ updates["tracker/"+part] = skeleton[part]; });
+  DB_PARTS.forEach(part=>{ updates["tracker/"+part] = encodeForRTDB(skeleton[part]); });
   await fb.db.ref().update(updates);
   return true;
 }
@@ -1440,7 +1440,7 @@ async function cloudLoadAll(){
   );
   snaps.forEach((s,i)=>{
     const part = DB_PARTS[i];
-    out[part] = s.exists() ? s.val() : skeletonData()[part];
+    out[part] = s.exists() ? decodeFromRTDB(s.val()) : skeletonData()[part];
   });
   return out;
 }
@@ -1453,7 +1453,7 @@ function cloudListen(){
     const ref = fb.db.ref("tracker/"+part);
     const handler = snap=>{
       if(!snap.exists()) return;
-      const incoming = snap.val();
+      const incoming = decodeFromRTDB(snap.val());
       const inJson = JSON.stringify(incoming);
       // ignore the echo of our own just-written change
       if(inJson === _lastSynced[part]) return;
@@ -1497,6 +1497,13 @@ async function loadDB(){
   return migrateDB(cached || skeletonData());
 }
 
+/* ---- Firebase key sanitisation ----
+   RTDB forbids ".", "#", "$", "/", "[", "]" in keys.
+   We JSON-serialise the whole part as a single string value to sidestep
+   the restriction entirely — each DB_PART is stored as one string node. */
+function encodeForRTDB(data){ return JSON.stringify(data); }
+function decodeFromRTDB(raw){ try{ return JSON.parse(raw); }catch(e){ return raw; } }
+
 /* ---- save: write ONLY the collections that actually changed ---- */
 async function saveDB(){
   if(!DB) return false;
@@ -1512,7 +1519,7 @@ async function saveDB(){
     DB_PARTS.forEach(part=>{
       const cur = JSON.stringify(DB[part] ?? skeletonData()[part]);
       if(cur !== _lastSynced[part]){
-        updates["tracker/"+part] = DB[part] ?? skeletonData()[part];
+        updates["tracker/"+part] = encodeForRTDB(DB[part] ?? skeletonData()[part]);
         _lastSynced[part] = cur;
       }
     });
