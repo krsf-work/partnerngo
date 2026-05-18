@@ -994,7 +994,7 @@ function liveReportingMonth(){
 /* a document is "expiring soon" if it lapses within the next 90 days */
 const SOON_CUTOFF_ISO = new Date(TODAY.getTime()+90*86400000).toISOString().slice(0,10);
 const VERTICALS = ["Livelihood","Advocacy","Education","Healthcare","Climate"];
-const BUDGET_CATS = ["Salary","Travel","Programme","Admin/Other"];
+const BUDGET_CATS = ["Salary","Travel","Programme","Admin-Other"];
 const DN_STATUS = ["Pending","Approved","Paid","Query Raised"];
 /* Partner scorecard — 8 criteria, each scored 0–5, total out of 40.
    key = short column header, label = full name shown on hover/tooltip. */
@@ -1257,16 +1257,16 @@ function seedData(){
     const per=Math.round(annual/12); return FY_MONTHS.map(()=>per);
   }
   const budgets = {
-    n1:{ annual:{Salary:2640000, Travel:480000, Programme:8400000, "Admin/Other":600000} },
-    n2:{ annual:{Salary:1980000, Travel:300000, Programme:2400000, "Admin/Other":420000} },
-    n3:{ annual:{Salary:2400000, Travel:360000, Programme:1100000, "Admin/Other":340000} },
-    n4:{ annual:{Salary:1560000, Travel:240000, Programme:780000,  "Admin/Other":240000} },
-    n5:{ annual:{Salary:1680000, Travel:264000, Programme:660000,  "Admin/Other":216000} },
-    n6:{ annual:{Salary:1320000, Travel:228000, Programme:540000,  "Admin/Other":192000} },
-    n7:{ annual:{Salary:2160000, Travel:540000, Programme:3600000, "Admin/Other":480000} },
-    n8:{ annual:{Salary:1080000, Travel:180000, Programme:480000,  "Admin/Other":156000} },
-    n9:{ annual:{Salary:1920000, Travel:336000, Programme:1320000, "Admin/Other":312000} },
-    n10:{annual:{Salary:2280000, Travel:600000, Programme:5400000, "Admin/Other":540000} }
+    n1:{ annual:{Salary:2640000, Travel:480000, Programme:8400000, "Admin-Other":600000} },
+    n2:{ annual:{Salary:1980000, Travel:300000, Programme:2400000, "Admin-Other":420000} },
+    n3:{ annual:{Salary:2400000, Travel:360000, Programme:1100000, "Admin-Other":340000} },
+    n4:{ annual:{Salary:1560000, Travel:240000, Programme:780000,  "Admin-Other":240000} },
+    n5:{ annual:{Salary:1680000, Travel:264000, Programme:660000,  "Admin-Other":216000} },
+    n6:{ annual:{Salary:1320000, Travel:228000, Programme:540000,  "Admin-Other":192000} },
+    n7:{ annual:{Salary:2160000, Travel:540000, Programme:3600000, "Admin-Other":480000} },
+    n8:{ annual:{Salary:1080000, Travel:180000, Programme:480000,  "Admin-Other":156000} },
+    n9:{ annual:{Salary:1920000, Travel:336000, Programme:1320000, "Admin-Other":312000} },
+    n10:{annual:{Salary:2280000, Travel:600000, Programme:5400000, "Admin-Other":540000} }
   };
   Object.keys(budgets).forEach(nid=>{
     const total = BUDGET_CATS.reduce((s,c)=>s+budgets[nid].annual[c],0);
@@ -1427,7 +1427,7 @@ async function cloudSeedIfEmpty(){
   if(snap.exists()) return false;          // already initialised — nothing to do
   const skeleton = skeletonData();
   const updates = {};
-  DB_PARTS.forEach(part=>{ updates["tracker/"+part] = encodeForRTDB(skeleton[part]); });
+  DB_PARTS.forEach(part=>{ updates["tracker/"+part] = skeleton[part]; });
   await fb.db.ref().update(updates);
   return true;
 }
@@ -1440,7 +1440,7 @@ async function cloudLoadAll(){
   );
   snaps.forEach((s,i)=>{
     const part = DB_PARTS[i];
-    out[part] = s.exists() ? decodeFromRTDB(s.val()) : skeletonData()[part];
+    out[part] = s.exists() ? s.val() : skeletonData()[part];
   });
   return out;
 }
@@ -1453,7 +1453,7 @@ function cloudListen(){
     const ref = fb.db.ref("tracker/"+part);
     const handler = snap=>{
       if(!snap.exists()) return;
-      const incoming = decodeFromRTDB(snap.val());
+      const incoming = snap.val();
       const inJson = JSON.stringify(incoming);
       // ignore the echo of our own just-written change
       if(inJson === _lastSynced[part]) return;
@@ -1497,18 +1497,11 @@ async function loadDB(){
   return migrateDB(cached || skeletonData());
 }
 
-/* ---- Firebase key sanitisation ----
-   RTDB forbids ".", "#", "$", "/", "[", "]" in keys.
-   We JSON-serialise the whole part as a single string value to sidestep
-   the restriction entirely — each DB_PART is stored as one string node. */
-function encodeForRTDB(data){ return JSON.stringify(data); }
-function decodeFromRTDB(raw){ try{ return JSON.parse(raw); }catch(e){ return raw; } }
-
 /* ---- save: write ONLY the collections that actually changed ---- */
 async function saveDB(){
   if(!DB) return false;
-  cacheSave();                            // always keep the local cache current
-  if(_applyingRemote) return true;        // a remote update isn't ours to save back
+  cacheSave();
+  if(_applyingRemote) return true;
   if(!CLOUD_OK || !fb.ready){
     if(SAVE_OK) toast("⚠ Offline — changes saved on this device only");
     SAVE_OK = false;
@@ -1519,7 +1512,7 @@ async function saveDB(){
     DB_PARTS.forEach(part=>{
       const cur = JSON.stringify(DB[part] ?? skeletonData()[part]);
       if(cur !== _lastSynced[part]){
-        updates["tracker/"+part] = encodeForRTDB(DB[part] ?? skeletonData()[part]);
+        updates["tracker/"+part] = DB[part] ?? skeletonData()[part];
         _lastSynced[part] = cur;
       }
     });
@@ -3682,7 +3675,7 @@ async function saveBudgetPlan(ngoId){
     BUDGET_CATS.forEach(c=>annualCats[c]=Math.round((existing.annual[c]||0)/oldT*annual));
   } else {
     annualCats = {Salary:Math.round(annual*0.4), Travel:Math.round(annual*0.1),
-                  Programme:Math.round(annual*0.4), "Admin/Other":Math.round(annual*0.1)};
+                  Programme:Math.round(annual*0.4), "Admin-Other":Math.round(annual*0.1)};
   }
   DB.budgets[ngoId] = { annual:annualCats, totalAnnual:annual, monthlyPlan,
                         editedBy:ME?ME.name:"—", editedAt:TODAY_ISO };
@@ -3710,7 +3703,7 @@ function ngoDebitsTab(ngoId){
   });
   const maxMonth = Math.max(...byMonth.map(x=>x.total),1);
 
-  const catColor = {Salary:"violet",Travel:"green",Programme:"blue","Admin/Other":"amber"};
+  const catColor = {Salary:"violet",Travel:"green",Programme:"blue","Admin-Other":"amber"};
 
   return `
   <div class="sec-head">
@@ -4419,7 +4412,7 @@ function guessDebitCategory(text){
   const t = (text||"").toLowerCase();
   if(/salary|stipend|honorar|wage|payroll|remuner/.test(t)) return "Salary";
   if(/travel|conveyance|fuel|transport|mileage|fare|ta\/da|tada/.test(t)) return "Travel";
-  if(/admin|office|rent|utility|stationery|audit|bank charge|misc/.test(t)) return "Admin/Other";
+  if(/admin|office|rent|utility|stationery|audit|bank charge|misc/.test(t)) return "Admin-Other";
   if(/programme|program|training|workshop|field|activity|material|equipment|event/.test(t)) return "Programme";
   return "Programme";
 }
