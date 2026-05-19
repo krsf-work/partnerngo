@@ -3759,10 +3759,22 @@ async function importMboFile(ngoId){
    ===================================================================== */
 function pageOkrUpload(){
   const ngos = visibleNgos();
+  // Partnership Leads = APL users
+  const leads = (DB.users||[]).filter(u=>u.role==="APL");
 
-  // Determine selected NGO (default to first)
-  if(!window.TEAM_OKR_NGO && ngos.length) window.TEAM_OKR_NGO = ngos[0].id;
-  const ngoId = window.TEAM_OKR_NGO || (ngos[0]||{}).id || "";
+  // Determine selected lead (default to first)
+  if(!window.TEAM_OKR_LEAD && leads.length) window.TEAM_OKR_LEAD = leads[0].id;
+  const leadId = window.TEAM_OKR_LEAD || (leads[0]||{}).id || "";
+  const lead   = leads.find(u=>u.id===leadId);
+
+  // The NGOs assigned to this lead
+  const leadNgoIds = lead ? (lead.ngoIds||[]) : [];
+  const leadNgos   = ngos.filter(n=>leadNgoIds.includes(n.id));
+
+  // For the OKR view: use the lead's first assigned NGO
+  if(!window.TEAM_OKR_NGO || !leadNgoIds.includes(window.TEAM_OKR_NGO))
+    window.TEAM_OKR_NGO = leadNgos.length ? leadNgos[0].id : "";
+  const ngoId = window.TEAM_OKR_NGO;
 
   const all = (DB.mbo||[]).filter(r=>r.ngoId===ngoId);
   const months = [...new Set(all.map(r=>r.month))].sort().reverse();
@@ -3771,11 +3783,18 @@ function pageOkrUpload(){
   const monthOpts = months.map(m=>
     `<option value="${m}" ${m===selMonth?'selected':''}>${monthLong(m)}</option>`).join("");
 
-  // NGO selector for switching which NGO's OKRs are shown
-  const ngoSel = ngos.length > 1 ? `
+  // Partnership Lead selector
+  const leadSel = leads.length ? `
+    <select style="font-size:12px;padding:5px 8px;border:1px solid var(--rule-2);border-radius:7px;margin-right:6px"
+      onchange="window.TEAM_OKR_LEAD=this.value;window.TEAM_OKR_NGO=null;render()">
+      ${leads.map(u=>`<option value="${u.id}" ${u.id===leadId?'selected':''}>${esc(u.name)}</option>`).join("")}
+    </select>` : '';
+
+  // If the lead has multiple NGOs, show a sub-selector
+  const ngoSubSel = leadNgos.length > 1 ? `
     <select style="font-size:12px;padding:5px 8px;border:1px solid var(--rule-2);border-radius:7px;margin-right:6px"
       onchange="window.TEAM_OKR_NGO=this.value;render()">
-      ${ngos.map(n=>`<option value="${n.id}" ${n.id===ngoId?'selected':''}>${esc(n.short)}</option>`).join("")}
+      ${leadNgos.map(n=>`<option value="${n.id}" ${n.id===ngoId?'selected':''}>${esc(n.short)}</option>`).join("")}
     </select>` : '';
 
   let html = `
@@ -3787,15 +3806,21 @@ function pageOkrUpload(){
   <div class="sec-head">
     <h2>Monthly Outcomes</h2>
     <div class="sh-act">
-      ${ngoSel}
+      ${leadSel}
+      ${ngoSubSel}
       ${months.length? `<select class="mbo-month" onchange="MBO_MONTH['${ngoId}']=this.value;render()">${monthOpts}</select>`:''}
-      ${ngos.length? `<button class="btn ghost sm" onclick="openMboUpload('${ngoId}')">↑ Upload Excel</button>
+      ${ngoId? `<button class="btn ghost sm" onclick="openMboUpload('${ngoId}')">↑ Upload Excel</button>
       <button class="btn accent sm" onclick="openMboModal('${ngoId}')">+ Key Result</button>`:''}
     </div>
   </div>`;
 
-  if(!ngos.length){
-    html += `<div class="panel"><div class="empty"><div class="mk">▤</div><p>No partner NGOs yet — add one first.</p></div></div>`;
+  if(!leads.length){
+    html += `<div class="panel"><div class="empty"><div class="mk">▤</div><p>No Partnership Leads yet — add one in Admin first.</p></div></div>`;
+    return html;
+  }
+
+  if(!ngoId || !leadNgos.length){
+    html += `<div class="panel"><div class="empty"><div class="mk">▤</div><p>${esc(lead?lead.name:"This lead")} has no NGOs assigned yet.</p></div></div>`;
     return html;
   }
 
