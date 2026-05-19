@@ -3769,13 +3769,13 @@ function pageOkrUpload(){
   const selMonth = MBO_MONTH[ngoId] || (months[0] || "");
 
   const monthOpts = months.map(m=>
-    `<option value="${m}" ${m===selMonth?'selected':''>${monthLong(m)}</option>`).join("");
+    `<option value="${m}" ${m===selMonth?'selected':''}>${monthLong(m)}</option>`).join("");
 
   // NGO selector for switching which NGO's OKRs are shown
   const ngoSel = ngos.length > 1 ? `
     <select style="font-size:12px;padding:5px 8px;border:1px solid var(--rule-2);border-radius:7px;margin-right:6px"
       onchange="window.TEAM_OKR_NGO=this.value;render()">
-      ${ngos.map(n=>`<option value="${n.id}" ${n.id===ngoId?'selected':''>${esc(n.short)}</option>`).join("")}
+      ${ngos.map(n=>`<option value="${n.id}" ${n.id===ngoId?'selected':''}>${esc(n.short)}</option>`).join("")}
     </select>` : '';
 
   let html = `
