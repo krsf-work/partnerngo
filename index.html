@@ -1770,6 +1770,10 @@ function emptyBudget(){
    ================================================================= */
 // visible NGOs — everyone sees the whole portfolio (full network access)
 function visibleNgos(){
+  if(ME && ME.role==="APL"){
+    const assigned = Array.isArray(ME.ngoIds) ? ME.ngoIds : [];
+    return DB.ngos.filter(n=>assigned.includes(n.id));
+  }
   return DB.ngos.slice();
 }
 // can the current user edit at all?  (Viewer is read-only)
@@ -3085,7 +3089,7 @@ function pageNgos(){
               return a?a.avatar:'—';
             })())}</span>
             <div>
-              <div class="apl-l">Associate Partnership Lead</div>
+              <div class="apl-l">Partnership Lead</div>
               <div class="apl-n">${esc(aplNamesFor(n.id))}</div>
             </div>
           </div>
@@ -3140,7 +3144,7 @@ function openNgoForm(editId){
     </div>
     <div class="frow">
       <div class="field">
-        <label>Partnership Lead (APL)</label>
+        <label>Partnership Lead</label>
         <div style="font-size:12px;color:var(--ink-2);padding:9px 11px;border:1px solid var(--rule);border-radius:8px;background:var(--paper-2)">
           ${n?esc(aplNamesFor(n.id)):'—'}
           <div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">Assign APLs to NGOs in the Admin panel.</div>
@@ -4868,7 +4872,7 @@ function openDebitForm(ngoId, editId){
         <input type="text" id="dfNo" value="${d?esc(d.dnNo):''}" placeholder="e.g. DB-01">
       </div>
       <div class="field">
-        <label>Reporting month <span style="text-transform:none;font-weight:400">— auto-set from the note</span></label>
+        <label>Reporting month <span style="text-transform:none;font-weight:400">— auto-derived from the date above</span></label>
         <select id="dfMonth">
           ${FY_MONTHS.map(m=>`<option value="${m}" ${(d?d.month:CUR_MONTH)===m?'selected':''}>${monthLong(m)}</option>`).join("")}
         </select>
@@ -4877,8 +4881,8 @@ function openDebitForm(ngoId, editId){
 
     <div class="frow">
       <div class="field">
-        <label>Debit note date</label>
-        <input type="date" id="dfDate" value="${d&&d.date?esc(d.date):''}">
+        <label>Debit note date <span style="text-transform:none;font-weight:400">— sets the reporting month automatically</span></label>
+        <input type="date" id="dfDate" value="${d&&d.date?esc(d.date):''}" oninput="syncDebitMonth()">
       </div>
       <div class="field">
         <label>Category <span style="text-transform:none;font-weight:400">— auto-detected</span></label>
@@ -4967,6 +4971,15 @@ function recalcScrollTotal(){
   const total = readScrollLines().reduce((s,l)=>s+l.amount,0);
   const el2 = el("dfTotal");
   if(el2) el2.textContent = fmtRsFull(total);
+}
+
+/* sync the Reporting Month dropdown whenever the note date changes */
+function syncDebitMonth(){
+  const raw = (el("dfDate")||{}).value || "";
+  if(raw.length < 7) return;
+  const ym = raw.slice(0, 7);
+  const sel = el("dfMonth");
+  if(sel && FY_MONTHS.includes(ym)) sel.value = ym;
 }
 
 /* read the Drive-link filename and pre-fill debit number + month */
@@ -5168,7 +5181,14 @@ async function saveDebit(ngoId, editId){
     toast("Debit note "+dnNo+" is already logged for this NGO");
     return;
   }
-  const month = el("dfMonth").value;
+  // Derive reporting month from the note's own date (dfDate) if available;
+  // fall back to the manually chosen dfMonth dropdown.
+  let month = el("dfMonth").value;
+  const rawDate = el("dfDate").value;
+  if(rawDate && rawDate.length>=7){
+    const derived = rawDate.slice(0,7); // YYYY-MM
+    if(FY_MONTHS.includes(derived)) month = derived;
+  }
   const status = (document.querySelector('input[name="dfStatus"]:checked')||{}).value || DN_STATUS_DEFAULT;
   const d = editId ? DB.debits.find(x=>x.id===editId) : null;
   const obj = {
@@ -5421,7 +5441,7 @@ function pageBudget(){
     <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>NGO</th><th>APL</th><th class="num">Approved</th>
+          <th>NGO</th><th>Partnership Lead</th><th class="num">Approved</th>
           <th class="num">Utilised</th><th class="num">Next month</th>
           <th class="num">Variance</th>
         </tr></thead>
@@ -5790,7 +5810,7 @@ function pageAdmin(){
         <h1 class="serif">Admin</h1>
         <div class="desc">Manage who can sign in and which NGOs each partnership lead covers.</div>
       </div>
-      <button class="btn accent" onclick="openAplForm()">+ Add APL</button>
+      <button class="btn accent" onclick="openAplForm()">+ Add Partnership Lead</button>
     </div>
   </div>
 
@@ -5813,7 +5833,7 @@ function pageAdmin(){
 
   <div class="panel" style="margin-bottom:16px">
     <div class="panel-h">
-      <h3>Partnership Leads (APLs)</h3>
+      <h3>Partnership Leads</h3>
       <span class="note">${apls.length} login${apls.length!==1?'s':''} · each edits only their assigned NGOs</span>
     </div>
     ${apls.length? `<div class="tbl-wrap">
@@ -5840,7 +5860,7 @@ function pageAdmin(){
         </tbody>
       </table>
     </div>` : `<div class="empty"><div class="mk">⚙</div>
-      <p>No APL logins yet. Click <b>+ Add APL</b> to create one.</p></div>`}
+      <p>No Partnership Lead logins yet. Click <b>+ Add Partnership Lead</b> to create one.</p></div>`}
   </div>
 
   <div class="panel">
@@ -5898,8 +5918,8 @@ function openAplForm(editId){
   const foot = `
     ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteApl('${editId}')">Remove APL</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveApl('${editId||''}')">${editId?'Save changes':'Add APL'}</button>`;
-  showModal(modalShell(editId?"Edit APL":"New APL", editId?"Edit Partnership Lead":"Add a Partnership Lead", body, foot));
+    <button class="btn primary" onclick="saveApl('${editId||''}')">${editId?'Save changes':'Add Partnership Lead'}</button>`;
+  showModal(modalShell(editId?"Edit Partnership Lead":"New Partnership Lead", editId?"Edit Partnership Lead":"Add a Partnership Lead", body, foot));
 }
 async function saveApl(editId){
   const name = el("apName").value.trim();
@@ -5932,13 +5952,13 @@ async function saveApl(editId){
 function deleteApl(id){
   const u = (DB.users||[]).find(x=>x.id===id);
   if(!u) return;
-  confirmAction("Remove this APL login?",
+  confirmAction("Remove this Partnership Lead login?",
     `<b>${esc(u.name)}</b> will no longer be able to sign in. Their NGOs and all
      recorded data stay intact — only the login is removed.`,
     async ()=>{
       DB.users = (DB.users||[]).filter(x=>x.id!==id);
       await saveDB(); closeModal(); render();
-      toast("APL login removed");
+      toast("Partnership Lead login removed");
     }, "Remove login", true);
 }
 /* ---- edit the PM's own credentials ---- */
