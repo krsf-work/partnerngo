@@ -3451,6 +3451,7 @@ function ngoMboTab(ngoId){
     <h2>Monthly Outcomes</h2>
     <div class="sh-act">
       ${months.length? `<select class="mbo-month" onchange="MBO_MONTH['${ngoId}']=this.value;render()">${monthOpts}</select>`:''}
+      ${canEditNgo(ngoId)&&selMonth?`<button class="btn ghost sm" style="color:var(--red)" onclick="deleteMboMonth('${ngoId}','${selMonth}')">Delete month</button>`:''}
       ${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openMboUpload('${ngoId}')">↑ Upload Excel</button>
       <button class="btn accent sm" onclick="openMboModal('${ngoId}')">+ Key Result</button>`:''}
     </div>
@@ -3667,6 +3668,20 @@ function deleteMbo(id){
 }
 
 /* Excel upload affordance — the APL uploads the monthly outcomes sheet */
+function deleteMboMonth(ngoId, month){
+  const n = ngoById(ngoId);
+  const count = (DB.mbo||[]).filter(r=>r.ngoId===ngoId&&r.month===month).length;
+  confirmAction("Delete all outcomes for this month?",
+    `This will permanently remove all <b>${count} key result${count!==1?'s':''}</b> recorded for
+     <b>${esc(n?n.short:'this NGO')}</b> in <b>${monthLong(month)}</b>.`,
+    async ()=>{
+      DB.mbo = (DB.mbo||[]).filter(r=>!(r.ngoId===ngoId&&r.month===month));
+      delete MBO_MONTH[ngoId];
+      await saveDB(); closeModal(); render();
+      toast("Outcomes for "+monthLong(month)+" deleted");
+    }, "Delete all", true);
+}
+
 function openMboUpload(ngoId){
   if(blockIfCantEditNgo(ngoId)) return;
   const body = `
@@ -3809,6 +3824,7 @@ function pageOkrUpload(){
       ${leadSel}
       ${ngoSubSel}
       ${months.length? `<select class="mbo-month" onchange="MBO_MONTH['${ngoId}']=this.value;render()">${monthOpts}</select>`:''}
+      ${ngoId&&selMonth?`<button class="btn ghost sm" style="color:var(--red)" onclick="deleteMboMonth('${ngoId}','${selMonth}')">Delete month</button>`:''}
       ${ngoId? `<button class="btn ghost sm" onclick="openMboUpload('${ngoId}')">↑ Upload Excel</button>
       <button class="btn accent sm" onclick="openMboModal('${ngoId}')">+ Key Result</button>`:''}
     </div>
@@ -4066,6 +4082,7 @@ function openBudgetUpload(ngoId){
       <div class="hint">Recognised columns: Month (YYYY-MM or Apr/May…), Planned amount. Read in your browser.</div>
     </div>`;
   const foot = `
+    ${b?`<button class="btn danger" style="margin-right:auto" onclick="clearBudget('${ngoId}')">Clear budget</button>`:''}
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
     <button class="btn accent" onclick="saveBudgetPlan('${ngoId}')">Save budget plan</button>`;
   showModal(modalShell("Budget", "Set Budget Plan", body, foot));
@@ -4134,6 +4151,17 @@ async function saveBudgetPlan(ngoId){
                         editedBy:ME?ME.name:"—", editedAt:TODAY_ISO };
   await saveDB(); closeModal(); render();
   toast("Budget plan saved for "+ngoById(ngoId).short);
+}
+
+function clearBudget(ngoId){
+  const n = ngoById(ngoId);
+  confirmAction("Clear budget plan?",
+    `The entire budget plan for <b>${esc(n?n.short:'this NGO')}</b> — including the annual amount and all monthly figures — will be removed. Debit notes are not affected.`,
+    async ()=>{
+      delete DB.budgets[ngoId];
+      await saveDB(); closeModal(); render();
+      toast("Budget plan cleared for "+(n?n.short:'NGO'));
+    }, "Clear budget", true);
 }
 
 /* =====================================================================
@@ -5563,6 +5591,7 @@ function pageTasks(){
         <div class="s">${esc(n?n.short:'—')} · ${esc(who)} · due ${t.due}${overdue?' <b style="color:var(--red)">overdue</b>':''}</div>
       </div>
       <span class="badge ${pc}">${t.priority}</span>
+      ${canEdit()?`<button class="btn ghost sm" onclick="openTaskForm('${t.id}')">Edit</button>`:''}
     </div>`;
   };
 
@@ -5622,44 +5651,66 @@ async function toggleTask(id){
   await saveDB();
   render();
 }
-function openTaskForm(){
+function openTaskForm(editId){
   if(blockIfReadOnly()) return;
   const ngos = visibleNgos();
+  const t = editId ? DB.tasks.find(x=>x.id===editId) : null;
   const body = `
     <div class="field">
       <label>Task</label>
-      <input type="text" id="tfTitle" placeholder="e.g. Field verification visit to VNCS"/>
+      <input type="text" id="tfTitle" value="${t?esc(t.title):''}" placeholder="e.g. Field verification visit to VNCS"/>
     </div>
     <div class="frow">
       <div class="field">
         <label>NGO</label>
-        <select id="tfNgo">${ngos.map(n=>`<option value="${n.id}">${esc(n.short)}</option>`).join("")}</select>
+        <select id="tfNgo">${ngos.map(n=>`<option value="${n.id}" ${t&&t.ngoId===n.id?'selected':''}>${esc(n.short)}</option>`).join("")}</select>
       </div>
       <div class="field">
         <label>Priority</label>
-        <select id="tfPri"><option>High</option><option selected>Medium</option><option>Low</option></select>
+        <select id="tfPri">
+          <option ${t&&t.priority==='High'?'selected':''}>High</option>
+          <option ${!t||t.priority==='Medium'?'selected':''}>Medium</option>
+          <option ${t&&t.priority==='Low'?'selected':''}>Low</option>
+        </select>
       </div>
     </div>
     <div class="field">
       <label>Due date</label>
-      <input type="date" id="tfDue" value="2026-02-15"/>
+      <input type="date" id="tfDue" value="${t?t.due:'2026-02-15'}"/>
     </div>`;
-  showModal(modalShell("New task","Add a Task",body,
-    `<button class="btn" onclick="closeModal()">Cancel</button>
-     <button class="btn primary" onclick="saveTask()">Create task</button>`));
+  const foot = `
+    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteTask('${editId}')">Delete</button>`:''}
+    <button class="btn" onclick="closeModal()">Cancel</button>
+    <button class="btn primary" onclick="saveTask('${editId||''}')"> ${editId?'Save changes':'Create task'}</button>`;
+  showModal(modalShell(editId?"Edit task":"New task", editId?"Edit Task":"Add a Task", body, foot));
 }
-async function saveTask(){
+async function saveTask(editId){
   const title = el("tfTitle").value.trim();
   if(!title){ toast("Add a task title"); return; }
   const ngoId = el("tfNgo").value;
-  // assign to the first APL covering this NGO (if any)
-  const apl = (DB.users||[]).find(u=>u.role==="APL" && Array.isArray(u.ngoIds) && u.ngoIds.includes(ngoId));
-  DB.tasks.push({ id:genId("t"), ngoId, aplId: apl?apl.id:"",
-    title, due:el("tfDue").value, status:"Open", priority:el("tfPri").value });
+  if(editId){
+    const t = DB.tasks.find(x=>x.id===editId);
+    if(t){ Object.assign(t, { title, ngoId, due:el("tfDue").value, priority:el("tfPri").value }); }
+  } else {
+    const apl = (DB.users||[]).find(u=>u.role==="APL" && Array.isArray(u.ngoIds) && u.ngoIds.includes(ngoId));
+    DB.tasks.push({ id:genId("t"), ngoId, aplId: apl?apl.id:"",
+      title, due:el("tfDue").value, status:"Open", priority:el("tfPri").value });
+  }
   await saveDB();
   closeModal();
   render();
-  toast("Task created");
+  toast(editId?"Task updated":"Task created");
+}
+function deleteTask(id){
+  const t = DB.tasks.find(x=>x.id===id);
+  if(!t) return;
+  confirmAction("Delete this task?",
+    `"${esc((t.title||"").slice(0,80))}" will be permanently removed.`,
+    async ()=>{
+      DB.tasks = DB.tasks.filter(x=>x.id!==id);
+      await saveDB(); closeModal(); render();
+      toast("Task deleted");
+    }, "Delete", true);
 }
 
 /* =================================================================
