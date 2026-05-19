@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V1</title>
+<title>KRSF · NGO Partnership Program · V5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -800,6 +800,48 @@ window.FIREBASE_CONFIG = {
   }
   .chk:hover{border-color:var(--ink-3)}
   .chk input{width:14px;height:14px;flex:none;accent-color:var(--accent)}
+
+  /* debit-note scroll breakdown table */
+  .scroll-tbl{width:100%;border-collapse:collapse}
+  .scroll-tbl td{padding:3px 4px 3px 0;vertical-align:middle}
+  .scroll-tbl input{
+    width:100%;padding:7px 9px;border:1px solid var(--rule-2);border-radius:7px;
+    font-size:12px;font-family:var(--sans);background:var(--card);color:var(--ink);
+  }
+  .scroll-tbl .sc-amt{text-align:right}
+  .scroll-tbl td:last-child{width:30px}
+  .sc-del{
+    width:24px;height:24px;border-radius:6px;background:var(--paper-2);
+    color:var(--ink-3);font-size:15px;line-height:1;border:1px solid var(--rule);
+  }
+  .sc-del:hover{background:var(--red);color:#fff;border-color:var(--red)}
+  .scroll-total{
+    text-align:right;font-size:12.5px;color:var(--ink-2);margin-top:8px;
+    padding-top:8px;border-top:1px solid var(--rule);
+  }
+  .scroll-total b{color:var(--ink);font-size:14px;font-family:var(--mono)}
+
+  /* radio column (debit-note status) */
+  .radio-col{display:flex;flex-direction:column;gap:6px;margin-top:3px}
+  .radio-opt{
+    display:flex;align-items:center;gap:9px;font-size:12.5px;cursor:pointer;
+    padding:9px 11px;border:1px solid var(--rule);border-radius:8px;transition:.12s;
+  }
+  .radio-opt:hover{border-color:var(--ink-3)}
+  .radio-opt input{width:15px;height:15px;flex:none;accent-color:var(--accent)}
+  .radio-opt input:checked+span{font-weight:600;color:var(--ink)}
+
+  /* debit-note status history */
+  .dn-history{display:flex;flex-direction:column;gap:0;
+    border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+  .dn-hrow{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:8px 11px;font-size:12px;border-bottom:1px solid var(--rule);
+  }
+  .dn-hrow:last-child{border-bottom:none}
+  .dn-hrow:nth-child(odd){background:var(--paper-2)}
+  .dn-hstage{font-weight:600;color:var(--ink)}
+  .dn-hmeta{color:var(--ink-3);font-size:11px;font-family:var(--mono);white-space:nowrap}
   .chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink-3);margin-bottom:8px}
   .chart-legend span{display:flex;align-items:center;gap:5px}
   .lg-sw{width:13px;height:9px;border-radius:2px;display:inline-block}
@@ -913,7 +955,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Goals, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V1</b></div>
+    <div class="sub">Goals, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V5</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -926,7 +968,7 @@ window.FIREBASE_CONFIG = {
       <button class="login-btn" onclick="doLogin()">Sign in →</button>
       <div id="loginHint" style="font-size:11px;color:var(--ink-3);text-align:center;margin-top:14px;line-height:1.6"></div>
       <div style="text-align:center;margin-top:8px">
-        <span onclick="loginRecovery()" style="font-size:11px;color:var(--accent);cursor:pointer;font-weight:600;text-decoration:underline">Can't sign in? Recover / reset access →</span>
+        <span onclick="loginRecovery()" style="font-size:11px;color:var(--ink-3);cursor:pointer;text-decoration:underline">Can't sign in?</span>
       </div>
     </div>
   </div>
@@ -938,7 +980,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V1</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V5</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -980,8 +1022,8 @@ window.FIREBASE_CONFIG = {
    ================================================================= */
 
 /* ---------- constants ---------- */
-const FY_MONTHS = ["2025-04","2025-05","2025-06","2025-07","2025-08","2025-09",
-                    "2025-10","2025-11","2025-12","2026-01","2026-02","2026-03"];
+const FY_MONTHS = ["2026-04","2026-05","2026-06","2026-07","2026-08","2026-09",
+                    "2026-10","2026-11","2026-12","2027-01","2027-02","2027-03"];
 const FY_END = FY_MONTHS[FY_MONTHS.length-1];   // last month of the financial year
 const MONTH_NAMES = {1:"Jan",2:"Feb",3:"Mar",4:"Apr",5:"May",6:"Jun",
                      7:"Jul",8:"Aug",9:"Sep",10:"Oct",11:"Nov",12:"Dec"};
@@ -999,7 +1041,23 @@ function liveReportingMonth(){
 const SOON_CUTOFF_ISO = new Date(TODAY.getTime()+90*86400000).toISOString().slice(0,10);
 const VERTICALS = ["Livelihood","Advocacy","Education","Healthcare","Climate"];
 const BUDGET_CATS = ["Salary","Travel","Programme","Admin-Other"];
-const DN_STATUS = ["Pending","Approved","Paid","Query Raised"];
+/* Debit-note processing workflow — four ordered stages.
+   A debit note starts at the first stage and moves down as it is processed.
+   Each move is timestamped in the note's history. */
+const DN_STATUS = [
+  "Hard copy not received",
+  "Under review by Program Team",
+  "Under review with Finance Team",
+  "Payment released"
+];
+const DN_STATUS_DEFAULT = DN_STATUS[0];
+/* colour for each stage — used by badges */
+const DN_STATUS_COLOR = {
+  "Hard copy not received":      "amber",
+  "Under review by Program Team":"blue",
+  "Under review with Finance Team":"violet",
+  "Payment released":            "green"
+};
 /* Partner scorecard — 8 criteria, each scored 0–5, total out of 40.
    key = short column header, label = full name shown on hover/tooltip. */
 const SCORE_CRITERIA = [
@@ -1093,7 +1151,7 @@ function buildMboForNgo(ngo, bets){
    panel. (seedData() below still exists for offline demo use.) */
 function skeletonData(){
   return {
-    meta: { fyLabel:"FY 2025-26", created:Date.now(), program:"NGO Partnership Program" },
+    meta: { fyLabel:"FY 2026-27", created:Date.now(), program:"NGO Partnership Program" },
     users: [
       { id:"pm", name:"Program Manager", role:"PM",
         title:"Program Manager", avatar:"PM",
@@ -1377,14 +1435,14 @@ function seedData(){
 }
 
 /* =================================================================
-   PERSISTENCE  ·  Firestore live sync (with localStorage offline cache)
+   PERSISTENCE  ·  Realtime Database live sync (localStorage offline cache)
    =================================================================
 
    Storage model — overwrite-safe by design:
    Each top-level collection (ngos, bigBets, budgets, debits, documents,
    tasks, scorecards, mbo, refFiles, users, meta) is stored as ONE
-   Firestore document inside the collection "tracker". So two people
-   editing different things write to different documents and never
+   node under "tracker/" in the Realtime Database. So two people
+   editing different things write to different nodes and never
    collide. Live listeners keep every open browser's DB fresh within
    ~1-2s, so even same-collection edits merge instead of overwriting.
    ================================================================= */
@@ -1473,6 +1531,18 @@ function cloudListen(){
             incoming[k].monthlyPlan = toArr(incoming[k].monthlyPlan);
         });
       }
+      if(part==="debits"){
+        incoming.forEach(d=>{
+          if(d.scrolls!==undefined) d.scrolls = toArr(d.scrolls);
+          if(d.history!==undefined) d.history = toArr(d.history);
+        });
+      }
+      if(part==="bigBets"){
+        incoming.forEach(b=>{
+          if(b && (!b.months || typeof b.months!=="object" || Array.isArray(b.months)))
+            b.months = {};
+        });
+      }
       const inJson = JSON.stringify(incoming);
       // ignore the echo of our own just-written change
       if(inJson === _lastSynced[part]) return;
@@ -1507,29 +1577,24 @@ async function loadDB(){
     }
     if(data){
       // We have live Firebase data — coerce and migrate it regardless of cache
-      DB_PARTS.forEach(p=>{ _lastSynced[p] = JSON.stringify(data[p]); });
+      let merged;
       try{
-        const merged = migrateDB(data);
-        DB = merged;                 // assign DB FIRST, then attach listeners
-        // migrateDB may have patched the PM credentials — write the fix back
-        _lastSynced["users"] = "__stale__";
-        cacheSave();
-        cloudListen();
-        saveDB();                    // async, fire-and-forget — fixes credentials in Firebase
-        return merged;
+        merged = migrateDB(data);
       }catch(e){
         // migrateDB failed — apply toArr manually and retry rather than dropping data
         console.error("migrateDB failed, retrying with coercion", e);
         ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles"]
           .forEach(p=>{ if(data[p] && !Array.isArray(data[p])) data[p] = Object.values(data[p]); });
-        const merged = migrateDB(data);
-        DB = merged;
-        _lastSynced["users"] = "__stale__";
-        cacheSave();
-        cloudListen();
-        saveDB();
-        return merged;
+        merged = migrateDB(data);
       }
+      DB = merged;                 // assign DB FIRST, then attach listeners
+      // _lastSynced must reflect the MIGRATED data that is now in memory,
+      // not the raw cloud data — otherwise the echo-check and change-diff
+      // both misfire on the first listener event / first save.
+      DB_PARTS.forEach(p=>{ _lastSynced[p] = JSON.stringify(merged[p] ?? skeletonData()[p]); });
+      cacheSave();
+      cloudListen();
+      return merged;
     }
   }
   // offline fallback — cache, else a clean skeleton
@@ -1547,24 +1612,47 @@ async function saveDB(){
     SAVE_OK = false;
     return false;
   }
-  let ok = true, updates = {};
+  let ok = true;
+  const updates = {}, pending = {};   // pending = the new _lastSynced values, applied only on success
   try{
     DB_PARTS.forEach(part=>{
-      const cur = JSON.stringify(DB[part] ?? skeletonData()[part]);
+      const val = DB[part] ?? skeletonData()[part];
+      const cur = JSON.stringify(val);
       if(cur !== _lastSynced[part]){
-        updates["tracker/"+part] = DB[part] ?? skeletonData()[part];
-        _lastSynced[part] = cur;
+        updates["tracker/"+part] = val;
+        pending[part] = cur;
       }
     });
-    if(Object.keys(updates).length) await fb.db.ref().update(updates);
+    if(Object.keys(updates).length){
+      await fb.db.ref().update(updates);
+      // write confirmed — NOW it is safe to mark these parts as synced
+      Object.keys(pending).forEach(p=>{ _lastSynced[p] = pending[p]; });
+    }
   }catch(e){
     ok = false;
     console.error("save failed", e);
+    // _lastSynced is intentionally NOT updated — the change stays "dirty"
+    // so the next saveDB() retries the write instead of silently dropping it.
   }
-  if(!ok && SAVE_OK) toast("⚠ Couldn't sync — check your connection");
+  if(!ok && SAVE_OK) toast("⚠ Couldn't sync — your last change will retry automatically");
   SAVE_OK = ok;
   setConnState(ok);
+  // a failed write leaves the change "dirty" in _lastSynced; schedule a retry
+  // so it isn't stranded until the next manual edit.
+  if(!ok) scheduleSaveRetry();
   return ok;
+}
+let _retryTimer = null;
+function scheduleSaveRetry(){
+  if(_retryTimer) return;          // one retry in flight is enough
+  _retryTimer = setTimeout(async ()=>{
+    _retryTimer = null;
+    if(!DB) return;
+    // re-enable the cloud path for one attempt; saveDB will re-disable if it fails again
+    if(fb.ready) CLOUD_OK = true;
+    const ok = await saveDB();
+    if(ok) toast("✓ Reconnected — your changes are now synced");
+  }, 15000);                       // retry 15s later
 }
 
 /* ---- connection indicator ---- */
@@ -1618,31 +1706,45 @@ function migrateDB(db){
     u.ngoIds = toArr(u.ngoIds);
   });
   db.bigBets.forEach(b=>{
-    if(b && b.months && typeof b.months==="object" && Array.isArray(b.months))
-      b.months = {};                       // months is keyed by month string, never an array
+    if(!b || typeof b!=="object") return;
+    // months must always be a plain keyed object — never undefined, never an array.
+    // (RTDB drops an empty {} on save, so a months-less goal comes back undefined
+    //  and would crash every dashboard/goal render.)
+    if(!b.months || typeof b.months!=="object" || Array.isArray(b.months)) b.months = {};
+    // numeric fields that the health/progress maths depends on
+    if(typeof b.baseline!=="number") b.baseline = 0;
+    if(typeof b.annualTarget!=="number"){
+      const n = Number(b.annualTarget);
+      b.annualTarget = isNaN(n)?0:n;
+    }
+    if(!b.unit) b.unit = "";
+    if(!b.title) b.title = "Untitled goal";
   });
   // budget monthlyPlan must be a numeric array
   Object.keys(db.budgets).forEach(k=>{
     const bg = db.budgets[k];
     if(bg && bg.monthlyPlan!==undefined) bg.monthlyPlan = toArr(bg.monthlyPlan);
   });
+  // debit notes — coerce nested scroll/history arrays and back-fill status
+  db.debits.forEach(d=>{
+    if(d.scrolls!==undefined) d.scrolls = toArr(d.scrolls);
+    if(d.history!==undefined) d.history = toArr(d.history);
+    // an old note saved before the workflow change → default it
+    if(!d.status || !DN_STATUS.includes(d.status)) d.status = DN_STATUS_DEFAULT;
+  });
   db.ngos.forEach(n=>{ if(!n.partnership) n.partnership = "Active"; });
-  // Ensure the PM user always has valid login credentials.
-  // If the database was seeded with seedData() (the demo dataset), the PM
-  // record has no username/password — restore the defaults so the owner
-  // can always sign in with admin / krsf@2026.
-  const pmUser = db.users.find(u=>u.role==="PM");
-  if(pmUser){
-    if(!pmUser.username) pmUser.username = "admin";
-    if(!pmUser.password) pmUser.password = "krsf@2026";
-    if(!pmUser.avatar)   pmUser.avatar   = pmUser.name ? pmUser.name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase() : "PM";
-  }
   // every NGO must have a budget object so finance never crashes
   db.ngos.forEach(n=>{
     const b = db.budgets[n.id];
     if(!b || !b.monthlyPlan || !Array.isArray(b.monthlyPlan) || !b.annual)
       db.budgets[n.id] = emptyBudget();
   });
+  // ---- keep the FY label in step with the active financial year ----
+  if(!db.meta || typeof db.meta!=="object") db.meta = skeletonData().meta;
+  const fyStartYr = FY_MONTHS[0].slice(0,4);
+  const fyEndYr2  = String(Number(fyStartYr)+1).slice(2);
+  db.meta.fyLabel = "FY "+fyStartYr+"-"+fyEndYr2;
+  if(!db.meta.program) db.meta.program = "NGO Partnership Program";
   // ---- SAFETY NET: there must always be a working PM login ----
   // If an older/partial seed left no PM (or no usable credentials), restore the
   // default admin account so the owner can never be locked out.
@@ -1685,6 +1787,14 @@ function canEditNgo(ngoId){
 function canManageNgos(){ return ME && ME.role==="PM"; }
 function ngoById(id){ return DB.ngos.find(n=>n.id===id); }
 function userById(id){ return DB.users.find(u=>u.id===id); }
+/* names of the APLs assigned to an NGO (via their ngoIds), comma-joined.
+   Falls back gracefully when no APL is assigned yet. */
+function aplNamesFor(ngoId){
+  const names = (DB.users||[])
+    .filter(u=>u.role==="APL" && Array.isArray(u.ngoIds) && u.ngoIds.includes(ngoId))
+    .map(u=>u.name);
+  return names.length ? names.join(", ") : "—";
+}
 function betsForNgo(id){ return DB.bigBets.filter(b=>b.ngoId===id); }
 function visibleBets(){
   const ids = new Set(visibleNgos().map(n=>n.id));
@@ -1704,11 +1814,12 @@ function betIsLevelType(bet){
 
 // cumulative achieved for a goal up to & including month m
 function betCumulative(bet, uptoMonth){
+  const months = (bet && bet.months) || {};
   if(betIsLevelType(bet)){
     let latest = bet.baseline||0;
     for(const m of FY_MONTHS){
       if(m> uptoMonth) break;
-      const c = bet.months[m];
+      const c = months[m];
       if(c && c.actual!=null) latest = c.actual;
     }
     return latest;
@@ -1716,21 +1827,22 @@ function betCumulative(bet, uptoMonth){
   let sum = bet.baseline || 0;
   for(const m of FY_MONTHS){
     if(m > uptoMonth) break;
-    const c = bet.months[m];
+    const c = months[m];
     if(c && c.actual!=null) sum += c.actual;
   }
   return sum;
 }
 function betCumulativePlan(bet, uptoMonth){
+  const months = (bet && bet.months) || {};
   if(betIsLevelType(bet)){
     let latest = bet.baseline||0;
     for(const m of FY_MONTHS){ if(m>uptoMonth)break;
-      const c=bet.months[m]; if(c&&c.plan!=null) latest=c.plan; }
+      const c=months[m]; if(c&&c.plan!=null) latest=c.plan; }
     return latest;
   }
   let sum = bet.baseline||0;
   for(const m of FY_MONTHS){ if(m>uptoMonth)break;
-    const c=bet.months[m]; if(c&&c.plan!=null) sum+=c.plan; }
+    const c=months[m]; if(c&&c.plan!=null) sum+=c.plan; }
   return sum;
 }
 
@@ -1741,8 +1853,9 @@ function betProgress(bet){
 }
 // on-track status: cumulative achieved vs cumulative plan as of last fully-reported month
 function lastReportedMonth(bet){
+  const months = (bet && bet.months) || {};
   let last=null;
-  for(const m of FY_MONTHS){ if(bet.months[m] && bet.months[m].actual!=null) last=m; }
+  for(const m of FY_MONTHS){ if(months[m] && months[m].actual!=null) last=m; }
   return last;
 }
 function betHealth(bet){
@@ -1757,8 +1870,18 @@ function betHealth(bet){
 
 /* Budget actuals from debit notes. A debit note counts toward utilised
    budget as soon as it is logged — the budget tracker reflects all
-   recorded spend. (Query Raised notes are disputed and excluded.) */
-function dnCounts(d){ return d.status!=="Query Raised"; }
+   recorded spend regardless of which processing stage it is at. */
+function dnCounts(d){ return true; }
+
+/* a human timestamp for the audit trail, e.g. "18 May 2026, 2:14 PM" */
+function stamp(){
+  const d = new Date();
+  const day = d.getDate();
+  const mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+  let h = d.getHours(); const ap = h>=12?"PM":"AM"; h = h%12||12;
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  return day+" "+mon+" "+d.getFullYear()+", "+h+":"+mm+" "+ap;
+}
 
 // budget actuals for NGO/month from debit notes
 function ngoSpendForMonth(ngoId, month){
@@ -1772,8 +1895,14 @@ function ngoSpendUpto(ngoId, uptoMonth){
 }
 function ngoSpendByCat(ngoId, uptoMonth){
   const out={}; BUDGET_CATS.forEach(c=>out[c]=0);
-  DB.debits.filter(d=>d.ngoId===ngoId && d.month<=uptoMonth && dnCounts(d))
-           .forEach(d=>{ out[d.category]=(out[d.category]||0)+(d.amount||0); });
+  // only count months that are inside the financial year and at/before uptoMonth
+  // — this keeps the category split consistent with ngoSpendUpto().
+  DB.debits.filter(d=>d.ngoId===ngoId && dnCounts(d)
+                   && FY_MONTHS.includes(d.month) && d.month<=uptoMonth)
+           .forEach(d=>{
+             const cat = BUDGET_CATS.includes(d.category) ? d.category : "Programme";
+             out[cat]=(out[cat]||0)+(d.amount||0);
+           });
   return out;
 }
 function budgetUtilPct(ngoId, uptoMonth){
@@ -1998,13 +2127,14 @@ function navItems(){
     { id:"debits",  label:"Debit Notes",   ic:"▦", sec:"Portfolio",
       count: DB.debits.filter(d=>{
         const ids=new Set(visibleNgos().map(n=>n.id));
-        return ids.has(d.ngoId) && d.status==="Pending";
+        return ids.has(d.ngoId) && (d.status||DN_STATUS_DEFAULT)===DN_STATUS_DEFAULT;
       }).length || null },
     { id:"tasks",   label:"Tasks",         ic:"✓", sec:"Work",
       count: DB.tasks.filter(t=>{
         if(ME.role==="APL"&&t.aplId!==ME.id) return false;
         return t.status==="Open";
       }).length || null },
+    { id:"okrupload", label:"Team OKR", ic:"↑", sec:"Work" },
     { id:"docs",    label:"Documents",     ic:"▣", sec:"Work" }
   ];
   if(ME.role==="PM"){
@@ -2054,6 +2184,7 @@ function render(){
     case "budget": c.innerHTML = pageBudget(); break;
     case "debits": c.innerHTML = pageDebits(); break;
     case "tasks":  c.innerHTML = pageTasks(); break;
+    case "okrupload": c.innerHTML = pageOkrUpload(); break;
     case "docs":   c.innerHTML = pageDocs(); break;
     case "admin":  c.innerHTML = (ME.role==="PM") ? pageAdmin() : pageDash(); break;
     default: c.innerHTML = pageDash();
@@ -2148,14 +2279,15 @@ function pageDash(){
   const totalSpent  = ngos.reduce((s,n)=>s+ngoSpendUpto(n.id,CUR_MONTH),0);
   const utilPct = pct(totalSpent,totalBudget);
 
-  /* ---- box 3: goals by delivery health (vs plan-to-date) ----
-     uses the SAME betHealth definition as the Goals page so the
-     dashboard and that page never contradict each other. */
-  const betHealths = bets.map(b=>betHealth(b).status);
-  const betRed   = betHealths.filter(s=>s==="red").length;
-  const betAmber = betHealths.filter(s=>s==="amber").length;
-  const betGreen = betHealths.filter(s=>s==="green").length;
-  const betGray  = betHealths.filter(s=>s==="gray").length;
+  /* ---- box 3: goals by % of annual target achieved ----
+     Bands are defined purely on progress toward the annual target:
+       70%+        → "70% achieved"
+       40% to <70% → "40% to <70% achieved"
+       below 40%   → "Less than 40% achieved"  */
+  const betProgs = bets.map(b=>betProgress(b));
+  const betGreen = betProgs.filter(p=>p>=70).length;
+  const betAmber = betProgs.filter(p=>p>=40 && p<70).length;
+  const betRed   = betProgs.filter(p=>p<40).length;
 
   /* ---- box 4: partner scorecard by status ---- */
   const scores = ngos.map(n=>ngoScore(n.id));
@@ -2197,9 +2329,9 @@ function pageDash(){
         <div class="lab">Goals — Delivery</div>
       </div>
       <div class="band-row">
-        <div class="band green"><div class="bn">${betGreen}</div><div class="bl">On track</div></div>
-        <div class="band amber"><div class="bn">${betAmber}</div><div class="bl">Slipping</div></div>
-        <div class="band red"><div class="bn">${betRed}</div><div class="bl">Behind</div></div>
+        <div class="band green"><div class="bn">${betGreen}</div><div class="bl">70% achieved</div></div>
+        <div class="band amber"><div class="bn">${betAmber}</div><div class="bl">40% to &lt;70% achieved</div></div>
+        <div class="band red"><div class="bn">${betRed}</div><div class="bl">Less than 40% achieved</div></div>
       </div>
     </div>
 
@@ -2435,7 +2567,7 @@ function dashNgoRow(n){
         <b>${esc(n.short)}</b>
         <span style="color:var(--ink-3);font-size:11px"> · ${esc(n.state)}</span>
       </td>
-      <td style="font-size:12px">${esc(userById(n.aplId).name)}</td>
+      <td style="font-size:12px">${esc(aplNamesFor(n.id))}</td>
       <td class="num">
         ${fmtRs(appr)} <span style="color:var(--ink-3)">·</span> ${fmtRs(used)}
         <div style="font-size:10.5px;color:var(--${up>=100?'red':up>=85?'amber':'green'})">${up}% used</div>
@@ -2924,7 +3056,6 @@ function pageNgos(){
   ${ngos.length?`<div class="ngo-grid">` : `<div class="panel"><div class="empty"><div class="mk">▤</div><p>No partner NGOs yet.${ME.role==="PM"?' Click <b>+ Add partner</b> to onboard one.':''}</p></div></div><div style="display:none">`}
     ${ngos.map(n=>{
       const sc = ngoScore(n.id);
-      const apl = userById(n.aplId);
       const b = DB.budgets[n.id];
       const approved = b? b.totalAnnual : 0;
       const used = ngoSpendUpto(n.id,CUR_MONTH);
@@ -2949,10 +3080,13 @@ function pageNgos(){
             </div>
           </div>
           <div class="ngo-card-people">
-            <span class="apl-ico">${esc(apl?apl.avatar:'—')}</span>
+            <span class="apl-ico">${esc((function(){
+              const a=(DB.users||[]).find(u=>u.role==="APL"&&Array.isArray(u.ngoIds)&&u.ngoIds.includes(n.id));
+              return a?a.avatar:'—';
+            })())}</span>
             <div>
               <div class="apl-l">Associate Partnership Lead</div>
-              <div class="apl-n">${esc(apl?apl.name:'—')}</div>
+              <div class="apl-n">${esc(aplNamesFor(n.id))}</div>
             </div>
           </div>
           <div class="ngo-card-budget">
@@ -3007,7 +3141,10 @@ function openNgoForm(editId){
     <div class="frow">
       <div class="field">
         <label>Partnership Lead (APL)</label>
-        <select id="nfApl">${apls.map(a=>`<option value="${a.id}" ${n&&n.aplId===a.id?'selected':''}>${esc(a.name)}</option>`).join("")}</select>
+        <div style="font-size:12px;color:var(--ink-2);padding:9px 11px;border:1px solid var(--rule);border-radius:8px;background:var(--paper-2)">
+          ${n?esc(aplNamesFor(n.id)):'—'}
+          <div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">Assign APLs to NGOs in the Admin panel.</div>
+        </div>
       </div>
       <div class="field">
         <label>Partner since</label>
@@ -3042,7 +3179,6 @@ async function saveNgo(editId){
     name, short,
     vertical: el("nfVertical").value,
     state: el("nfState").value.trim()||"—",
-    aplId: el("nfApl").value,
     since: el("nfSince").value,
     lead: el("nfLead").value.trim()||"—",
     partnership: el("nfStatus").value
@@ -3095,7 +3231,6 @@ let NGO_TAB = "overview";   // overview | mbo | budget | debits | docs | scoreca
 function pageNgoDetail(ngoId){
   const n = ngoById(ngoId);
   if(!n) return `<div class="empty"><p>NGO not found.</p></div>`;
-  const apl = userById(n.aplId);
   const bets = betsForNgo(ngoId);
   const dn = DB.debits.filter(d=>d.ngoId===ngoId);
   const docs = DB.documents.filter(d=>d.ngoId===ngoId);
@@ -3145,7 +3280,7 @@ function pageNgoDetail(ngoId){
       </div>
     </div>
     <div class="ngo-hero-strip">
-      <div><div class="l">Partnership Lead</div><div class="v">${esc(apl?apl.name:'—')}</div></div>
+      <div><div class="l">Partnership Lead</div><div class="v">${esc(aplNamesFor(n.id))}</div></div>
       <div><div class="l">Partnership</div><div class="v">${esc(n.partnership)}</div></div>
       <div><div class="l">Approved Budget</div><div class="v mono">${b?fmtRsFull(b.totalAnnual):'—'}</div></div>
       <div><div class="l">Org Contact</div><div class="v">${esc(n.lead)}</div></div>
@@ -3244,7 +3379,6 @@ function portfolioActivityStream(ngos, limit){
 
 function ngoOverviewTab(ngoId){
   const n = ngoById(ngoId);
-  const apl = userById(n.aplId);
   const sc = ngoScore(ngoId);
   const bets = betsForNgo(ngoId);
   const acts = ngoActivityStream(ngoId);
@@ -3267,7 +3401,7 @@ function ngoOverviewTab(ngoId){
         <div class="dl-row"><span class="k">Vertical</span><span class="v">${esc(n.vertical)}</span></div>
         <div class="dl-row"><span class="k">State</span><span class="v">${esc(n.state)}</span></div>
         <div class="dl-row"><span class="k">Partner since</span><span class="v">${monthLong(n.since)}</span></div>
-        <div class="dl-row"><span class="k">Partnership Lead</span><span class="v">${esc(apl?apl.name:'—')}</span></div>
+        <div class="dl-row"><span class="k">Partnership Lead</span><span class="v">${esc(aplNamesFor(n.id))}</span></div>
         <div class="dl-row"><span class="k">Org contact</span><span class="v">${esc(n.lead)}</span></div>
         <div class="dl-row"><span class="k">Status</span>
           <span class="v"><span class="badge ${sc.status}" style="font-size:10.5px">${
@@ -3618,6 +3752,135 @@ async function importMboFile(ngoId){
 }
 
 /* =====================================================================
+   PAGE · TEAM OKR UPLOAD
+   A dedicated place for team members to upload their OKR / MBO outcomes
+   for a partner NGO — reuses the exact OKR/MBO template and the same
+   DB.mbo store that the per-NGO "OKR / MBO" tab uses.
+   ===================================================================== */
+function pageOkrUpload(){
+  const ngos = visibleNgos();
+
+  // Determine selected NGO (default to first)
+  if(!window.TEAM_OKR_NGO && ngos.length) window.TEAM_OKR_NGO = ngos[0].id;
+  const ngoId = window.TEAM_OKR_NGO || (ngos[0]||{}).id || "";
+
+  const all = (DB.mbo||[]).filter(r=>r.ngoId===ngoId);
+  const months = [...new Set(all.map(r=>r.month))].sort().reverse();
+  const selMonth = MBO_MONTH[ngoId] || (months[0] || "");
+
+  const monthOpts = months.map(m=>
+    `<option value="${m}" ${m===selMonth?'selected':''>${monthLong(m)}</option>`).join("");
+
+  // NGO selector for switching which NGO's OKRs are shown
+  const ngoSel = ngos.length > 1 ? `
+    <select style="font-size:12px;padding:5px 8px;border:1px solid var(--rule-2);border-radius:7px;margin-right:6px"
+      onchange="window.TEAM_OKR_NGO=this.value;render()">
+      ${ngos.map(n=>`<option value="${n.id}" ${n.id===ngoId?'selected':''>${esc(n.short)}</option>`).join("")}
+    </select>` : '';
+
+  let html = `
+  <div class="phead slim">
+    <div class="eyebrow">Work</div>
+    <h1 class="serif">Team OKR</h1>
+  </div>
+
+  <div class="sec-head">
+    <h2>Monthly Outcomes</h2>
+    <div class="sh-act">
+      ${ngoSel}
+      ${months.length? `<select class="mbo-month" onchange="MBO_MONTH['${ngoId}']=this.value;render()">${monthOpts}</select>`:''}
+      ${ngos.length? `<button class="btn ghost sm" onclick="openMboUpload('${ngoId}')">↑ Upload Excel</button>
+      <button class="btn accent sm" onclick="openMboModal('${ngoId}')">+ Key Result</button>`:''}
+    </div>
+  </div>`;
+
+  if(!ngos.length){
+    html += `<div class="panel"><div class="empty"><div class="mk">▤</div><p>No partner NGOs yet — add one first.</p></div></div>`;
+    return html;
+  }
+
+  if(!selMonth){
+    html += `<div class="panel"><div class="empty"><div class="mk">◎</div>
+      <p>No outcomes recorded yet. Upload an Excel sheet or click <b>+ Key Result</b>.</p></div></div>`;
+    return html;
+  }
+
+  const rows = all.filter(r=>r.month===selMonth);
+  const allDerived = rows.length && rows.every(r=>r.derived);
+  if(allDerived){
+    html += `<div class="cum-readout" style="background:var(--amber-soft);border-left-color:var(--amber)">
+      <b>Placeholder outcomes.</b> These key results were auto-generated from this NGO's
+      Goal targets so the tab isn't empty. Replace them by uploading the partner's real
+      monthly outcomes sheet via <b>↑ Upload Excel</b>.
+    </div>`;
+  }
+  html += renderMboBlocks(rows, ngoId);
+  return html;
+}
+
+async function importOkrUpload(){
+  const ngoId = el("okNgo") ? el("okNgo").value : "";
+  if(!ngoId){ toast("Pick a partner NGO first"); return; }
+  if(blockIfCantEditNgo(ngoId)) return;
+  const inp = el("okFile");
+  const msg = el("okMsg");
+  if(!inp || !inp.files || !inp.files[0]){ toast("Choose an OKR file first"); return; }
+  if(typeof XLSX==="undefined"){
+    if(msg){ msg.style.color="var(--red)"; msg.textContent="Spreadsheet reader didn't load — check your connection."; }
+    return;
+  }
+  const defMonth = el("okMonth").value;
+  try{
+    const buf = await inp.files[0].arrayBuffer();
+    const wb = XLSX.read(buf,{type:"array"});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws,{defval:""});
+    if(!rows.length){
+      if(msg){ msg.style.color="var(--red)"; msg.textContent="No rows found in that file."; }
+      return;
+    }
+    let added = 0;
+    rows.forEach(r=>{
+      const objective = String(pickCol(r,["objective","goal"])).trim();
+      const kr = String(pickCol(r,["keyresult","kr","activity","result"])).trim();
+      if(!objective && !kr) return;
+      let status = String(pickCol(r,["status"])).trim();
+      const sl = status.toLowerCase();
+      status = sl.startsWith("done")||sl.startsWith("complete")?"Done"
+             : sl.startsWith("not")?"Not Done":"Pending";
+      let month = String(pickCol(r,["month"])).trim();
+      if(!/^\d{4}-\d{2}$/.test(month)) month = defMonth;
+      const rec = {
+        id: genId("mbo"), ngoId, month,
+        objNum: parseInt(pickCol(r,["objectiveno","objno","objnum","no"]))||1,
+        objective: objective||"(untitled objective)",
+        kr: kr||"(untitled key result)",
+        timeline: String(pickCol(r,["timeline","targetdate","duedate"])).trim(),
+        status,
+        comment: String(pickCol(r,["comment","remark","note"])).trim(),
+        ref: String(pickCol(r,["reference","ref","link"])).trim(),
+        isOther: String(pickCol(r,["type"])).toLowerCase().includes("other")
+      };
+      stampEdit(rec);
+      if(!DB.mbo) DB.mbo=[];
+      DB.mbo.push(rec);
+      added++;
+    });
+    if(!added){
+      if(msg){ msg.style.color="var(--red)"; msg.textContent="Couldn't find Objective / Key Result columns in that file."; }
+      return;
+    }
+    MBO_MONTH[ngoId] = defMonth;
+    await saveDB();
+    render();
+    toast(added+" OKR key result"+(added>1?"s":"")+" uploaded for "+(ngoById(ngoId)||{}).short);
+  }catch(e){
+    console.error(e);
+    if(msg){ msg.style.color="var(--red)"; msg.textContent="Couldn't read that file — is it a valid spreadsheet?"; }
+  }
+}
+
+/* =====================================================================
    TAB 3 · BUDGET  (from V1 — KPI tiles + budget-vs-actual + table)
    ===================================================================== */
 function ngoBudgetTab(ngoId){
@@ -3927,26 +4190,28 @@ function ngoDebitsTab(ngoId){
   </div>
 
   <div class="panel">
-    <div class="panel-h"><h3>All debit notes</h3><span class="note">${all.length} PDFs uploaded</span></div>
+    <div class="panel-h"><h3>All debit notes</h3><span class="note">${all.length} logged</span></div>
     <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>DN No.</th><th>Month</th><th>Category</th><th>Description</th>
-          <th class="num">Amount</th><th>Status</th><th></th>
+          <th>DN No.</th><th>Month</th><th>Category</th><th>Scrolls</th>
+          <th class="num">Amount</th><th>Status</th><th>PDF</th><th></th>
         </tr></thead>
         <tbody>
         ${all.length? all.slice().sort((a,b)=>b.month.localeCompare(a.month)).map(d=>{
-          const s=d.status==="Paid"?"green":d.status==="Approved"?"blue":d.status==="Query Raised"?"red":"amber";
+          const s = DN_STATUS_COLOR[d.status] || "amber";
+          const nScrolls = Array.isArray(d.scrolls)?d.scrolls.length:0;
           return `<tr>
             <td class="mono" style="font-size:11.5px">${esc(d.dnNo)}</td>
             <td>${monthLabel(d.month)}</td>
             <td>${esc(d.category)}</td>
-            <td style="font-size:12px;color:var(--ink-2)">${esc(d.note||'')}</td>
+            <td style="font-size:12px;color:var(--ink-2)">${nScrolls?nScrolls+' scroll'+(nScrolls>1?'s':''):'—'}</td>
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
-            <td><span class="badge ${s}">${esc(d.status)}</span></td>
+            <td><span class="badge ${s}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
+            <td>${d.url?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)">↗ Open</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>'}</td>
             <td>${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
-        }).join("") : `<tr><td colspan="7"><div class="empty"><div class="mk">▦</div><p>No debit notes uploaded yet.</p></div></td></tr>`}
+        }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes uploaded yet.</p></div></td></tr>`}
         </tbody>
       </table>
     </div>
@@ -4521,55 +4786,168 @@ function openDebitForm(ngoId, editId){
   if(blockIfCantEditNgo(ngoId)) return;
   const d = editId? DB.debits.find(x=>x.id===editId) : null;
   const n = ngoById(ngoId);
+  // scroll lines — at least one empty row when adding
+  const lines = (d && Array.isArray(d.scrolls) && d.scrolls.length)
+    ? d.scrolls : [{scrollId:"",amount:""}];
   const body = `
     <div style="font-size:12px;color:var(--ink-3);margin-bottom:14px">For <b style="color:var(--ink)">${esc(n.name)}</b></div>
+
     ${!editId?`
-    <div class="field" style="background:var(--paper-2);border:1px dashed var(--rule-2);border-radius:9px;padding:12px">
-      <label>Upload debit note <span style="text-transform:none;font-weight:400">— .xlsx, .xls or .csv</span></label>
-      <input type="file" id="dfFile" accept=".xlsx,.xls,.csv" onchange="importDebitFile('${ngoId}')">
-      <div class="hint">Drop the debit note file and the fields below fill in automatically — number, amount, month and category are read from the sheet.</div>
-      <div id="dfFileMsg" style="font-size:11.5px;margin-top:6px"></div>
+    <div class="field" style="background:var(--paper-2);border:1px dashed var(--rule-2);border-radius:9px;padding:13px">
+      <label>Upload debit note — Excel <span style="text-transform:none;font-weight:400">(.xlsx, .xls or .csv)</span></label>
+      <input type="file" id="dfXls" accept=".xlsx,.xls,.csv" onchange="importDebitExcel()">
+      <div class="hint">Drop the debit note's Excel file — the number, date, amount and scroll lines below fill in automatically. No typing needed.</div>
+      <div id="dfXlsMsg" style="font-size:11.5px;margin-top:6px"></div>
     </div>`:''}
+
+    <div class="field">
+      <label>Debit note PDF — Google Drive link <span style="text-transform:none;font-weight:400">(optional)</span></label>
+      <input type="text" id="dfUrl" value="${d?esc(d.url||''):''}"
+             placeholder="https://drive.google.com/…"
+             oninput="debitParseLink()">
+      <div class="hint">Keep the scanned PDF in your shared Drive folder and paste its link here for the record.</div>
+      <div id="dfParseMsg" style="font-size:11.5px;margin-top:5px"></div>
+    </div>
+
     <div class="frow">
       <div class="field">
-        <label>Reporting month</label>
+        <label>Debit note number</label>
+        <input type="text" id="dfNo" value="${d?esc(d.dnNo):''}" placeholder="e.g. DB-01">
+      </div>
+      <div class="field">
+        <label>Reporting month <span style="text-transform:none;font-weight:400">— auto-set from the note</span></label>
         <select id="dfMonth">
           ${FY_MONTHS.map(m=>`<option value="${m}" ${(d?d.month:CUR_MONTH)===m?'selected':''}>${monthLong(m)}</option>`).join("")}
         </select>
       </div>
+    </div>
+
+    <div class="frow">
       <div class="field">
-        <label>Category <span style="text-transform:none;font-weight:400">— auto-detected, edit if needed</span></label>
+        <label>Debit note date</label>
+        <input type="date" id="dfDate" value="${d&&d.date?esc(d.date):''}">
+      </div>
+      <div class="field">
+        <label>Category <span style="text-transform:none;font-weight:400">— auto-detected</span></label>
         <select id="dfCat">
           ${BUDGET_CATS.map(c=>`<option ${d&&d.category===c?'selected':''}>${c}</option>`).join("")}
         </select>
       </div>
     </div>
-    <div class="frow">
-      <div class="field">
-        <label>Debit note number</label>
-        <input type="text" id="dfNo" value="${d?esc(d.dnNo):''}" placeholder="e.g. VNC-P10"/>
-      </div>
-      <div class="field">
-        <label>Amount (₹)</label>
-        <input type="number" id="dfAmount" value="${d?d.amount:''}" placeholder="219000"/>
-      </div>
-    </div>
+
     <div class="field">
-      <label>Status</label>
-      <select id="dfStatus">
-        ${DN_STATUS.map(s=>`<option ${d&&d.status===s?'selected':''}>${s}</option>`).join("")}
-      </select>
+      <label>Scroll breakdown <span style="text-transform:none;font-weight:400">— one row per scroll entry on the note</span></label>
+      <table class="scroll-tbl"><tbody id="dfScrolls">
+        ${lines.map((l,i)=>scrollRowHtml(l,i)).join("")}
+      </tbody></table>
+      <button type="button" class="btn ghost sm" style="margin-top:7px" onclick="addScrollRow()">+ Add scroll line</button>
+      <div class="scroll-total">Total: <b id="dfTotal">₹0</b></div>
     </div>
+
     <div class="field">
-      <label>Description</label>
+      <label>Description <span style="text-transform:none;font-weight:400">— optional</span></label>
       <textarea id="dfNote" placeholder="What this debit note covers…">${d?esc(d.note||''):''}</textarea>
-    </div>`;
+    </div>
+
+    <div class="field">
+      <label>Processing status</label>
+      <div id="dfStatus" class="radio-col">
+        ${DN_STATUS.map(s=>{
+          const on = (d?d.status:DN_STATUS_DEFAULT)===s;
+          return `<label class="radio-opt">
+            <input type="radio" name="dfStatus" value="${esc(s)}" ${on?'checked':''}>
+            <span>${esc(s)}</span>
+          </label>`;
+        }).join("")}
+      </div>
+      <div class="hint">Each time the status changes, the date, time and your name are recorded in the note's history.</div>
+    </div>
+    ${d && Array.isArray(d.history) && d.history.length ? `
+    <div class="field">
+      <label>Status history</label>
+      <div class="dn-history">
+        ${d.history.map(h=>`<div class="dn-hrow">
+          <span class="dn-hstage">${esc(h.status)}</span>
+          <span class="dn-hmeta">${esc(h.at)} · ${esc(h.by)}</span>
+        </div>`).join("")}
+      </div>
+    </div>`:''}`;
   const footer = `
     ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteDebit('${editId}')">Delete</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveDebit('${ngoId}','${editId||''}')">${editId?'Save':'Log debit note'}</button>`;
+    <button class="btn primary" onclick="saveDebit('${ngoId}','${editId||''}')">${editId?'Save changes':'Log debit note'}</button>`;
   showModal(modalShell(editId?"Edit debit note":"New debit note",
     editId?"Edit Debit Note":"Log a Debit Note", body, footer));
+  recalcScrollTotal();
+}
+
+/* one editable scroll-line row */
+function scrollRowHtml(line, i){
+  return `<tr class="scroll-row">
+    <td><input type="text" class="sc-id" value="${esc(line.scrollId||'')}" placeholder="Scroll ID e.g. 0001"></td>
+    <td><input type="number" class="sc-amt" value="${line.amount!==''&&line.amount!=null?line.amount:''}"
+         placeholder="Amount ₹" oninput="recalcScrollTotal()"></td>
+    <td><button type="button" class="sc-del" onclick="removeScrollRow(this)" title="Remove">×</button></td>
+  </tr>`;
+}
+function addScrollRow(){
+  const tb = el("dfScrolls");
+  if(!tb) return;
+  const tmp = document.createElement("tbody");
+  tmp.innerHTML = scrollRowHtml({scrollId:"",amount:""}, tb.children.length);
+  tb.appendChild(tmp.firstElementChild);
+}
+function removeScrollRow(btn){
+  const tb = el("dfScrolls");
+  const row = btn.closest("tr");
+  if(tb && tb.children.length>1) row.remove();
+  else { row.querySelector(".sc-id").value=""; row.querySelector(".sc-amt").value=""; }
+  recalcScrollTotal();
+}
+function readScrollLines(){
+  return Array.from(document.querySelectorAll("#dfScrolls .scroll-row")).map(r=>({
+    scrollId: r.querySelector(".sc-id").value.trim(),
+    amount: parseFloat(r.querySelector(".sc-amt").value)||0
+  }));
+}
+function recalcScrollTotal(){
+  const total = readScrollLines().reduce((s,l)=>s+l.amount,0);
+  const el2 = el("dfTotal");
+  if(el2) el2.textContent = fmtRsFull(total);
+}
+
+/* read the Drive-link filename and pre-fill debit number + month */
+function debitParseLink(){
+  const url = (el("dfUrl")?el("dfUrl").value:"") || "";
+  const msg = el("dfParseMsg");
+  let txt = "";
+  try{ txt = decodeURIComponent(url); }catch(e){ txt = url; }
+  // debit note number — DB-01, DN-12, etc.
+  const noEl = el("dfNo");
+  const numM = txt.match(/\b(D[BN][-\s]?\d{1,3})\b/i);
+  if(numM && noEl && !noEl.value.trim()){
+    noEl.value = numM[1].toUpperCase().replace(/\s/g,"-");
+  }
+  // month name + year → FY month value
+  const months = {january:"01",february:"02",march:"03",april:"04",may:"05",june:"06",
+    july:"07",august:"08",september:"09",october:"10",november:"11",december:"12"};
+  const mM = txt.toLowerCase().match(/(january|february|march|april|may|june|july|august|september|october|november|december)[\s_-]*(\d{4})/);
+  if(mM){
+    const val = mM[2]+"-"+months[mM[1]];
+    if(FY_MONTHS.includes(val) && el("dfMonth")) el("dfMonth").value = val;
+  }
+  if(msg){
+    if(numM || mM){
+      msg.style.color = "var(--green)";
+      msg.innerHTML = "✓ Read from the file name"
+        + (numM?` — number <b>${esc((numM[1]||'').toUpperCase().replace(/\s/g,'-'))}</b>`:"")
+        + (mM?`, month <b>${esc(monthLong(mM[2]+'-'+months[mM[1]]))}</b>`:"")
+        + ". Check and adjust below.";
+    } else {
+      msg.style.color = "var(--ink-3)";
+      msg.textContent = "Link saved. Fill in the number and month below.";
+    }
+  }
 }
 
 /* infer the budget category from free text on the debit note */
@@ -4581,69 +4959,192 @@ function guessDebitCategory(text){
   if(/programme|program|training|workshop|field|activity|material|equipment|event/.test(t)) return "Programme";
   return "Programme";
 }
-/* read an uploaded debit-note sheet and auto-fill the form fields */
-async function importDebitFile(ngoId){
-  const inp = el("dfFile");
-  const msg = el("dfFileMsg");
-  if(!inp || !inp.files || !inp.files[0]) return;
-  if(typeof XLSX==="undefined"){ if(msg){msg.style.color="var(--red)";msg.textContent="Spreadsheet reader didn't load — check your connection.";} return; }
-  try{
-    const wb = XLSX.read(await inp.files[0].arrayBuffer(),{type:"array"});
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
-    if(!rows.length){ if(msg){msg.style.color="var(--red)";msg.textContent="No rows found in that file.";} return; }
-    const r = rows[0];   // single debit note per file
-    const dnNo = String(pickCol(r,["debitnoteno","debitnote","dnno","notenumber","number","dnnumber"])).trim();
-    const amtRaw = String(pickCol(r,["amount","value","total","sum"])).replace(/[^0-9.\-]/g,"");
-    const amt = parseFloat(amtRaw);
-    let month = String(pickCol(r,["month","period","reportingmonth"])).trim();
-    const dateStr = String(pickCol(r,["date","notedate","billdate"])).trim();
-    if(!/^\d{4}-\d{2}$/.test(month)){
-      const dm = dateStr.match(/(\d{4})[-/](\d{1,2})/);
-      if(dm) month = dm[1]+"-"+String(dm[2]).padStart(2,"0");
-    }
-    const desc = String(pickCol(r,["description","particulars","details","narration","purpose","note"])).trim();
-    const catRaw = String(pickCol(r,["category","head","budgethead","type"])).trim();
-    const status = String(pickCol(r,["status","approval"])).trim();
 
-    if(dnNo) el("dfNo").value = dnNo;
-    if(!isNaN(amt)) el("dfAmount").value = amt;
-    if(/^\d{4}-\d{2}$/.test(month) && FY_MONTHS.includes(month)) el("dfMonth").value = month;
-    if(desc) el("dfNote").value = desc;
-    // category: use the file's value if it matches a known head, else infer from text
-    const cat = BUDGET_CATS.find(c=>c.toLowerCase()===catRaw.toLowerCase())
-              || guessDebitCategory(catRaw+" "+desc+" "+dnNo);
-    el("dfCat").value = cat;
-    if(status){
-      const m = DN_STATUS.find(s=>s.toLowerCase()===status.toLowerCase()
-        || status.toLowerCase().startsWith(s.toLowerCase().slice(0,4)));
-      if(m) el("dfStatus").value = m;
-    }
-    if(msg){
-      msg.style.color="var(--green)";
-      msg.innerHTML = `✓ Read from file — category detected as <b>${esc(cat)}</b>. Review and adjust if needed.`;
-    }
-  }catch(e){
-    console.error(e);
-    if(msg){ msg.style.color="var(--red)"; msg.textContent="Couldn't read that file — is it a valid spreadsheet?"; }
+/* ---- read a debit-note Excel file and auto-fill the whole form ----
+   Forgiving by design: scans every sheet, finds the header row wherever it
+   sits, and maps columns by recognising their names. */
+function importDebitExcel(){
+  const inp = el("dfXls");
+  const msg = el("dfXlsMsg");
+  if(!inp || !inp.files || !inp.files[0]) return;
+  if(typeof XLSX==="undefined"){
+    if(msg){ msg.style.color="var(--red)"; msg.textContent="Spreadsheet reader didn't load — check your connection and retry."; }
+    return;
   }
+  const file = inp.files[0];
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const wb = XLSX.read(reader.result, {type:"array"});
+
+      // ---- gather every sheet as its own grid (don't merge — sheets have
+      //      different table shapes; merging loses the per-table structure) ----
+      const sheets = wb.SheetNames.map(sn=>
+        XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, defval:""})
+          .map(r=>r.map(c=>String(c).trim()))
+      );
+      const allFlat = [].concat(...sheets);
+      const joined = allFlat.map(r=>r.join(" | ")).join("\n");
+
+      // ---- debit note number: DB-01, DN-12 etc., anywhere in the workbook ----
+      let dnNo = "";
+      const numM = joined.match(/\b(D[BN][-\s]?\d{1,3})\b/i);
+      if(numM) dnNo = numM[1].toUpperCase().replace(/\s/g,"-");
+
+      // ---- date: prefer one on a line that mentions the debit-note date ----
+      let isoDate = "";
+      const toIso = (d1,m1,y1)=>{
+        if(String(y1).length===2) y1="20"+y1;
+        return y1+"-"+String(m1).padStart(2,"0")+"-"+String(d1).padStart(2,"0");
+      };
+      // first look for a row containing "Date" near the top (the note's own date)
+      for(const row of allFlat){
+        const line = row.join(" ");
+        if(/debit\s*no|date\s*[:.]/i.test(line)){
+          // strip ordinal suffixes (16th, 1st, 2nd, 3rd) so the date parses
+          const clean = line.replace(/(\d)(st|nd|rd|th)\b/gi,"$1");
+          const m = clean.match(/(\d{1,2})[-/\s]+(\d{1,2}|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[-/\s,]+(\d{2,4})/i);
+          if(m){
+            const mon = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+            let mm = isNaN(+m[2]) ? mon[m[2].toLowerCase().slice(0,3)] : +m[2];
+            if(mm){ isoDate = toIso(m[1],mm,m[3]); break; }
+          }
+        }
+      }
+      // fall back to the first date anywhere
+      if(!isoDate){
+        const dM = joined.match(/\b(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})\b/);
+        if(dM) isoDate = toIso(dM[1],dM[2],dM[3]);
+        const ymM = joined.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+        if(ymM && !isoDate) isoDate = ymM[1]+"-"+String(ymM[2]).padStart(2,"0")+"-"+String(ymM[3]).padStart(2,"0");
+      }
+
+      // ---- find the BEST data table across all sheets ----
+      // For each sheet: locate a header row (one with an amount-like column),
+      // then count the data rows beneath it. The table with the MOST data rows
+      // wins — that's the detailed expense/scroll breakdown, not a 1-line summary.
+      const amtNames = ["amount","totalamount","total","amountrs","value"];
+      const idNames  = ["scrollid","scroll","srno","sr","slno","sl","no","sno"];
+      let best = null;   // {lines:[…], descText:''}
+      sheets.forEach(flat=>{
+        let headerIdx=-1,colAmt=-1,colId=-1,colDesc=-1;
+        for(let i=0;i<flat.length;i++){
+          const cells = flat[i].map(c=>c.toLowerCase().replace(/[^a-z]/g,""));
+          const ai = cells.findIndex(c=>amtNames.includes(c));
+          if(ai>=0){
+            headerIdx=i; colAmt=ai;
+            colId  = cells.findIndex(c=>idNames.includes(c));
+            colDesc= cells.findIndex(c=>/desc|particular|budgetline|narration|head/.test(c));
+            break;
+          }
+        }
+        if(headerIdx<0) return;
+        const lines=[]; let descText="";
+        for(let i=headerIdx+1;i<flat.length;i++){
+          const row=flat[i];
+          if(/total/i.test(row.join(" "))) continue;            // skip summary rows
+          const amt=parseFloat((row[colAmt]||"").replace(/[^0-9.\-]/g,""));
+          if(isNaN(amt)||amt<=0) continue;
+          lines.push({ scrollId: colId>=0?(row[colId]||"").trim():"", amount:amt });
+          if(colDesc>=0 && row[colDesc]) descText += " "+row[colDesc];
+        }
+        if(lines.length && (!best || lines.length>best.lines.length)){
+          best = { lines, descText };
+        }
+      });
+      const lines = best ? best.lines : [];
+      const descText = best ? best.descText : "";
+
+      // ---- apply to the form ----
+      if(dnNo && el("dfNo") && !el("dfNo").value.trim()) el("dfNo").value = dnNo;
+      if(isoDate && el("dfDate")){
+        el("dfDate").value = isoDate;
+        const mv = isoDate.slice(0,7);
+        if(FY_MONTHS.includes(mv) && el("dfMonth")) el("dfMonth").value = mv;
+      }
+      // category: detect ONLY from the expense-line descriptions — never the
+      // whole workbook, whose legal boilerplate ("…Salary/Professional fees…")
+      // would otherwise mis-trigger. Fall back to Programme if no lines.
+      if(el("dfCat")){
+        el("dfCat").value = descText.trim()
+          ? guessDebitCategory(descText)
+          : "Programme";
+      }
+
+      if(lines.length){
+        const tb = el("dfScrolls");
+        if(tb){
+          tb.innerHTML = lines.map((l,i)=>scrollRowHtml(l,i)).join("");
+          recalcScrollTotal();
+        }
+      }
+
+      if(msg){
+        const total = lines.reduce((s,l)=>s+l.amount,0);
+        if(lines.length || dnNo){
+          msg.style.color = "var(--green)";
+          msg.innerHTML = "✓ Read from the Excel file"
+            + (dnNo?` — <b>${esc(dnNo)}</b>`:"")
+            + (lines.length?`, <b>${lines.length}</b> line${lines.length>1?'s':''} totalling <b>${fmtRsFull(total)}</b>`:"")
+            + ". Check the fields below and save.";
+        } else {
+          msg.style.color = "var(--amber)";
+          msg.textContent = "Couldn't find a data table in that file — fill the fields in by hand below.";
+        }
+      }
+    }catch(e){
+      console.error(e);
+      if(msg){ msg.style.color="var(--red)"; msg.textContent="Couldn't read that file — is it a valid Excel/CSV?"; }
+    }
+  };
+  reader.onerror = ()=>{ if(msg){ msg.style.color="var(--red)"; msg.textContent="Couldn't open that file."; } };
+  reader.readAsArrayBuffer(file);
 }
+
 async function saveDebit(ngoId, editId){
-  const amt = parseFloat(el("dfAmount").value);
-  if(isNaN(amt) || amt<=0){ toast("Enter a valid amount greater than zero"); return; }
+  const scrolls = readScrollLines().filter(l=>l.scrollId || l.amount);
+  if(!scrolls.length){ toast("Add at least one scroll line with an amount"); return; }
+  const amt = scrolls.reduce((s,l)=>s+l.amount,0);
+  if(amt<=0){ toast("The scroll lines must add up to more than zero"); return; }
+  const dnNo = el("dfNo").value.trim();
+  if(!dnNo){ toast("Enter the debit note number"); return; }
+  // guard against logging the same debit note twice for this NGO
+  const dup = DB.debits.find(x=>x.ngoId===ngoId && x.id!==editId
+    && (x.dnNo||"").trim().toLowerCase()===dnNo.toLowerCase());
+  if(dup){
+    toast("Debit note "+dnNo+" is already logged for this NGO");
+    return;
+  }
   const month = el("dfMonth").value;
+  const status = (document.querySelector('input[name="dfStatus"]:checked')||{}).value || DN_STATUS_DEFAULT;
+  const d = editId ? DB.debits.find(x=>x.id===editId) : null;
   const obj = {
-    month, category:el("dfCat").value,
-    dnNo: el("dfNo").value.trim()||"DN-"+genId("x").slice(-4),
-    amount: amt, status: el("dfStatus").value,
-    date: month+"-28", note: el("dfNote").value.trim(),
+    month, category: el("dfCat").value, dnNo,
+    amount: amt, scrolls,
+    url: el("dfUrl").value.trim(),
+    date: el("dfDate").value || (month+"-28"),
+    note: el("dfNote").value.trim(),
+    status,
     editedBy: ME?ME.name:"—", editedAt: TODAY_ISO
   };
-  // over-budget guard — warn (but allow) if total logged spend would exceed the approved budget
+  // build/extend the timestamped status history
+  let history = (d && Array.isArray(d.history)) ? d.history.slice() : [];
+  const prevStatus = d ? d.status : null;
+  if(!history.length){
+    // first save — record the starting stage
+    history.push({ status, at: stamp(), by: ME?ME.name:"—" });
+  } else if(status !== prevStatus){
+    // status changed — append a new stamped entry
+    history.push({ status, at: stamp(), by: ME?ME.name:"—" });
+  }
+  obj.history = history;
+
+  // over-budget guard — compare against spend within this financial year
   const b = DB.budgets[ngoId];
-  if(b && b.totalAnnual && obj.status!=="Query Raised"){
+  if(b && b.totalAnnual){
     let spentSoFar = DB.debits
-      .filter(d=>d.ngoId===ngoId && dnCounts(d) && d.id!==editId)
-      .reduce((s,d)=>s+(d.amount||0),0);
+      .filter(x=>x.ngoId===ngoId && x.id!==editId && FY_MONTHS.includes(x.month))
+      .reduce((s,x)=>s+(x.amount||0),0);
     if(spentSoFar + amt > b.totalAnnual){
       const over = spentSoFar + amt - b.totalAnnual;
       confirmAction("This exceeds the approved budget",
@@ -4875,7 +5376,7 @@ function pageBudget(){
         ${rows.slice().sort((a,b)=>b.util-a.util).map(r=>{
           return `<tr class="click" onclick="FIN_NGO='${r.n.id}';render()">
             <td><b>${esc(r.n.short)}</b></td>
-            <td style="font-size:12px">${esc(userById(r.n.aplId).name.split(" ")[0])}</td>
+            <td style="font-size:12px">${esc(aplNamesFor(r.n.id))}</td>
             <td class="num">${fmtRsFull(r.b.totalAnnual)}</td>
             <td class="num">${fmtRsFull(r.spent)} <span style="color:var(--ink-3)">· ${r.util}%</span></td>
             <td class="num">${nextMonth?fmtRsFull(r.nextPlan):'—'}</td>
@@ -4941,14 +5442,9 @@ let DN_FILTER = "all";
 function pageDebits(){
   const ids = new Set(visibleNgos().map(n=>n.id));
   let dn = DB.debits.filter(d=>ids.has(d.ngoId));
-  const counts = {
-    all: dn.length,
-    Pending: dn.filter(d=>d.status==="Pending").length,
-    "Query Raised": dn.filter(d=>d.status==="Query Raised").length,
-    Approved: dn.filter(d=>d.status==="Approved").length,
-    Paid: dn.filter(d=>d.status==="Paid").length
-  };
-  if(DN_FILTER!=="all") dn = dn.filter(d=>d.status===DN_FILTER);
+  const counts = { all: dn.length };
+  DN_STATUS.forEach(s=>{ counts[s] = dn.filter(d=>(d.status||DN_STATUS_DEFAULT)===s).length; });
+  if(DN_FILTER!=="all") dn = dn.filter(d=>(d.status||DN_STATUS_DEFAULT)===DN_FILTER);
   dn = dn.filter(d=>d.month===CUR_MONTH);
   dn.sort((a,b)=> a.ngoId.localeCompare(b.ngoId));
 
@@ -4967,9 +5463,9 @@ function pageDebits(){
 
   <div style="display:flex;gap:14px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
     <div class="seg-toggle">
-      ${["all","Pending","Query Raised","Approved","Paid"].map(f=>`
-        <button class="${DN_FILTER===f?'on':''}" onclick="DN_FILTER='${f}';render()">
-          ${f==='all'?'All':f} ${counts[f]||0}
+      ${["all",...DN_STATUS].map(f=>`
+        <button class="${DN_FILTER===f?'on':''}" onclick="DN_FILTER='${f.replace(/'/g,"\\'")}';render()">
+          ${f==='all'?'All':esc(f)} ${counts[f]||0}
         </button>`).join("")}
     </div>
     <span style="font-size:12px;color:var(--ink-3);margin-left:auto">${dn.length} notes · ${fmtRs(monthTotal)} this month</span>
@@ -4979,23 +5475,25 @@ function pageDebits(){
     <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>NGO</th><th>DN No.</th><th>Category</th><th>Description</th>
-          <th class="num">Amount</th><th>Status</th><th></th>
+          <th>NGO</th><th>DN No.</th><th>Category</th><th>Scrolls</th>
+          <th class="num">Amount</th><th>Status</th><th>PDF</th><th></th>
         </tr></thead>
         <tbody>
         ${dn.length? dn.map(d=>{
           const n=ngoById(d.ngoId);
-          const sc = d.status==="Paid"?"green":d.status==="Approved"?"blue":d.status==="Query Raised"?"red":"amber";
+          const sc = DN_STATUS_COLOR[d.status] || "amber";
+          const nScrolls = Array.isArray(d.scrolls)?d.scrolls.length:0;
           return `<tr>
             <td><b>${esc(n.short)}</b></td>
             <td class="mono" style="font-size:11.5px">${esc(d.dnNo)}</td>
             <td>${esc(d.category)}</td>
-            <td style="font-size:12px;color:var(--ink-2)">${esc(d.note||'')}</td>
+            <td style="font-size:12px;color:var(--ink-2)">${nScrolls?nScrolls+' scroll'+(nScrolls>1?'s':''):'—'}</td>
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
-            <td><span class="badge ${sc}">${esc(d.status)}</span></td>
-            <td>${canEdit()?`<button class="btn ghost sm" onclick="openDebitForm('${d.ngoId}','${d.id}')">Edit</button>`:''}</td>
+            <td><span class="badge ${sc}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
+            <td>${d.url?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)">↗ Open</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>'}</td>
+            <td>${canEditNgo(d.ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${d.ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
-        }).join("") : `<tr><td colspan="7"><div class="empty"><div class="mk">▦</div><p>No debit notes for ${monthLong(CUR_MONTH)} match this filter.</p></div></td></tr>`}
+        }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes for ${monthLong(CUR_MONTH)} match this filter.</p></div></td></tr>`}
         </tbody>
       </table>
     </div>
@@ -5032,11 +5530,12 @@ function pageTasks(){
     const apl = userById(t.aplId);
     const overdue = t.status==="Open" && t.due && t.due<TODAY_ISO;
     const pc = t.priority==="High"?"red":t.priority==="Medium"?"amber":"gray";
+    const who = apl ? apl.name.split(" ")[0] : "Unassigned";
     return `<div class="lrow">
       <button onclick="toggleTask('${t.id}')" style="width:20px;height:20px;border-radius:5px;border:1.5px solid var(--${t.status==='Done'?'green':'rule-2'});background:${t.status==='Done'?'var(--green)':'transparent'};color:#fff;font-size:12px;flex:none">${t.status==='Done'?'✓':''}</button>
       <div class="meta">
         <div class="t" style="${t.status==='Done'?'text-decoration:line-through;color:var(--ink-3)':''}">${esc(t.title)}</div>
-        <div class="s">${esc(n.short)} · ${esc(apl.name.split(" ")[0])} · due ${t.due}${overdue?' <b style="color:var(--red)">overdue</b>':''}</div>
+        <div class="s">${esc(n?n.short:'—')} · ${esc(who)} · due ${t.due}${overdue?' <b style="color:var(--red)">overdue</b>':''}</div>
       </div>
       <span class="badge ${pc}">${t.priority}</span>
     </div>`;
@@ -5128,7 +5627,9 @@ async function saveTask(){
   const title = el("tfTitle").value.trim();
   if(!title){ toast("Add a task title"); return; }
   const ngoId = el("tfNgo").value;
-  DB.tasks.push({ id:genId("t"), ngoId, aplId:ngoById(ngoId).aplId,
+  // assign to the first APL covering this NGO (if any)
+  const apl = (DB.users||[]).find(u=>u.role==="APL" && Array.isArray(u.ngoIds) && u.ngoIds.includes(ngoId));
+  DB.tasks.push({ id:genId("t"), ngoId, aplId: apl?apl.id:"",
     title, due:el("tfDue").value, status:"Open", priority:el("tfPri").value });
   await saveDB();
   closeModal();
