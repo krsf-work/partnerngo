@@ -4083,7 +4083,7 @@ function openBudgetUpload(ngoId){
     <div class="field">
       <label>Or upload a monthly plan sheet (.xlsx / .csv)</label>
       <input type="file" id="bgFile" accept=".xlsx,.xls,.csv">
-      <div class="hint">Recognised columns: Month (YYYY-MM or Apr/May…), Planned amount. Read in your browser.</div>
+      <div class="hint">Two formats accepted: (1) <b>List format</b> — columns named Month &amp; Planned, one row per month. (2) <b>Pivot/wide format</b> — months as column headers with a Total row (e.g. your standard budget sheet). Read in your browser.</div>
     </div>`;
   const foot = `
     ${b?`<button class="btn danger" style="margin-right:auto" onclick="clearBudget('${ngoId}')">Clear budget</button>`:''}
@@ -4092,28 +4092,92 @@ function openBudgetUpload(ngoId){
   showModal(modalShell("Budget", "Set Budget Plan", body, foot));
 }
 
-/* parse an uploaded monthly-plan sheet into a 12-element array (or null) */
+/* parse an uploaded monthly-plan sheet into a 12-element array (or null).
+   Supports two formats:
+   1. Tall/list format  — columns: Month, Planned (one row per month)
+   2. Wide/pivot format — months as column headers, rows are cost categories;
+      uses the row whose first cell matches "total" (case-insensitive).
+      Month columns are detected as Excel date serials, YYYY-MM strings, or
+      short month names (Apr, May …). */
 async function parseBudgetSheet(file){
   if(typeof XLSX==="undefined") return null;
   try{
-    const wb = XLSX.read(await file.arrayBuffer(),{type:"array"});
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
-    const plan = FY_MONTHS.map(()=>0);
-    let hit = 0;
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf,{type:"array",cellDates:true});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+
+    /* ---- helper: resolve a raw cell value to a FY_MONTHS index ---- */
     const monthIndex = (raw)=>{
+      if(raw==null || raw==="") return -1;
+      /* Excel Date object (when cellDates:true) */
+      if(raw instanceof Date){
+        const ym = raw.getFullYear()+"-"+String(raw.getMonth()+1).padStart(2,"0");
+        return FY_MONTHS.indexOf(ym);
+      }
       const s = String(raw).trim();
+      /* YYYY-MM */
       if(/^\d{4}-\d{2}$/.test(s)) return FY_MONTHS.indexOf(s);
+      /* Short/long month name: Apr, April, May … */
       const mn = s.slice(0,3).toLowerCase();
       const num = Object.keys(MONTH_NAMES).find(k=>MONTH_NAMES[k].toLowerCase()===mn);
       if(!num) return -1;
       return FY_MONTHS.findIndex(m=>(+m.split("-")[1])===(+num));
     };
+
+    /* ---- attempt 1: tall/list format (Month + Planned columns) ---- */
+    const rows = XLSX.utils.sheet_to_json(ws,{defval:"",raw:false,dateNF:"YYYY-MM"});
+    const plan1 = FY_MONTHS.map(()=>0);
+    let hit1 = 0;
     rows.forEach(r=>{
       const idx = monthIndex(pickCol(r,["month","mon"]));
       const amt = parseFloat(String(pickCol(r,["planned","plan","amount","budget"])).replace(/[^0-9.\-]/g,""));
-      if(idx>=0 && !isNaN(amt)){ plan[idx]=amt; hit++; }
+      if(idx>=0 && !isNaN(amt)){ plan1[idx]=amt; hit1++; }
     });
-    return hit ? plan : null;
+    if(hit1>=1) return plan1;
+
+    /* ---- attempt 2: wide/pivot format (months as column headers) ----
+       Read raw 2-D array so we can inspect every row and header cell. */
+    const grid = XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:true});
+    /* Find the header row: the row that contains the most month-like values */
+    let headerRowIdx = -1, headerColMap = {}; /* colIndex -> FY_MONTHS index */
+    for(let ri=0;ri<Math.min(grid.length,10);ri++){
+      const row = grid[ri];
+      const map = {};
+      for(let ci=1;ci<row.length;ci++){
+        const mi = monthIndex(row[ci]);
+        if(mi>=0) map[ci]=mi;
+      }
+      if(Object.keys(map).length > Object.keys(headerColMap).length){
+        headerColMap = map; headerRowIdx = ri;
+      }
+    }
+    if(headerRowIdx<0 || Object.keys(headerColMap).length===0) return null;
+
+    /* Find the "Total" data row (first col contains "total", case-insensitive).
+       Also accept "grand total". Fall back to the last non-empty numeric row. */
+    const plan2 = FY_MONTHS.map(()=>0);
+    let hit2 = 0;
+    let fallbackPlan = null, fallbackHit = 0;
+    for(let ri=headerRowIdx+1;ri<grid.length;ri++){
+      const row = grid[ri];
+      const label = String(row[0]||"").trim().toLowerCase();
+      /* Try every data row as a candidate and accumulate a fallback */
+      const rowPlan = FY_MONTHS.map(()=>0); let rowHit=0;
+      for(const [ci,mi] of Object.entries(headerColMap)){
+        const v = parseFloat(String(row[ci]||"").replace(/[^0-9.\-]/g,""));
+        if(!isNaN(v) && v>0){ rowPlan[mi]=v; rowHit++; }
+      }
+      if(rowHit>0 && rowHit>=fallbackHit){ fallbackPlan=rowPlan; fallbackHit=rowHit; }
+      /* Prefer the explicit "Total" / "Grand Total" row */
+      if((label==="total"||label.includes("grand total")||label.includes("total")) && rowHit>0){
+        for(const [mi,v] of Object.entries(rowPlan)) plan2[mi]=v;
+        hit2=rowHit; break;
+      }
+    }
+    if(hit2>0) return plan2;
+    if(fallbackPlan && fallbackHit>0) return fallbackPlan;
+
+    return null;
   }catch(e){ console.error(e); return null; }
 }
 
