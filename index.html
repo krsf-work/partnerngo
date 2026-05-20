@@ -5154,17 +5154,19 @@ function importDebitExcel(){
       // For each sheet: locate a header row (one with an amount-like column),
       // then count the data rows beneath it. The table with the MOST data rows
       // wins — that's the detailed expense/scroll breakdown, not a 1-line summary.
-      const amtNames = ["amount","totalamount","total","amountrs","value"];
-      const idNames  = ["scrollid","scroll","srno","sr","slno","sl","no","sno"];
+      // Liberal column matching — normalise to lowercase letters only, then
+      // check for any of these substrings anywhere in the cell text.
+      const isAmtCol = c => /amt|amount|payment|paid|value|rs|inr/.test(c) && !/bank|account|acno|pan|ifsc|aadhar/.test(c);
+      const isIdCol  = c => /scroll|srno|slno|sno|^sr$|^sl$|^no$|serial|entryno/.test(c);
       let best = null;   // {lines:[…], descText:''}
       sheets.forEach(flat=>{
         let headerIdx=-1,colAmt=-1,colId=-1,colDesc=-1;
         for(let i=0;i<flat.length;i++){
           const cells = flat[i].map(c=>c.toLowerCase().replace(/[^a-z]/g,""));
-          const ai = cells.findIndex(c=>amtNames.includes(c));
+          const ai = cells.findIndex(c=>isAmtCol(c));
           if(ai>=0){
             headerIdx=i; colAmt=ai;
-            colId  = cells.findIndex(c=>idNames.includes(c));
+            colId  = cells.findIndex(c=>isIdCol(c));
             colDesc= cells.findIndex(c=>/desc|particular|budgetline|narration|head/.test(c));
             break;
           }
