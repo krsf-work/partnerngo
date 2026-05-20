@@ -5110,11 +5110,12 @@ function importDebitExcel(){
 
       // ---- gather every sheet as its own grid (don't merge — sheets have
       //      different table shapes; merging loses the per-table structure) ----
-      const sheets = wb.SheetNames.map(sn=>
-        XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, defval:""})
-          .map(r=>r.map(c=>String(c).trim()))
-      );
-      const allFlat = [].concat(...sheets);
+      const sheets = wb.SheetNames.map(sn=>({
+        name: sn,
+        rows: XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, defval:""})
+               .map(r=>r.map(c=>String(c).trim()))
+      }));
+      const allFlat = [].concat(...sheets.map(s=>s.rows));
       const joined = allFlat.map(r=>r.join(" | ")).join("\n");
 
       // ---- debit note number: DB-01, DN-12 etc., anywhere in the workbook ----
@@ -5134,7 +5135,7 @@ function importDebitExcel(){
         if(/debit\s*no|date\s*[:.]/i.test(line)){
           // strip ordinal suffixes (16th, 1st, 2nd, 3rd) so the date parses
           const clean = line.replace(/(\d)(st|nd|rd|th)\b/gi,"$1");
-          const m = clean.match(/(\d{1,2})[-/\s]+(\d{1,2}|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[-/\s,]+(\d{2,4})/i);
+          const m = clean.match(/(\d{1,2})[-./\s]+(\d{1,2}|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[-./ ,]+(\d{2,4})/i);
           if(m){
             const mon = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
             let mm = isNaN(+m[2]) ? mon[m[2].toLowerCase().slice(0,3)] : +m[2];
@@ -5144,9 +5145,9 @@ function importDebitExcel(){
       }
       // fall back to the first date anywhere
       if(!isoDate){
-        const dM = joined.match(/\b(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})\b/);
+        const dM = joined.match(/\b(\d{1,2})[-./](\d{1,2})[-./](\d{2,4})\b/);
         if(dM) isoDate = toIso(dM[1],dM[2],dM[3]);
-        const ymM = joined.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+        const ymM = joined.match(/\b(20\d{2})[-./](\d{1,2})[-./](\d{1,2})\b/);
         if(ymM && !isoDate) isoDate = ymM[1]+"-"+String(ymM[2]).padStart(2,"0")+"-"+String(ymM[3]).padStart(2,"0");
       }
 
@@ -5156,20 +5157,27 @@ function importDebitExcel(){
       // wins — that's the detailed expense/scroll breakdown, not a 1-line summary.
       // Liberal column matching — normalise to lowercase letters only, then
       // check for any of these substrings anywhere in the cell text.
-      const isAmtCol = c => /amt|amount|payment|paid|value|rs|inr/.test(c) && !/bank|account|acno|pan|ifsc|aadhar/.test(c);
+      const isAmtCol = c => /amt|amount|payment|paid|value/.test(c) || /^rs$|^inr$|^amtrs$/.test(c) ? !/bank|account|acno|pan|ifsc|aadhar/.test(c) : false;
       const isIdCol  = c => /scroll|srno|slno|sno|^sr$|^sl$|^no$|serial|entryno/.test(c);
       let best = null;   // {lines:[…], descText:''}
-      sheets.forEach(flat=>{
+      sheets.forEach(({name: sheetName, rows: flat})=>{
         let headerIdx=-1,colAmt=-1,colId=-1,colDesc=-1;
         for(let i=0;i<flat.length;i++){
-          const cells = flat[i].map(c=>c.toLowerCase().replace(/[^a-z]/g,""));
+          const rawRow = flat[i];
+          const cells = rawRow.map(c=>c.toLowerCase().replace(/[^a-z]/g,""));
           const ai = cells.findIndex(c=>isAmtCol(c));
-          if(ai>=0){
-            headerIdx=i; colAmt=ai;
-            colId  = cells.findIndex(c=>isIdCol(c));
-            colDesc= cells.findIndex(c=>/desc|particular|budgetline|narration|head/.test(c));
-            break;
-          }
+          if(ai<0) continue;
+          // Require this to look like a real table header, not a sentence:
+          // at least 2 non-empty cells, and the amount-column cell must be a
+          // short label (≤6 words), not a long prose sentence.
+          const nonEmpty = cells.filter(c=>c.length>0).length;
+          const amtLabel = rawRow[ai] ? String(rawRow[ai]).trim() : "";
+          const wordCount = amtLabel.split(/\s+/).length;
+          if(nonEmpty < 2 || wordCount > 6) continue;
+          headerIdx=i; colAmt=ai;
+          colId  = cells.findIndex(c=>isIdCol(c));
+          colDesc= cells.findIndex(c=>/desc|particular|budgetline|narration|head/.test(c));
+          break;
         }
         if(headerIdx<0) return;
         const lines=[]; let descText="";
@@ -5181,8 +5189,12 @@ function importDebitExcel(){
           lines.push({ scrollId: colId>=0?(row[colId]||"").trim():"", amount:amt });
           if(colDesc>=0 && row[colDesc]) descText += " "+row[colDesc];
         }
-        if(lines.length && (!best || lines.length>best.lines.length)){
-          best = { lines, descText };
+        if(lines.length){
+          const isScroll = /scroll|payment.?scroll/i.test(sheetName);
+          const betterThanBest = !best
+            || (isScroll && !best.isScroll)           // scroll sheet always beats non-scroll
+            || (isScroll === best.isScroll && lines.length > best.lines.length); // tie-break by row count
+          if(betterThanBest) best = { lines, descText, isScroll };
         }
       });
       const lines = best ? best.lines : [];
