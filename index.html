@@ -5184,8 +5184,14 @@ function importDebitExcel(){
         for(let i=headerIdx+1;i<flat.length;i++){
           const row=flat[i];
           if(/total/i.test(row.join(" "))) continue;            // skip summary rows
-          const amt=parseFloat((row[colAmt]||"").replace(/[^0-9.\-]/g,""));
-          if(isNaN(amt)||amt<=0) continue;
+          const rawCell = (row[colAmt]||"").trim();
+          // reject formula strings (start with =) and non-numeric looking cells
+          if(rawCell.startsWith("=")) continue;
+          // only accept cells that look like a plain number (digits, commas, dot, optional leading minus)
+          if(!/^-?[\d,]+\.?\d*$/.test(rawCell)) continue;
+          const amt=parseFloat(rawCell.replace(/,/g,""));
+          // reject implausibly small amounts (serial numbers, date fragments, etc.)
+          if(isNaN(amt)||amt<100) continue;
           lines.push({ scrollId: colId>=0?(row[colId]||"").trim():"", amount:amt });
           if(colDesc>=0 && row[colDesc]) descText += " "+row[colDesc];
         }
