@@ -1528,7 +1528,7 @@ function cloudListen(){
       if(part==="budgets" && incoming && typeof incoming==="object"){
         Object.keys(incoming).forEach(k=>{
           if(incoming[k] && incoming[k].monthlyPlan!==undefined)
-            incoming[k].monthlyPlan = toArr(incoming[k].monthlyPlan);
+            incoming[k].monthlyPlan = toArr(incoming[k].monthlyPlan, 12);
         });
       }
       if(part==="debits"){
@@ -1677,18 +1677,26 @@ async function saveSession(uid){
    a proper JS array.  Firebase Realtime Database serialises arrays as
    {"0":{…},"1":{…}} when round-tripped through .val(), so anything that
    should be an array must be coerced before we call .forEach / .map on it. */
-function toArr(v){
-  if(Array.isArray(v)) return v;
+function toArr(v, padLen){
+  if(Array.isArray(v)){
+    // pad a short array to padLen with 0 (e.g. monthlyPlan missing trailing zeros)
+    if(padLen && v.length < padLen) return [...v, ...Array(padLen-v.length).fill(0)];
+    return v;
+  }
   if(v && typeof v==="object"){
-    // numeric-keyed object → restore as array (preserving sparse gaps as null)
+    // numeric-keyed object → restore as array
+    // Firebase omits keys whose value is 0/null, so we must NOT filter — instead
+    // fill gaps with 0 to preserve positional indices (critical for monthlyPlan).
     const keys = Object.keys(v);
     if(keys.length && keys.every(k=>/^\d+$/.test(k))){
-      const out = [];
+      const maxKey = Math.max(...keys.map(Number));
+      const len = padLen ? Math.max(maxKey+1, padLen) : maxKey+1;
+      const out = new Array(len).fill(0);
       keys.forEach(k=>{ out[Number(k)] = v[k]; });
-      return out.filter(x=>x!==undefined); // drop empty slots
+      return out;
     }
   }
-  return [];
+  return padLen ? new Array(padLen).fill(0) : [];
 }
 
 /* fill in fields added after a DB was first saved */
@@ -1723,7 +1731,7 @@ function migrateDB(db){
   // budget monthlyPlan must be a numeric array
   Object.keys(db.budgets).forEach(k=>{
     const bg = db.budgets[k];
-    if(bg && bg.monthlyPlan!==undefined) bg.monthlyPlan = toArr(bg.monthlyPlan);
+    if(bg && bg.monthlyPlan!==undefined) bg.monthlyPlan = toArr(bg.monthlyPlan, 12);
   });
   // debit notes — coerce nested scroll/history arrays and back-fill status
   db.debits.forEach(d=>{
@@ -4108,23 +4116,37 @@ async function parseBudgetSheet(file){
     const ws = wb.Sheets[wb.SheetNames[0]];
 
     /* ---- helper: resolve a raw cell value to a FY_MONTHS index ---- */
+    /* resolve any date-like value to a FY_MONTHS index.
+       Handles: JS Date objects, Excel serial numbers, YYYY-MM strings,
+       short/long month names, and the common case where Jan-Mar are stored
+       with the fiscal-year START year (e.g. 2026-01 in an FY 2026-27 sheet)
+       instead of the correct end year (2027-01). */
+    const _dateToIdx = (yr, mo)=>{
+      const ym = yr+"-"+String(mo).padStart(2,"0");
+      let idx = FY_MONTHS.indexOf(ym);
+      /* Jan/Feb/Mar stored with wrong year (start-year instead of end-year) */
+      if(idx<0 && mo<=3){
+        const altYm = (yr+1)+"-"+String(mo).padStart(2,"0");
+        idx = FY_MONTHS.indexOf(altYm);
+      }
+      return idx;
+    };
     const monthIndex = (raw)=>{
       if(raw==null || raw==="") return -1;
       /* Excel Date object (when cellDates:true) */
-      if(raw instanceof Date){
-        const ym = raw.getFullYear()+"-"+String(raw.getMonth()+1).padStart(2,"0");
-        return FY_MONTHS.indexOf(ym);
-      }
+      if(raw instanceof Date) return _dateToIdx(raw.getFullYear(), raw.getMonth()+1);
       /* Excel date serial number (when raw:true) — days since 1899-12-30 */
       if(typeof raw==="number" && raw>40000 && raw<60000){
         const d = new Date(Math.round((raw-25569)*86400*1000));
-        const ym = d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0");
-        return FY_MONTHS.indexOf(ym);
+        return _dateToIdx(d.getUTCFullYear(), d.getUTCMonth()+1);
       }
       const s = String(raw).trim();
       /* YYYY-MM */
-      if(/^\d{4}-\d{2}$/.test(s)) return FY_MONTHS.indexOf(s);
-      /* Short/long month name: Apr, April, May … */
+      if(/^\d{4}-\d{2}$/.test(s)){
+        const [yr,mo] = s.split("-").map(Number);
+        return _dateToIdx(yr, mo);
+      }
+      /* Short/long month name: Apr, April, May … — match by month number only */
       const mn = s.slice(0,3).toLowerCase();
       const num = Object.keys(MONTH_NAMES).find(k=>MONTH_NAMES[k].toLowerCase()===mn);
       if(!num) return -1;
