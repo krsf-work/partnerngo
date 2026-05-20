@@ -3964,7 +3964,8 @@ function ngoBudgetTab(ngoId){
   <div class="sec-head">
     <h2>Budget vs Actual</h2>
     <div class="sh-act">
-      <button class="btn accent sm" onclick="openBudgetUpload('${ngoId}')">↑ Upload budget plan</button>
+      <button class="btn ghost sm" style="color:var(--red)" onclick="clearBudget('${ngoId}')">✕ Clear budget</button>
+      <button class="btn accent sm" onclick="openBudgetUpload('${ngoId}')">✎ Edit budget plan</button>
     </div>
   </div>
 
@@ -5415,8 +5416,15 @@ function pageBudget(){
         <option value="all" ${FIN_NGO==='all'?'selected':''}>All partner NGOs</option>
         ${ngos.map(n=>`<option value="${n.id}" ${FIN_NGO===n.id?'selected':''}>${esc(n.short)} — ${esc(n.name)}</option>`).join("")}
       </select>
-      ${FIN_NGO!=='all'?`<button class="btn ghost sm" onclick="FIN_NGO='all';render()">Clear filter</button>
-        <a class="link" style="font-size:12px;margin-left:auto;cursor:pointer" onclick="go('ngo','${FIN_NGO}')">Open ${esc(ngoById(FIN_NGO).short)} detail →</a>`:''}
+      ${FIN_NGO!=='all'?(()=>{
+        const _fn = FIN_NGO;
+        const _nb = DB.budgets[_fn];
+        const _can = canEditNgo(_fn);
+        return `<button class="btn ghost sm" onclick="FIN_NGO='all';render()">Clear filter</button>
+          ${_can?`<button class="btn ghost sm" onclick="openBudgetUpload('${_fn}')" title="Edit or replace the budget plan for this NGO">✎ Edit budget</button>`:''}
+          ${_can&&_nb?`<button class="btn ghost sm" style="color:var(--red)" onclick="clearBudget('${_fn}')" title="Delete the current budget plan for this NGO">✕ Clear budget</button>`:''}
+          <a class="link" style="font-size:12px;margin-left:auto;cursor:pointer" onclick="go('ngo','${_fn}')">Open ${esc(ngoById(_fn).short)} detail →</a>`;
+      })():''}
     </div>`;
 
   return `
