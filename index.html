@@ -5157,7 +5157,7 @@ function importDebitExcel(){
       // wins — that's the detailed expense/scroll breakdown, not a 1-line summary.
       // Liberal column matching — normalise to lowercase letters only, then
       // check for any of these substrings anywhere in the cell text.
-      const isAmtCol = c => /amt|amount|payment|paid|value/.test(c) || /^rs$|^inr$|^amtrs$/.test(c) ? !/bank|account|acno|pan|ifsc|aadhar/.test(c) : false;
+      const isAmtCol = c => (/amt|amount|payment|paid|value/.test(c) || /^rs$|^inr$|^amtrs$/.test(c)) && !/bank|account|acno|pan|ifsc|aadhar|date/.test(c);
       const isIdCol  = c => /scroll|srno|slno|sno|^sr$|^sl$|^no$|serial|entryno/.test(c);
       let best = null;   // {lines:[…], descText:''}
       sheets.forEach(({name: sheetName, rows: flat})=>{
@@ -5190,7 +5190,7 @@ function importDebitExcel(){
           if(colDesc>=0 && row[colDesc]) descText += " "+row[colDesc];
         }
         if(lines.length){
-          const isScroll = /scroll|payment.?scroll/i.test(sheetName);
+          const isScroll = /scroll|payment.?scroll|payment.?summary/i.test(sheetName);
           const betterThanBest = !best
             || (isScroll && !best.isScroll)           // scroll sheet always beats non-scroll
             || (isScroll === best.isScroll && lines.length > best.lines.length); // tie-break by row count
