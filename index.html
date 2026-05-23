@@ -4065,6 +4065,39 @@ function ngoBudgetTab(ngoId){
   </div>`;
 }
 
+/* download a blank budget template — horizontal with Budget + Actual columns per month */
+function downloadBudgetTemplate(ngoId){
+  if(typeof XLSX==="undefined"){ toast("Spreadsheet library not loaded — check your connection"); return; }
+  const n = ngoById(ngoId);
+  const labels = FY_MONTHS.map(ym=>{ const [yr,mo]=ym.split("-").map(Number); return MONTH_NAMES[mo]+"-"+String(yr).slice(2); });
+  const fyLabel = "FY "+FY_MONTHS[0].slice(0,4)+"-"+FY_MONTHS[11].slice(2);
+  const nM = 12, totalColIdx = 1 + nM*2; /* col Z */
+  /* Row 1: title */
+  const row1 = [(n?n.name:"NGO")+" — Budget Plan "+fyLabel, ...Array(totalColIdx).fill("")];
+  /* Row 2: month labels (each spans 2 cols) */
+  const row2 = ["Particulars"]; labels.forEach(l=>row2.push(l,"")); row2.push("Total (₹)");
+  /* Row 3: Budget / Actual sub-headers */
+  const row3 = [""]; labels.forEach(()=>row3.push("Budget","Actual")); row3.push("");
+  /* Row 4: data row — fill Budget cols; Actual cols for reference */
+  const row4 = ["Budget"]; for(let i=0;i<nM;i++) row4.push(0,0);
+  const budCols = Array.from({length:nM},(_,i)=>XLSX.utils.encode_col(1+i*2)+"4");
+  row4.push({f:budCols.join("+")});
+  /* Row 5: blank */
+  /* Row 6: Total — mirrors row 4, detected as 'Total' by the parser */
+  const row6 = ["Total"];
+  for(let i=0;i<nM;i++) row6.push({f:XLSX.utils.encode_col(1+i*2)+"4"},{f:XLSX.utils.encode_col(2+i*2)+"4"});
+  row6.push({f:XLSX.utils.encode_col(totalColIdx)+"4"});
+
+  const ws = XLSX.utils.aoa_to_sheet([row1,row2,row3,row4,[],row6]);
+  ws["!cols"] = [{wch:22},...Array(nM*2).fill({wch:11}),{wch:14}];
+  const merges = [{s:{r:0,c:0},e:{r:0,c:totalColIdx}}];
+  for(let i=0;i<nM;i++) merges.push({s:{r:1,c:1+i*2},e:{r:1,c:2+i*2}});
+  ws["!merges"] = merges;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Budget Plan");
+  XLSX.writeFile(wb, (n?n.short:"NGO")+"_Budget_"+FY_MONTHS[0].slice(0,4)+"-"+FY_MONTHS[11].slice(2)+".xlsx");
+}
+
 /* budget plan upload — APL sets the annual + monthly plan once */
 function openBudgetUpload(ngoId){
   if(blockIfCantEditNgo(ngoId)) return;
@@ -4093,6 +4126,10 @@ function openBudgetUpload(ngoId){
       <label>Or upload a monthly plan sheet (.xlsx / .csv)</label>
       <input type="file" id="bgFile" accept=".xlsx,.xls,.csv">
       <div class="hint">Two formats accepted: (1) <b>List format</b> — columns named Month &amp; Planned, one row per month. (2) <b>Pivot/wide format</b> — months as column headers with a Total row (e.g. your standard budget sheet). Read in your browser.</div>
+      <div style="margin-top:10px">
+        <button type="button" class="btn ghost sm" onclick="downloadBudgetTemplate('${ngoId}')">↓ Download blank template</button>
+        <span style="font-size:11.5px;color:var(--ink-3);margin-left:8px">Fill the Planned column, then re-upload above.</span>
+      </div>
     </div>`;
   const foot = `
     ${b?`<button class="btn danger" style="margin-right:auto" onclick="clearBudget('${ngoId}')">Clear budget</button>`:''}
@@ -4143,6 +4180,11 @@ async function parseBudgetSheet(file){
       const s = String(raw).trim();
       /* YYYY-MM */
       if(/^\d{4}-\d{2}$/.test(s)){
+        const [yr,mo] = s.split("-").map(Number);
+        return _dateToIdx(yr, mo);
+      }
+      /* ISO datetime string: 2027-03-01T00:00:00.000Z (SheetJS cellDates:true) */
+      if(/^\d{4}-\d{2}-\d{2}/.test(s)){
         const [yr,mo] = s.split("-").map(Number);
         return _dateToIdx(yr, mo);
       }
