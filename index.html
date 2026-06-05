@@ -1092,7 +1092,7 @@ function liveReportingMonth(){
 /* a document is "expiring soon" if it lapses within the next 90 days */
 const SOON_CUTOFF_ISO = new Date(TODAY.getTime()+90*86400000).toISOString().slice(0,10);
 const VERTICALS = ["Livelihood","Advocacy","Education","Healthcare","Climate"];
-const BUDGET_CATS = ["Salary","Travel","Programme","Admin-Other"];
+const BUDGET_CATS = ["Salary","Travel","Programme","Other"];
 /* Debit-note processing workflow — four ordered stages.
    A debit note starts at the first stage and moves down as it is processed.
    Each move is timestamped in the note's history. */
@@ -1380,16 +1380,16 @@ function seedData(){
     const per=Math.round(annual/12); return FY_MONTHS.map(()=>per);
   }
   const budgets = {
-    n1:{ annual:{Salary:2640000, Travel:480000, Programme:8400000, "Admin-Other":600000} },
-    n2:{ annual:{Salary:1980000, Travel:300000, Programme:2400000, "Admin-Other":420000} },
-    n3:{ annual:{Salary:2400000, Travel:360000, Programme:1100000, "Admin-Other":340000} },
-    n4:{ annual:{Salary:1560000, Travel:240000, Programme:780000,  "Admin-Other":240000} },
-    n5:{ annual:{Salary:1680000, Travel:264000, Programme:660000,  "Admin-Other":216000} },
-    n6:{ annual:{Salary:1320000, Travel:228000, Programme:540000,  "Admin-Other":192000} },
-    n7:{ annual:{Salary:2160000, Travel:540000, Programme:3600000, "Admin-Other":480000} },
-    n8:{ annual:{Salary:1080000, Travel:180000, Programme:480000,  "Admin-Other":156000} },
-    n9:{ annual:{Salary:1920000, Travel:336000, Programme:1320000, "Admin-Other":312000} },
-    n10:{annual:{Salary:2280000, Travel:600000, Programme:5400000, "Admin-Other":540000} }
+    n1:{ annual:{Salary:2640000, Travel:480000, Programme:8400000, "Other":600000} },
+    n2:{ annual:{Salary:1980000, Travel:300000, Programme:2400000, "Other":420000} },
+    n3:{ annual:{Salary:2400000, Travel:360000, Programme:1100000, "Other":340000} },
+    n4:{ annual:{Salary:1560000, Travel:240000, Programme:780000,  "Other":240000} },
+    n5:{ annual:{Salary:1680000, Travel:264000, Programme:660000,  "Other":216000} },
+    n6:{ annual:{Salary:1320000, Travel:228000, Programme:540000,  "Other":192000} },
+    n7:{ annual:{Salary:2160000, Travel:540000, Programme:3600000, "Other":480000} },
+    n8:{ annual:{Salary:1080000, Travel:180000, Programme:480000,  "Other":156000} },
+    n9:{ annual:{Salary:1920000, Travel:336000, Programme:1320000, "Other":312000} },
+    n10:{annual:{Salary:2280000, Travel:600000, Programme:5400000, "Other":540000} }
   };
   Object.keys(budgets).forEach(nid=>{
     const total = BUDGET_CATS.reduce((s,c)=>s+budgets[nid].annual[c],0);
@@ -1800,6 +1800,12 @@ function migrateDB(db){
     if(d.history!==undefined) d.history = toArr(d.history);
     // an old note saved before the workflow change → default it
     if(!d.status || !DN_STATUS.includes(d.status)) d.status = DN_STATUS_DEFAULT;
+    if(d.category==="Admin-Other") d.category="Other";
+  });
+  /* legacy budget category "Admin-Other" → "Other" */
+  Object.keys(db.budgets||{}).forEach(k=>{
+    const a=db.budgets[k]&&db.budgets[k].annual;
+    if(a && a["Admin-Other"]!==undefined){ a["Other"]=(+a["Other"]||0)+(+a["Admin-Other"]||0); delete a["Admin-Other"]; }
   });
   db.ngos.forEach(n=>{ if(!n.partnership) n.partnership = "Active"; });
   // every NGO must have a budget object so finance never crashes
@@ -4371,7 +4377,7 @@ async function saveBudgetPlan(ngoId){
     BUDGET_CATS.forEach(c=>annualCats[c]=Math.round((existing.annual[c]||0)/oldT*annual));
   } else {
     annualCats = {Salary:Math.round(annual*0.4), Travel:Math.round(annual*0.1),
-                  Programme:Math.round(annual*0.4), "Admin-Other":Math.round(annual*0.1)};
+                  Programme:Math.round(annual*0.4), "Other":Math.round(annual*0.1)};
   }
   DB.budgets[ngoId] = { annual:annualCats, totalAnnual:annual, monthlyPlan,
                         editedBy:ME?ME.name:"—", editedAt:TODAY_ISO };
@@ -4411,7 +4417,7 @@ function ngoDebitsTab(ngoId){
   });
   const maxMonth = Math.max(...byMonth.map(x=>x.total),1);
 
-  const catColor = {Salary:"violet",Travel:"green",Programme:"blue","Admin-Other":"amber"};
+  const catColor = {Salary:"violet",Travel:"green",Programme:"blue","Other":"amber"};
 
   return `
   <div class="sec-head">
@@ -5064,6 +5070,7 @@ function svgRadar(dims){
 /* ---------- debit note form ---------- */
 function openDebitForm(ngoId, editId){
   if(blockIfCantEditNgo(ngoId)) return;
+  window._dfNgoId = ngoId;
   const d = editId? DB.debits.find(x=>x.id===editId) : null;
   const n = ngoById(ngoId);
   // scroll lines — at least one empty row when adding
@@ -5244,7 +5251,7 @@ function guessDebitCategory(text){
   const t = (text||"").toLowerCase();
   if(/salary|stipend|honorar|wage|payroll|remuner/.test(t)) return "Salary";
   if(/travel|conveyance|fuel|transport|mileage|fare|ta\/da|tada/.test(t)) return "Travel";
-  if(/admin|office|rent|utility|stationery|audit|bank charge|misc/.test(t)) return "Admin-Other";
+  if(/admin|office|rent|utility|stationery|audit|bank charge|misc/.test(t)) return "Other";
   if(/programme|program|training|workshop|field|activity|material|equipment|event/.test(t)) return "Programme";
   return "Programme";
 }
@@ -5281,6 +5288,27 @@ function importDebitExcel(){
       const numM = joined.match(/\b(D[BN][-\s]?\d{1,3})\b/i);
       if(numM) dnNo = numM[1].toUpperCase().replace(/\s/g,"-");
 
+      // ---- reporting month: prefer the explicit "…for April 2026" phrase ----
+      let phraseYm = "";
+      {
+        const monthsMap={january:"01",february:"02",march:"03",april:"04",may:"05",june:"06",july:"07",august:"08",september:"09",october:"10",november:"11",december:"12"};
+        const mM = joined.toLowerCase().match(/(?:for|month of)\s+(january|february|march|april|may|june|july|august|september|october|november|december)[\s_-]*(\d{4})/);
+        if(mM){ const ym = mM[2]+"-"+monthsMap[mM[1]]; if(FY_MONTHS.includes(ym)) phraseYm = ym; }
+      }
+
+      // ---- no number inside the file? suggest the next one for this NGO ----
+      // (these salary scrolls carry no DB-/DN- number, so we always fall back
+      //  to a suggestion — never leave the field empty)
+      let dnSuggested = false;
+      if(!dnNo){
+        const ngoForSuggest = (typeof window._dfNgoId!=="undefined") ? window._dfNgoId : "";
+        let mx = 0;
+        (DB.debits||[]).filter(d=>!ngoForSuggest || d.ngoId===ngoForSuggest).forEach(d=>{
+          const m = String(d.dnNo||"").match(/(\d{1,4})\s*$/); if(m) mx = Math.max(mx, +m[1]);
+        });
+        dnNo = "DB-"+String(mx+1).padStart(2,"0"); dnSuggested = true;
+      }
+
       // ---- date: prefer one on a line that mentions the debit-note date ----
       let isoDate = "";
       const toIso = (d1,m1,y1)=>{
@@ -5307,6 +5335,21 @@ function importDebitExcel(){
         if(dM) isoDate = toIso(dM[1],dM[2],dM[3]);
         const ymM = joined.match(/\b(20\d{2})[-./](\d{1,2})[-./](\d{1,2})\b/);
         if(ymM && !isoDate) isoDate = ymM[1]+"-"+String(ymM[2]).padStart(2,"0")+"-"+String(ymM[3]).padStart(2,"0");
+        // Excel stores dates as serial numbers (e.g. "Date of Entry" cells) — convert the first one found
+        if(!isoDate){
+          outer: for(const row of allFlat){
+            for(const cell of row){
+              if(/^[45][0-9]{4}(\.0+)?$/.test(cell)){
+                const ser = parseFloat(cell);
+                if(ser>40000 && ser<60000){
+                  const dt = new Date(Math.round((ser-25569)*86400*1000)+12*3600*1000);
+                  isoDate = dt.getUTCFullYear()+"-"+String(dt.getUTCMonth()+1).padStart(2,"0")+"-"+String(dt.getUTCDate()).padStart(2,"0");
+                  break outer;
+                }
+              }
+            }
+          }
+        }
       }
 
       // ---- find the BEST data table across all sheets ----
@@ -5366,10 +5409,24 @@ function importDebitExcel(){
 
       // ---- apply to the form ----
       if(dnNo && el("dfNo") && !el("dfNo").value.trim()) el("dfNo").value = dnNo;
-      if(isoDate && el("dfDate")){
-        el("dfDate").value = isoDate;
+      // Reporting month: the "…for <Month> <Year>" phrase wins — it's the
+      // salary period being reimbursed, NOT the date the payment was entered
+      // or made. (e.g. April salary paid/entered on 5 May still reports as
+      // April.) Only fall back to a parsed date's month when there's no phrase.
+      let repMonth = phraseYm;
+      if(!repMonth && isoDate){
         const mv = isoDate.slice(0,7);
-        if(FY_MONTHS.includes(mv) && el("dfMonth")) el("dfMonth").value = mv;
+        if(FY_MONTHS.includes(mv)) repMonth = mv;
+      }
+      if(repMonth && el("dfMonth")) el("dfMonth").value = repMonth;
+
+      // Debit-note date: only adopt a parsed date when it sits inside the
+      // reporting month. A "Date of Entry"/payment date in a different month
+      // is not the note's reporting date — leave the field blank so it
+      // defaults to the reporting month on save instead of showing May.
+      if(el("dfDate")){
+        el("dfDate").value =
+          (isoDate && (!repMonth || isoDate.slice(0,7)===repMonth)) ? isoDate : "";
       }
       // category: detect ONLY from the expense-line descriptions — never the
       // whole workbook, whose legal boilerplate ("…Salary/Professional fees…")
@@ -5393,7 +5450,8 @@ function importDebitExcel(){
         if(lines.length || dnNo){
           msg.style.color = "var(--green)";
           msg.innerHTML = "✓ Read from the Excel file"
-            + (dnNo?` — <b>${esc(dnNo)}</b>`:"")
+            + (dnNo?` — number <b>${esc(dnNo)}</b>${dnSuggested?" <span style='color:var(--ink-3)'>(suggested — none in the file)</span>":""}`:"")
+            + (repMonth?`, month <b>${esc(monthLong(repMonth))}</b>`:"")
             + (lines.length?`, <b>${lines.length}</b> line${lines.length>1?'s':''} totalling <b>${fmtRsFull(total)}</b>`:"")
             + ". Check the fields below and save.";
         } else {
@@ -5424,14 +5482,12 @@ async function saveDebit(ngoId, editId){
     toast("Debit note "+dnNo+" is already logged for this NGO");
     return;
   }
-  // Derive reporting month from the note's own date (dfDate) if available;
-  // fall back to the manually chosen dfMonth dropdown.
-  let month = el("dfMonth").value;
-  const rawDate = el("dfDate").value;
-  if(rawDate && rawDate.length>=7){
-    const derived = rawDate.slice(0,7); // YYYY-MM
-    if(FY_MONTHS.includes(derived)) month = derived;
-  }
+  // Reporting month = the dropdown the user sees and confirms. It is kept in
+  // sync with the note date by syncDebitMonth() on manual edits and set from
+  // the "…for <Month>" phrase on import, so it is the single source of truth.
+  // Do NOT re-derive it from the date here — that would wrongly pull a
+  // payment/entry date (e.g. 5 May) and report April salary under May.
+  const month = el("dfMonth").value;
   const status = (document.querySelector('input[name="dfStatus"]:checked')||{}).value || DN_STATUS_DEFAULT;
   const d = editId ? DB.debits.find(x=>x.id===editId) : null;
   const obj = {
@@ -6356,6 +6412,7 @@ function fdLoad(){
   try{ const r=localStorage.getItem(FD_KEY); if(r){ FD=JSON.parse(r); } }catch(e){}
   if(!FD || typeof FD!=="object"){ FD={users:[],notes:[],payments:[],audit:[],seq:1,paySeq:1,meId:null,seeded:false}; }
   ["users","notes","payments","audit"].forEach(k=>{ if(!Array.isArray(FD[k])) FD[k]=[]; });
+  FD.notes.forEach(d=>{ if(d && d.budgetHead==="Admin-Other") d.budgetHead="Other"; });
   if(!FD.seq) FD.seq=FD.notes.length+1;
   if(!FD.paySeq) FD.paySeq=FD.payments.length+1;
 }
@@ -6417,7 +6474,7 @@ function fdEnsureSeed(){
   const a = apl? ngoById(apl.ngoIds[0]) : ngos[0];
   const b = (apl && apl.ngoIds[1] && ngoById(apl.ngoIds[1])) || ngos[1] || a;
   const uid = apl?apl.id:"seed", uname = apl?apl.name:"Partner NGO";
-  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Programme","Salary","Travel","Admin-Other"];
+  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Programme","Salary","Travel","Other"];
   function L(d,xid,xname,role,action,detail,at,color){ FD.audit.push({id:genId("fa"),noteId:d.id,number:d.number,userId:xid,userName:xname,role,action,detail:detail||"",at:at||fdNow(),ip:fdIP(),color:color||"accent"}); }
   function mk(ngo,head,purpose,items,docs,daysAgo){ const d=fdNewNote(ngo.id); d.createdBy=uid; d.createdByName=uname; d.budgetHead=head; d.purpose=purpose; d.projectName=ngo.name+" \u2014 "+head; d.grantCode="GR-"+head.slice(0,3).toUpperCase()+"-26"; d.lineItems=items; d.docs=docs; d.createdAt=new Date(Date.now()-daysAgo*864e5).toISOString(); fdRecalc(d); FD.notes.push(d); L(d,uid,uname,"Partner NGO","Created Debit Note",items.length+" line item(s)",d.createdAt); return d; }
   function submit(d,days){ d.submittedAt=new Date(Date.now()-days*864e5).toISOString(); d.status="Submitted"; L(d,uid,uname,"Partner NGO","Submitted for Verification","Submitted to KRSF Vadali Accounts",d.submittedAt); }
@@ -6597,7 +6654,7 @@ function fdCreateView(){
 function fdForm(){
   const d=FD_DRAFT; while(d.lineItems.length<3) d.lineItems.push({desc:"",qty:1,rate:0,amount:0});
   fdRecalc(d); const ngos=fdAssignedNgos();
-  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Programme","Salary","Travel","Admin-Other"];
+  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Programme","Salary","Travel","Other"];
   const editing=!!fdById(d.id);
   return `
   <div class="panel" style="margin-bottom:16px">
@@ -7114,7 +7171,7 @@ function fdUploadView(){
   if(!fdCanUpload()) return `<div class="empty"><div class="mk">🔒</div><p>File upload is for the KRSF Program team.</p></div>`;
   const ngos=(DB&&DB.ngos)||[];
   if(!ngos.length) return `<div class="empty"><div class="mk">⚠</div><p>Add a Partner NGO first (Partner NGOs page).</p></div>`;
-  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Salary","Travel","Programme","Admin-Other"];
+  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Salary","Travel","Programme","Other"];
   return `
   <div class="fbanner accent">📄 For NGOs / Accounts teams not using the app — record a debit note here by uploading the actual <b>&nbsp;PDF or Excel&nbsp;</b> file. It enters the same register, repository, search and audit trail.</div>
   <div class="panel">
