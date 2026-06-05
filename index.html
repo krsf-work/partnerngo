@@ -946,6 +946,58 @@ window.FIREBASE_CONFIG = {
     .kpi-grid{grid-template-columns:1fr}
     .stat-grid{grid-template-columns:1fr !important}
   }
+
+  /* ===== FDNMS — Debit Note workflow (prefixed, additive) ===== */
+  .fst{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+  .fst .sd{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .fst-Draft{background:var(--paper-2);color:var(--ink-3)}.fst-Submitted{background:var(--blue-soft);color:var(--blue)}.fst-AccountsVerification{background:var(--violet-soft);color:var(--violet)}.fst-ReturnedForCorrection{background:var(--amber-soft);color:var(--amber)}.fst-Resubmitted{background:var(--blue-soft);color:var(--blue)}.fst-FinanceReview{background:var(--accent-soft);color:var(--accent)}.fst-Approved{background:var(--green-soft);color:var(--green)}.fst-FundReleased{background:var(--green-soft);color:var(--green)}.fst-Closed{background:var(--paper-2);color:var(--ink-2)}.fst-Rejected{background:var(--red-soft);color:var(--red)}
+  .fd-tabs{display:flex;gap:2px;border-bottom:1.5px solid var(--rule);margin-bottom:18px;flex-wrap:wrap}
+  .fd-tab{padding:9px 15px;font-size:12.5px;font-weight:600;color:var(--ink-3);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:.12s;display:flex;align-items:center;gap:7px}
+  .fd-tab:hover{color:var(--ink)}.fd-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+  .fd-tab .ct{font-size:10.5px;background:var(--paper-2);color:var(--ink-3);padding:1px 6px;border-radius:8px;font-weight:700}.fd-tab.on .ct{background:var(--accent-soft);color:var(--accent)}.fd-tab .ct.alert{background:var(--red);color:#fff}
+  .fcheck{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border:1px solid var(--rule);border-radius:11px;margin-bottom:8px;cursor:pointer;transition:.12s}
+  .fcheck:hover{border-color:var(--ink-3);background:var(--paper-2)}.fcheck.on{border-color:var(--green);background:var(--green-soft)}
+  .fcheck .box{width:20px;height:20px;flex:none;border-radius:6px;border:2px solid var(--rule-2);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;margin-top:1px}.fcheck.on .box{background:var(--green);border-color:var(--green)}
+  .fcheck .ct{font-size:13px;font-weight:600}.fcheck .cs{font-size:11px;color:var(--ink-3);margin-top:1px}
+  .ftl{position:relative;padding-left:26px}.ftl::before{content:"";position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--rule)}
+  .ftl-item{position:relative;padding-bottom:15px}.ftl-item:last-child{padding-bottom:0}
+  .ftl-item .pt{position:absolute;left:-22px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--accent)}
+  .ftl-item.green .pt{border-color:var(--green)}.ftl-item.amber .pt{border-color:var(--amber)}.ftl-item.red .pt{border-color:var(--red)}
+  .ftl-item .act{font-weight:600;font-size:13px}.ftl-item .meta{font-size:11px;color:var(--ink-3);margin-top:1px}.ftl-item .cmt{font-size:12px;color:var(--ink-2);margin-top:3px;background:var(--paper-2);padding:7px 10px;border-radius:8px;border-left:3px solid var(--rule-2)}
+  .fdoc{display:flex;align-items:center;gap:11px;padding:9px 12px;border:1px solid var(--rule);border-radius:10px;margin-bottom:7px}
+  .fdoc .di{width:32px;height:32px;flex:none;border-radius:8px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px}
+  .fdoc .dn{font-weight:600;font-size:12.5px}.fdoc .dm{font-size:10.5px;color:var(--ink-3)}
+  .finfo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .finfo .k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:3px}.finfo .v{font-size:13.5px;font-weight:600}
+  .fli-tbl input,.fli-tbl select{padding:6px 8px;border:1px solid var(--rule-2);border-radius:7px;width:100%;font-size:12px}.fli-tbl td{padding:5px 6px}
+  .fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:900px){.fgrid2,.fgrid3{grid-template-columns:1fr}}
+  .fbanner{padding:11px 14px;border-radius:11px;font-size:12.5px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:9px}
+  .fbanner.amber{background:var(--amber-soft);color:var(--amber)}.fbanner.accent{background:var(--accent-soft);color:var(--accent)}.fbanner.green{background:var(--green-soft);color:var(--green)}
+  .fd-userbtn{display:flex;align-items:center;gap:11px;width:100%;padding:9px 11px;border:1px solid var(--rule);background:var(--card);border-radius:11px;margin-bottom:7px;text-align:left;cursor:pointer}
+  .fd-userbtn .av,.fd-whoami .av{width:32px;height:32px;flex:none;border-radius:9px;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}\n  .xlbar{display:flex;gap:10px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--rule);background:var(--paper)}
+  .xlbar .xf{display:flex;flex-direction:column;gap:3px;min-width:128px}
+  .xlbar .xf.grow{flex:1;min-width:200px}
+  .xlbar label{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+  .xlbar input,.xlbar select{padding:6px 8px;border:1px solid var(--rule-2);border-radius:7px;font-size:12px;background:var(--card)}
+  .xl{overflow-x:auto}
+  .xl table{width:100%;border-collapse:collapse}
+  .xl th{background:#eef0f5;border:1px solid #dfe3ec;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);font-weight:700;padding:6px 9px;text-align:left}
+  .xl th.xr,.xl td.xr{text-align:right}
+  .xl th.xn{width:34px;text-align:center}
+  .xl td{border:1px solid #e6e9f0;padding:0}
+  .xl td.xn{background:#f5f6f9;text-align:center;color:var(--ink-3);font-size:11px;padding:6px 4px}
+  .xl td.xla{padding:7px 9px;background:#fafbfd;font-family:var(--mono);font-size:12px}
+  .xl td.xlc input{border:none;outline:none;width:100%;padding:7px 9px;font-size:12.5px;background:transparent;font-family:inherit;border-radius:0}
+  .xl td.xr input{text-align:right;font-family:var(--mono);font-size:12px}
+  .xl td.xlc input:focus{outline:2px solid var(--accent);outline-offset:-2px;background:#fff}
+  .xl tfoot td{border:1px solid #e6e9f0;background:#f5f6f9;font-weight:700;padding:7px 9px;font-size:12px}
+  .xl tfoot tr.big td{background:#e6eafe;color:var(--accent);font-size:13px}
+  .xl .xdel{color:var(--red);border:none;background:none;cursor:pointer;font-size:14px;padding:4px 8px}
+  .xltip{font-size:10.5px;color:var(--ink-3);padding:7px 12px;display:flex;align-items:center;gap:8px}
+  .fd-whoami{display:flex;align-items:center;gap:9px;font-size:12px;line-height:1.25}
+
+
 </style>
 </head>
 <body>
@@ -1085,6 +1137,15 @@ function fmtRs(n){
   return "₹"+Math.round(n);
 }
 function fmtRsFull(n){ if(n==null||isNaN(n))return"—"; return "₹"+Math.round(n).toLocaleString("en-IN"); }
+/* display dates as dd-mm-yyyy everywhere; leaves non-date text untouched */
+function fmtDMY(d){
+  if(d==null||d==="") return "—";
+  const s=String(d), m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return m[3]+"-"+m[2]+"-"+m[1];
+  const dt=new Date(s);
+  if(!isNaN(dt) && /\d{4}/.test(s)) return String(dt.getDate()).padStart(2,"0")+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+dt.getFullYear();
+  return s;
+}
 function pct(a,b){ if(!b)return 0; return Math.round(a/b*100); }
 let _idSeq = 0;
 function genId(p){ return p+"_"+Date.now().toString(36)+"_"+(_idSeq++).toString(36)+Math.random().toString(36).slice(2,7); }
@@ -1765,6 +1826,12 @@ function migrateDB(db){
     pm.username = pm.username || "admin";
     pm.password = pm.password || "krsf@2026";
   }
+  /* ---- FDNMS: ensure KRSF debit-note staff logins exist (single sign-in) ---- */
+  [["Accounts","Vadali Accounts Team","accounts"],["Finance","Ahmedabad Finance Authority","finance"],["Programme","Programme Team","programme"]].forEach(function(r){
+    if(!db.users.some(function(u){return u.role===r[0];})){
+      db.users.push({ id:"u_"+r[0].toLowerCase(), role:r[0], name:r[1], username:r[2], password:"krsf@2026", ngoIds:[], title:r[1], avatar:r[1].split(/\s+/).map(function(w){return w[0];}).join("").slice(0,2).toUpperCase() });
+    }
+  });
   return db;
 }
 /* a safe zero budget — used when an NGO has no plan yet */
@@ -1785,7 +1852,7 @@ function visibleNgos(){
   return DB.ngos.slice();
 }
 // can the current user edit at all?  (Viewer is read-only)
-function canEdit(){ return ME && ME.role!=="Viewer"; }
+function canEdit(){ return ME && (ME.role==="PM"||ME.role==="APL"); }
 // can the current user edit THIS specific NGO?
 //  - PM edits everything
 //  - APL edits only the NGOs assigned to them in the Admin panel
@@ -2141,6 +2208,7 @@ function navItems(){
         const ids=new Set(visibleNgos().map(n=>n.id));
         return ids.has(d.ngoId) && (d.status||DN_STATUS_DEFAULT)===DN_STATUS_DEFAULT;
       }).length || null },
+    { id:"fdnms",   label:"Fund Disbursement", ic:"⇄", sec:"Portfolio", count: fdNavCount() },
     { id:"tasks",   label:"Tasks",         ic:"✓", sec:"Work",
       count: DB.tasks.filter(t=>{
         if(ME.role==="APL"&&t.aplId!==ME.id) return false;
@@ -2149,6 +2217,12 @@ function navItems(){
     { id:"okrupload", label:"Team OKR", ic:"↑", sec:"Work" },
     { id:"docs",    label:"Documents",     ic:"▣", sec:"Work" }
   ];
+  // FDNMS: finance-side roles only see Finance + Debit Notes (no programmatic tabs)
+  const FD_RESTRICTED = ["APL","Accounts","Finance"];
+  if(FD_RESTRICTED.includes(ME.role)){
+    const allow = new Set(["budget","fdnms"]);
+    return items.filter(it=>allow.has(it.id));
+  }
   if(ME.role==="PM"){
     items.push({ id:"admin", label:"Admin", ic:"⚙", sec:"Work" });
   }
@@ -2183,6 +2257,7 @@ function go(page, arg){
 }
 function render(){
   if(!ME) return;
+  { const _al=navItems().map(i=>i.id); if(_al.length && !_al.includes(CUR_PAGE) && CUR_PAGE!=="ngo") CUR_PAGE=_al.includes("fdnms")?"fdnms":_al[0]; }
   buildNav();
   const c = el("content");
   let crumb = "<b>"+ (navItems().find(i=>i.id===CUR_PAGE)?.label||"") +"</b>";
@@ -2195,6 +2270,7 @@ function render(){
                    break;
     case "budget": c.innerHTML = pageBudget(); break;
     case "debits": c.innerHTML = pageDebits(); break;
+    case "fdnms":  c.innerHTML = pageFDNMS(); break;
     case "tasks":  c.innerHTML = pageTasks(); break;
     case "okrupload": c.innerHTML = pageOkrUpload(); break;
     case "docs":   c.innerHTML = pageDocs(); break;
@@ -2836,7 +2912,7 @@ function stampEdit(rec){
 function editStampLine(rec){
   if(!rec || !rec.editedAt) return "";
   return `<div style="font-size:10.5px;color:var(--ink-3);margin-top:2px">
-    Last updated ${esc(rec.editedAt)} by ${esc(rec.editedBy||'—')}</div>`;
+    Last updated ${fmtDMY(rec.editedAt)} by ${esc(rec.editedBy||'—')}</div>`;
 }
 /* block an edit action for read-only Viewers; returns true if blocked */
 function blockIfReadOnly(){
@@ -3547,7 +3623,7 @@ function renderObjCard(g, ngoId){
           <div>
             <div class="kr-text">${esc(k.kr)}</div>
             <div class="kr-meta">
-              ${k.timeline?`<time>${esc(k.timeline)}</time>`:''}
+              ${k.timeline?`<time>${fmtDMY(k.timeline)}</time>`:''}
               ${k.ref?`<a href="${esc(k.ref)}" target="_blank" rel="noopener">↗ Reference</a>`:''}
             </div>
             ${k.comment?`<div class="kr-cmt">${esc(k.comment)}</div>`:''}
@@ -3613,7 +3689,7 @@ function openMboModal(ngoId, editId){
     <div class="frow">
       <div class="field">
         <label>Timeline (target date)</label>
-        <input id="mbTimeline" value="${esc(r.timeline)}" placeholder="2026-05-30">
+        <input id="mbTimeline" value="${esc(r.timeline)}" placeholder="30-05-2026">
       </div>
       <div class="field">
         <label>Status</label>
@@ -4069,38 +4145,28 @@ function ngoBudgetTab(ngoId){
 function downloadBudgetTemplate(ngoId){
   if(typeof XLSX==="undefined"){ toast("Spreadsheet library not loaded — check your connection"); return; }
   const n = ngoById(ngoId);
-  const labels = FY_MONTHS.map(ym=>{ const [yr,mo]=ym.split("-").map(Number); return MONTH_NAMES[mo]+"-"+String(yr).slice(2); });
-  const fyLabel = "FY "+FY_MONTHS[0].slice(0,4)+"-"+FY_MONTHS[11].slice(2);
-  const nM = 12, totalColIdx = 1 + nM*2; /* col Z */
-  /* Row 1: title */
-  const row1 = [(n?n.name:"NGO")+" — Budget Plan "+fyLabel, ...Array(totalColIdx).fill("")];
-  /* Row 2: month labels (each spans 2 cols) */
-  const row2 = ["Particulars"]; labels.forEach(l=>row2.push(l,"")); row2.push("Total (₹)");
-  /* Row 3: Budget / Actual sub-headers */
-  const row3 = [""]; labels.forEach(()=>row3.push("Budget","Actual")); row3.push("");
-  /* Row 4: data row — fill Budget cols; Actual cols for reference */
-  const row4 = ["Budget"]; for(let i=0;i<nM;i++) row4.push(0,0);
-  const budCols = Array.from({length:nM},(_,i)=>XLSX.utils.encode_col(1+i*2)+"4");
-  row4.push({f:budCols.join("+")});
-  /* Row 5: blank */
-  /* Row 6: Total — mirrors row 4, detected as 'Total' by the parser */
-  const row6 = ["Total"];
-  for(let i=0;i<nM;i++) row6.push({f:XLSX.utils.encode_col(1+i*2)+"4"},{f:XLSX.utils.encode_col(2+i*2)+"4"});
-  row6.push({f:XLSX.utils.encode_col(totalColIdx)+"4"});
-
-  const ws = XLSX.utils.aoa_to_sheet([row1,row2,row3,row4,[],row6]);
-  ws["!cols"] = [{wch:22},...Array(nM*2).fill({wch:11}),{wch:14}];
-  const merges = [{s:{r:0,c:0},e:{r:0,c:totalColIdx}}];
-  for(let i=0;i<nM;i++) merges.push({s:{r:1,c:1+i*2},e:{r:1,c:2+i*2}});
-  ws["!merges"] = merges;
-  const wb = XLSX.utils.book_new();
+  const fyLabel = "FY "+FY_MONTHS[0].slice(0,4)+"-"+FY_MONTHS[11].slice(2,4);
+  const monthName = ym=>{ const [yr,mo]=ym.split("-").map(Number); return MONTH_NAMES[mo]+" "+yr; };
+  const rows=[
+    [(n?n.name:"NGO")+" — Monthly Budget Plan "+fyLabel],
+    ["Fill the Planned Budget column for every month (April to March). Keep the Month Code column unchanged, then upload this file back in the app."],
+    ["Month Code","Month","Planned Budget (₹)"],
+    ...FY_MONTHS.map(ym=>[ym, monthName(ym), 0]),
+    ["","Total",{f:"SUM(C4:C15)"}]
+  ];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  for(let i=0;i<12;i++){ const ref="A"+(4+i); if(ws[ref]) ws[ref].t="s"; } /* keep month codes as text */
+  ws["!cols"]=[{wch:12},{wch:14},{wch:20}];
+  ws["!merges"]=[{s:{r:0,c:0},e:{r:0,c:2}},{s:{r:1,c:0},e:{r:1,c:2}}];
+  const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Budget Plan");
-  XLSX.writeFile(wb, (n?n.short:"NGO")+"_Budget_"+FY_MONTHS[0].slice(0,4)+"-"+FY_MONTHS[11].slice(2)+".xlsx");
+  XLSX.writeFile(wb, (n?n.short:"NGO")+"_Monthly_Budget_"+FY_MONTHS[0].slice(0,4)+"-"+FY_MONTHS[11].slice(2,4)+".xlsx");
 }
+
 
 /* budget plan upload — APL sets the annual + monthly plan once */
 function openBudgetUpload(ngoId){
-  if(blockIfCantEditNgo(ngoId)) return;
+  if(!(ME && (ME.role==="PM" || ME.role==="Programme" || canEditNgo(ngoId)))){ toast("You don't have access to edit this NGO's budget"); return; }
   const n = ngoById(ngoId);
   const b = DB.budgets[ngoId];
   const body = `
@@ -4128,7 +4194,7 @@ function openBudgetUpload(ngoId){
       <div class="hint">Two formats accepted: (1) <b>List format</b> — columns named Month &amp; Planned, one row per month. (2) <b>Pivot/wide format</b> — months as column headers with a Total row (e.g. your standard budget sheet). Read in your browser.</div>
       <div style="margin-top:10px">
         <button type="button" class="btn ghost sm" onclick="downloadBudgetTemplate('${ngoId}')">↓ Download blank template</button>
-        <span style="font-size:11.5px;color:var(--ink-3);margin-left:8px">Fill the Planned column, then re-upload above.</span>
+        <span style="font-size:11.5px;color:var(--ink-3);margin-left:8px">Fill the Planned Budget column for all 12 months (Apr–Mar), then re-upload above.</span>
       </div>
     </div>`;
   const foot = `
@@ -4171,7 +4237,7 @@ async function parseBudgetSheet(file){
     const monthIndex = (raw)=>{
       if(raw==null || raw==="") return -1;
       /* Excel Date object (when cellDates:true) */
-      if(raw instanceof Date) return _dateToIdx(raw.getFullYear(), raw.getMonth()+1);
+      if(raw instanceof Date){ const d2=new Date(raw.getTime()+12*3600*1000); return _dateToIdx(d2.getUTCFullYear(), d2.getUTCMonth()+1); }
       /* Excel date serial number (when raw:true) — days since 1899-12-30 */
       if(typeof raw==="number" && raw>40000 && raw<60000){
         const d = new Date(Math.round((raw-25569)*86400*1000));
@@ -4183,8 +4249,11 @@ async function parseBudgetSheet(file){
         const [yr,mo] = s.split("-").map(Number);
         return _dateToIdx(yr, mo);
       }
-      /* ISO datetime string: 2027-03-01T00:00:00.000Z (SheetJS cellDates:true) */
+      /* ISO datetime string: 2027-03-01T00:00:00.000Z (SheetJS cellDates:true).
+         Noon-shift guards against timezone month-shift (e.g. 28-Feb 18:30Z = 1-Mar IST). */
       if(/^\d{4}-\d{2}-\d{2}/.test(s)){
+        const dt = new Date(s);
+        if(!isNaN(dt)){ const d2=new Date(dt.getTime()+12*3600*1000); return _dateToIdx(d2.getUTCFullYear(), d2.getUTCMonth()+1); }
         const [yr,mo] = s.split("-").map(Number);
         return _dateToIdx(yr, mo);
       }
@@ -4195,16 +4264,23 @@ async function parseBudgetSheet(file){
       return FY_MONTHS.findIndex(m=>(+m.split("-")[1])===(+num));
     };
 
-    /* ---- attempt 1: tall/list format (Month + Planned columns) ---- */
-    const rows = XLSX.utils.sheet_to_json(ws,{defval:"",raw:false,dateNF:"YYYY-MM"});
+    /* ---- attempt 1: tall/list format (Month + Planned columns) ----
+       First locate the header row (a cell starting with "Month"), so title /
+       instruction rows above the table don't swallow the headers. */
+    const probe = XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false,dateNF:"YYYY-MM"});
+    let hdrRow = 0;
+    for(let ri=0;ri<Math.min(probe.length,10);ri++){
+      if((probe[ri]||[]).some(c=>/^month/i.test(String(c).trim()))){ hdrRow=ri; break; }
+    }
+    const rows = XLSX.utils.sheet_to_json(ws,{defval:"",raw:false,dateNF:"YYYY-MM",range:hdrRow});
     const plan1 = FY_MONTHS.map(()=>0);
-    let hit1 = 0;
+    let hit1 = 0; const seen1 = new Set();
     rows.forEach(r=>{
       const idx = monthIndex(pickCol(r,["month","mon"]));
       const amt = parseFloat(String(pickCol(r,["planned","plan","amount","budget"])).replace(/[^0-9.\-]/g,""));
-      if(idx>=0 && !isNaN(amt)){ plan1[idx]=amt; hit1++; }
+      if(idx>=0 && !isNaN(amt)){ plan1[idx]=amt; hit1++; seen1.add(idx); }
     });
-    if(hit1>=1) return plan1;
+    if(hit1>=1){ window._bgMonthsRead=[...seen1]; return plan1; }
 
     /* ---- attempt 2: wide/pivot format (months as column headers) ----
        Read raw 2-D array so we can inspect every row and header cell. */
@@ -4245,6 +4321,7 @@ async function parseBudgetSheet(file){
         hit2=rowHit; break;
       }
     }
+    window._bgMonthsRead=[...new Set(Object.values(headerColMap))];
     if(hit2>0) return plan2;
     if(fallbackPlan && fallbackHit>0) return fallbackPlan;
 
@@ -4261,6 +4338,11 @@ async function saveBudgetPlan(ngoId){
   if(fileInput && fileInput.files && fileInput.files[0]){
     monthlyPlan = await parseBudgetSheet(fileInput.files[0]);
     if(!monthlyPlan){ toast("Couldn't read a Month / Planned column from that file"); return; }
+    const _read = (window._bgMonthsRead||[]);
+    if(_read.length && _read.length<12){
+      const _missing = FY_MONTHS.map((m,i)=>_read.includes(i)?null:monthLabel(m)).filter(Boolean);
+      toast("⚠ Read "+_read.length+" of 12 months — missing: "+_missing.join(", ")+". Saved anyway — please check the sheet.");
+    }
   }
   const existing = DB.budgets[ngoId];
 
@@ -4293,6 +4375,7 @@ async function saveBudgetPlan(ngoId){
 }
 
 function clearBudget(ngoId){
+  if(!(ME && (ME.role==="PM" || ME.role==="Programme" || canEditNgo(ngoId)))){ toast("You don't have access to change this NGO's budget"); return; }
   const n = ngoById(ngoId);
   confirmAction("Clear budget plan?",
     `The entire budget plan for <b>${esc(n?n.short:'this NGO')}</b> — including the annual amount and all monthly figures — will be removed. Debit notes are not affected.`,
@@ -4428,7 +4511,7 @@ function ngoDocsTab(ngoId){
         const days = Math.round((new Date(d.expires)-new Date(TODAY_ISO))/86400000);
         if(days<0) statusHtml=`<span class="pill red">Expired</span>`;
         else if(days<90) statusHtml=`<span class="pill amber">Expires in ${days}d</span>`;
-        else statusHtml=`<span class="pill green no-dot">Valid · ${d.expires}</span>`;
+        else statusHtml=`<span class="pill green no-dot">Valid · ${fmtDMY(d.expires)}</span>`;
       }
       const ini = d.type.split(/\s+/)[0].slice(0,3).toUpperCase();
       const link = d.url
@@ -5509,7 +5592,7 @@ function pageBudget(){
       ${FIN_NGO!=='all'?(()=>{
         const _fn = FIN_NGO;
         const _nb = DB.budgets[_fn];
-        const _can = canEditNgo(_fn);
+        const _can = canEditNgo(_fn) || (ME && ME.role==="Programme");
         return `<button class="btn ghost sm" onclick="FIN_NGO='all';render()">Clear filter</button>
           ${_can?`<button class="btn ghost sm" onclick="openBudgetUpload('${_fn}')" title="Edit or replace the budget plan for this NGO">✎ Edit budget</button>`:''}
           ${_can&&_nb?`<button class="btn ghost sm" style="color:var(--red)" onclick="clearBudget('${_fn}')" title="Delete the current budget plan for this NGO">✕ Clear budget</button>`:''}
@@ -5770,7 +5853,7 @@ function pageTasks(){
       <button onclick="toggleTask('${t.id}')" style="width:20px;height:20px;border-radius:5px;border:1.5px solid var(--${t.status==='Done'?'green':'rule-2'});background:${t.status==='Done'?'var(--green)':'transparent'};color:#fff;font-size:12px;flex:none">${t.status==='Done'?'✓':''}</button>
       <div class="meta">
         <div class="t" style="${t.status==='Done'?'text-decoration:line-through;color:var(--ink-3)':''}">${esc(t.title)}</div>
-        <div class="s">${esc(n?n.short:'—')} · ${esc(who)} · due ${t.due}${overdue?' <b style="color:var(--red)">overdue</b>':''}</div>
+        <div class="s">${esc(n?n.short:'—')} · ${esc(who)} · due ${fmtDMY(t.due)}${overdue?' <b style="color:var(--red)">overdue</b>':''}</div>
       </div>
       <span class="badge ${pc}">${t.priority}</span>
       ${canEdit()?`<button class="btn ghost sm" onclick="openTaskForm('${t.id}')">Edit</button>`:''}
@@ -5937,9 +6020,9 @@ function pageDocs(){
           return nd.map(d=>{
             let exp;
             if(!d.expires) exp = `<span style="color:var(--ink-3);font-size:12px">—</span>`;
-            else if(d.expires<TODAY_ISO) exp = `<span class="badge red">Expired ${d.expires}</span>`;
-            else if(d.expires<SOON_CUTOFF_ISO) exp = `<span class="badge amber">Expires ${d.expires}</span>`;
-            else exp = `<span class="badge gray">Valid to ${d.expires}</span>`;
+            else if(d.expires<TODAY_ISO) exp = `<span class="badge red">Expired ${fmtDMY(d.expires)}</span>`;
+            else if(d.expires<SOON_CUTOFF_ISO) exp = `<span class="badge amber">Expires ${fmtDMY(d.expires)}</span>`;
+            else exp = `<span class="badge gray">Valid to ${fmtDMY(d.expires)}</span>`;
             return `<tr>
               <td><b>${esc(n.short)}</b></td>
               <td>${esc(d.type)}</td>
@@ -5960,7 +6043,7 @@ function pageDocs(){
    ================================================================= */
 function pageAdmin(){
   const users = DB.users || [];
-  const apls = users.filter(u=>u.role==="APL");
+  const apls = users.filter(u=>u.role!=="PM");
   const pm   = users.find(u=>u.role==="PM");
   const ngos = DB.ngos || [];
 
@@ -5972,7 +6055,7 @@ function pageAdmin(){
         <h1 class="serif">Admin</h1>
         <div class="desc">Manage who can sign in and which NGOs each partnership lead covers.</div>
       </div>
-      <button class="btn accent" onclick="openAplForm()">+ Add Partnership Lead</button>
+      <button class="btn accent" onclick="openAplForm()">+ Add user</button>
     </div>
   </div>
 
@@ -5995,13 +6078,13 @@ function pageAdmin(){
 
   <div class="panel" style="margin-bottom:16px">
     <div class="panel-h">
-      <h3>Partnership Leads</h3>
+      <h3>User Logins</h3>
       <span class="note">${apls.length} login${apls.length!==1?'s':''} · each edits only their assigned NGOs</span>
     </div>
     ${apls.length? `<div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>Name</th><th>Username</th><th>Password</th><th>Assigned NGOs</th><th></th>
+          <th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Assigned NGOs</th><th></th>
         </tr></thead>
         <tbody>
         ${apls.map(u=>{
@@ -6010,9 +6093,8 @@ function pageAdmin(){
             <td><b>${esc(u.name)}</b></td>
             <td class="mono">${esc(u.username)}</td>
             <td class="mono">${esc(u.password)}</td>
-            <td style="font-size:12px">${assigned.length
-              ? assigned.map(n=>esc(n.short)).join(", ")
-              : '<span style="color:var(--ink-3)">none yet</span>'}</td>
+            <td style="font-size:11.5px"><span class="badge ${u.role==='APL'?'blue':u.role==='Accounts'?'violet':u.role==='Finance'?'green':u.role==='Programme'?'amber':'gray'}">${({APL:'Partner NGO',Accounts:'Vadali Accounts',Finance:'Ahmedabad Finance',Programme:'Programme',Viewer:'Viewer'}[u.role])||u.role}</span></td>
+            <td style="font-size:12px">${u.role!=='APL' ? '<span style="color:var(--ink-3)">—</span>' : (assigned.length ? assigned.map(n=>esc(n.short)).join(", ") : '<span style="color:var(--ink-3)">none yet</span>')}</td>
             <td class="num" style="white-space:nowrap">
               <button class="btn ghost sm" onclick="openAplForm('${u.id}')">Edit</button>
               <button class="btn ghost sm" style="color:var(--red)" onclick="deleteApl('${u.id}')">Remove</button>
@@ -6022,7 +6104,7 @@ function pageAdmin(){
         </tbody>
       </table>
     </div>` : `<div class="empty"><div class="mk">⚙</div>
-      <p>No Partnership Lead logins yet. Click <b>+ Add Partnership Lead</b> to create one.</p></div>`}
+      <p>No user logins yet. Click <b>+ Add user</b> to create one.</p></div>`}
   </div>
 
   <div class="panel">
@@ -6069,7 +6151,17 @@ function openAplForm(editId){
       </div>
     </div>
     <div class="field">
-      <label>Assigned NGOs <span style="text-transform:none;font-weight:400">— this APL can edit only these</span></label>
+      <label>Role</label>
+      <select id="apRole">
+        <option value="APL" ${!u||u.role==='APL'?'selected':''}>Partner NGO (raises debit notes)</option>
+        <option value="Accounts" ${u&&u.role==='Accounts'?'selected':''}>KRSF Vadali — Accounts (verify)</option>
+        <option value="Finance" ${u&&u.role==='Finance'?'selected':''}>KRSF Ahmedabad — Finance (approve & release)</option>
+        <option value="Programme" ${u&&u.role==='Programme'?'selected':''}>Programme Team (monitor)</option>
+        <option value="Viewer" ${u&&u.role==='Viewer'?'selected':''}>Viewer (read-only)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Assigned NGOs <span style="text-transform:none;font-weight:400">— Partner NGO logins raise/edit only these</span></label>
       ${ngos.length? `<div class="chk-grid">
         ${ngos.map(n=>`<label class="chk">
           <input type="checkbox" class="apNgo" value="${n.id}" ${u&&(u.ngoIds||[]).includes(n.id)?'checked':''}>
@@ -6087,6 +6179,7 @@ async function saveApl(editId){
   const name = el("apName").value.trim();
   const username = el("apUser").value.trim().toLowerCase();
   const password = el("apPass").value;
+  const role = el("apRole") ? el("apRole").value : "APL";
   if(!name || !username || !password){ toast("Name, username and password are all required"); return; }
   // username must be unique
   const clash = (DB.users||[]).find(x=>x.id!==editId &&
@@ -6097,11 +6190,11 @@ async function saveApl(editId){
   const initials = name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
   if(editId){
     const u = (DB.users||[]).find(x=>x.id===editId);
-    Object.assign(u, { name, username, password, ngoIds,
+    Object.assign(u, { name, username, password, role, ngoIds,
       title: el("apTitle").value.trim()||"Associate Partnership Lead", avatar:initials });
     stampEdit(u);
   } else {
-    const rec = { id:genId("u"), role:"APL", name, username, password, ngoIds,
+    const rec = { id:genId("u"), role, name, username, password, ngoIds,
       title: el("apTitle").value.trim()||"Associate Partnership Lead", avatar:initials };
     stampEdit(rec);
     if(!DB.users) DB.users=[];
@@ -6218,8 +6311,917 @@ window.addEventListener("load", ()=>{
   init().finally(()=>clearTimeout(safetyTimer));
 });
 
+/* ===== FDNMS MODULE (5-role, single host login) ===== */
+/* ===========================================================================
+   FDNMS · Fund Disbursement & Debit Note Management  (additive module)
+   Its OWN 5-role identity + sign-in, independent of the host monitoring login.
+   Persists to localStorage ("krsf_fdnms_v2"). Reads host NGO master (DB.ngos)
+   and reuses host UI helpers. The Goals/OKR/Bets/Budget app is untouched.
+   =========================================================================== */
+const FD_KEY = "krsf_fdnms_v2";
+let FD = null;
+let FD_TAB = null;
+let FD_DRAFT = null;
+let _fdSeq = 1;
+
+/* ---- the five roles, each with distinct rights ---- */
+const FD_ROLES = {
+  NGO:       {label:"Partner NGO",            color:"#3079bd", desc:"Creates & submits debit notes for its own NGO"},
+  Accounts:  {label:"KRSF Vadali · Accounts", color:"#7d63cc", desc:"First-level verification only"},
+  Finance:   {label:"KRSF Ahmedabad · Finance",color:"#1c976a", desc:"Final approval & fund release"},
+  Programme: {label:"Programme Team",         color:"#d6912a", desc:"Read-only monitoring"},
+  Admin:     {label:"Super Admin",            color:"#3f5fd8", desc:"Manages users, NGOs & full access"}
+};
+const FD_FLOW = ["Draft","Submitted","AccountsVerification","ReturnedForCorrection","Resubmitted","FinanceReview","Approved","FundReleased","Closed","Rejected"];
+const FD_LABEL = {Draft:"Draft",Submitted:"Submitted",AccountsVerification:"Accounts Verification",ReturnedForCorrection:"Returned for Correction",Resubmitted:"Resubmitted",FinanceReview:"Finance Review",Approved:"Approved",FundReleased:"Fund Released",Closed:"Closed",Rejected:"Rejected"};
+const FD_CHECKLIST = [
+  {k:"amount", t:"Amount matches bills & invoices", s:"Claimed total reconciles with supporting documents"},
+  {k:"budget", t:"Budget head valid & available", s:"Expense maps to a sanctioned budget line"},
+  {k:"docs",   t:"All supporting documents uploaded", s:"Bills, invoices, annexures & utilisation present"},
+  {k:"vendor", t:"Vendor / beneficiary details verified", s:"Name, bank account and PAN/GST confirmed"},
+  {k:"ngo",    t:"NGO details verified", s:"Partner NGO registration and grant linkage confirmed"},
+  {k:"advance",t:"Previous advances adjusted", s:"Outstanding advances reconciled against this claim"},
+  {k:"calc",   t:"Calculations correct", s:"Line totals, taxes and grand total arithmetic verified"}
+];
+
+/* ---------- persistence ---------- */
+function fdSave(){ try{ localStorage.setItem(FD_KEY, JSON.stringify(FD)); }catch(e){} }
+function fdLoad(){
+  try{ const r=localStorage.getItem(FD_KEY); if(r){ FD=JSON.parse(r); } }catch(e){}
+  if(!FD || typeof FD!=="object"){ FD={users:[],notes:[],payments:[],audit:[],seq:1,paySeq:1,meId:null,seeded:false}; }
+  ["users","notes","payments","audit"].forEach(k=>{ if(!Array.isArray(FD[k])) FD[k]=[]; });
+  if(!FD.seq) FD.seq=FD.notes.length+1;
+  if(!FD.paySeq) FD.paySeq=FD.payments.length+1;
+}
+fdLoad();
+
+/* ---------- identity: mapped from the host single login (ME) ---------- */
+const FD_ROLE_MAP={ PM:"Admin", APL:"NGO", Accounts:"Accounts", Finance:"Finance", Programme:"Programme", Viewer:"Programme" };
+function FD_ME(){ return (typeof ME!=="undefined")?ME:null; }
+function fdSignedIn(){ return !!FD_ME(); }
+function fdRole(){ const m=FD_ME(); return m? (FD_ROLE_MAP[m.role]||"Programme") : null; }
+function fdMe(){ const m=FD_ME(); return m?m.id:"system"; }
+function fdMeName(){ const m=FD_ME(); return m?m.name:"System"; }
+function fdRoleLabel(){ const r=fdRole(); return r?FD_ROLES[r].label:""; }
+function fdIsAdmin(){ return fdRole()==="Admin"; }
+function fdCanCreate(){ return ["NGO","Admin"].includes(fdRole()); }
+function fdCanVerify(){ return ["Accounts","Admin"].includes(fdRole()); }
+function fdCanApprove(){ return ["Finance","Admin"].includes(fdRole()); }
+function fdCanRelease(){ return ["Finance","Admin"].includes(fdRole()); }
+function fdReadOnly(){ return fdRole()==="Programme"; }
+function fdUserById(id){ return (typeof userById==="function")?userById(id):null; }
+function fdUserName(id){ const u=fdUserById(id); if(u)return u.name; if(id==="seed")return"Partner NGO"; return id===fdMe()?fdMeName():"—"; }
+function fdMyNgoIds(){ const m=FD_ME(); if(m&&m.role==="APL") return new Set(Array.isArray(m.ngoIds)?m.ngoIds:[]); return null; }
+function fdAssignedNgos(){ const m=FD_ME(); const all=(DB&&DB.ngos)||[]; if(m&&m.role==="APL") return all.filter(n=>(m.ngoIds||[]).includes(n.id)); return all; }
+function fdVisibleNotes(){ const ids=fdMyNgoIds(); return ids? FD.notes.filter(d=>ids.has(d.ngoId)) : FD.notes.slice(); }
+function fdNgoName(id){ const n=(typeof ngoById==="function")?ngoById(id):null; return n?(n.short||n.name):"—"; }
+function fdNgoFull(id){ const n=(typeof ngoById==="function")?ngoById(id):null; return n?n.name:"—"; }
+
+/* ---------- small helpers ---------- */
+function fdIP(){ return "10."+(20+Math.floor(Math.random()*40))+"."+Math.floor(Math.random()*255)+"."+(2+Math.floor(Math.random()*250)); }
+function fdNow(){ return new Date().toISOString(); }
+function fdDate(iso){ if(!iso)return"—"; const d=new Date(iso); if(isNaN(d))return String(iso); return String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear(); }
+function fdDateTime(iso){ if(!iso)return"—"; const d=new Date(iso); if(isNaN(d))return String(iso); return fdDate(iso)+" · "+d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}); }
+function fdSum(a,f){ return a.reduce((s,x)=>s+(f?f(x):x),0); }
+function fdAge(iso){ return Math.floor((Date.now()-new Date(iso))/864e5); }
+function fdInitials(n){ return (n||"?").split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase(); }
+function fdPill(s){ return `<span class="fst fst-${s}"><span class="sd"></span>${esc(FD_LABEL[s]||s)}</span>`; }
+function fdDocIcon(t){ return ({Bill:"🧾",Invoice:"🧾",Annexure:"📎","Utilisation":"📊","Payment Request":"₹"}[t])||"📄"; }
+function fdNavCount(){ if(!FD)return null; const r=fdRole();
+  if(r==="Accounts"||r==="Admin"){ const n=FD.notes.filter(d=>["Submitted","Resubmitted","AccountsVerification"].includes(d.status)).length; if(n)return n; }
+  if(r==="Finance"){ const n=FD.notes.filter(d=>["FinanceReview","Approved"].includes(d.status)).length; if(n)return n; }
+  if(r==="NGO"){ const ids=fdMyNgoIds(); const n=FD.notes.filter(d=>ids.has(d.ngoId)&&d.status==="ReturnedForCorrection").length; if(n)return n; }
+  return null;
+}
+
+/* ---------- domain ---------- */
+function fdNewNote(ngoId){ const n=FD.seq++; return { id:genId("fdn"), number:"DN/26-27/"+String(n).padStart(4,"0"), ngoId:ngoId||"", projectName:"", grantCode:"", budgetHead:"", purpose:"", lineItems:[], docs:[], vendor:{name:"",ac:"",ifsc:"",bank:"",pan:"",gst:""}, paymentTo:"NGO", advanceAdjusted:0, status:"Draft", checklist:{}, queries:[], accountsApproval:null, financeApproval:null, paymentId:null, total:0, netPayable:0, createdBy:fdMe(), createdAt:fdNow(), submittedAt:null }; }
+function fdRecalc(d){ d.lineItems.forEach(li=>{ li.amount=(+li.qty||0)*(+li.rate||0); }); d.total=fdSum(d.lineItems,li=>+li.amount||0); d.netPayable=d.total-(+d.advanceAdjusted||0); }
+function fdLog(d,action,detail,color){ FD.audit.push({id:genId("fa"),noteId:d.id,number:d.number,userId:fdMe(),userName:fdMeName(),role:fdRoleLabel(),action,detail:detail||"",at:fdNow(),ip:fdIP(),color:color||"accent"}); }
+function fdNoteAudit(id){ return FD.audit.filter(a=>a.noteId===id).sort((a,b)=>new Date(a.at)-new Date(b.at)); }
+function fdById(id){ return FD.notes.find(d=>d.id===id); }
+function fdPayById(id){ return FD.payments.find(p=>p.id===id); }
+function fdNewPayment(d){ const n=FD.paySeq++; const ben=d.paymentTo==="Vendor"?(d.vendor.name||"Vendor"):fdNgoFull(d.ngoId); return { id:genId("fpay"), number:"PMT/26-27/"+String(n).padStart(4,"0"), noteId:d.id, dnNumber:d.number, amount:d.netPayable, beneficiary:ben, beneficiaryType:d.paymentTo, date:fdNow(), mode:"NEFT", utr:"", bankRef:"", remarks:"", status:"Pending", createdBy:fdMe() }; }
+
+/* ---------- seed users + sample notes (local, once) ---------- */
+function fdEnsureSeed(){
+  const ngos=(DB&&DB.ngos)||[];
+  if(FD.seeded || FD.notes.length || !ngos.length){ return; }
+  const apl=(DB.users||[]).find(u=>u.role==="APL" && Array.isArray(u.ngoIds) && u.ngoIds.length);
+  const a = apl? ngoById(apl.ngoIds[0]) : ngos[0];
+  const b = (apl && apl.ngoIds[1] && ngoById(apl.ngoIds[1])) || ngos[1] || a;
+  const uid = apl?apl.id:"seed", uname = apl?apl.name:"Partner NGO";
+  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Programme","Salary","Travel","Admin-Other"];
+  function L(d,xid,xname,role,action,detail,at,color){ FD.audit.push({id:genId("fa"),noteId:d.id,number:d.number,userId:xid,userName:xname,role,action,detail:detail||"",at:at||fdNow(),ip:fdIP(),color:color||"accent"}); }
+  function mk(ngo,head,purpose,items,docs,daysAgo){ const d=fdNewNote(ngo.id); d.createdBy=uid; d.createdByName=uname; d.budgetHead=head; d.purpose=purpose; d.projectName=ngo.name+" \u2014 "+head; d.grantCode="GR-"+head.slice(0,3).toUpperCase()+"-26"; d.lineItems=items; d.docs=docs; d.createdAt=new Date(Date.now()-daysAgo*864e5).toISOString(); fdRecalc(d); FD.notes.push(d); L(d,uid,uname,"Partner NGO","Created Debit Note",items.length+" line item(s)",d.createdAt); return d; }
+  function submit(d,days){ d.submittedAt=new Date(Date.now()-days*864e5).toISOString(); d.status="Submitted"; L(d,uid,uname,"Partner NGO","Submitted for Verification","Submitted to KRSF Vadali Accounts",d.submittedAt); }
+  function verify(d){ d.checklist={}; FD_CHECKLIST.forEach(c=>d.checklist[c.k]=true); d.accountsApproval={by:"seed",byName:"Vadali Accounts Team",at:fdNow(),ip:fdIP(),comment:"All bills reconciled; budget available. Recommended."}; d.status="FinanceReview"; L(d,"seed","Vadali Accounts Team","KRSF Vadali \u00b7 Accounts","Accounts Verified & Recommended","Checklist 7/7 complete. Forwarded to Finance.",null,"green"); }
+  function approve(d){ d.financeApproval={by:"seed",byName:"Ahmedabad Finance",at:fdNow(),ip:fdIP(),comment:"Approved for fund release."}; d.status="Approved"; L(d,"seed","Ahmedabad Finance","KRSF Ahmedabad \u00b7 Finance","Finance Approved Fund Release","Final approval granted",null,"green"); }
+  function release(d){ const p=fdNewPayment(d); p.createdBy="seed"; p.utr="UTR"+Math.floor(1e11+Math.random()*8e11); p.status="Paid"; FD.payments.push(p); d.paymentId=p.id; d.status="FundReleased"; L(d,"seed","Ahmedabad Finance","KRSF Ahmedabad \u00b7 Finance","Fund Released",p.number+" \u00b7 "+fmtRsFull(p.amount)+" \u00b7 UTR "+p.utr,null,"green"); }
+  const d1=mk(a,heads[0]||"Programme","Check-dam civil works at Site A",[{desc:"RCC check dam \u2014 Site A",qty:1,rate:680000},{desc:"Loose boulder structures (12 nos)",qty:12,rate:14500}],[{name:"Contractor Bill #441.pdf",type:"Bill"},{name:"Measurement book.pdf",type:"Annexure"},{name:"Utilisation.xlsx",type:"Utilisation"}],38); submit(d1,37); verify(d1); approve(d1); release(d1);
+  const d2=mk(a,heads[2]||"Travel","SHG revolving-fund disbursal (8 groups)",[{desc:"SHG revolving fund \u2014 8 groups",qty:8,rate:120000}],[{name:"SHG resolutions.pdf",type:"Annexure"},{name:"Disbursal request.pdf",type:"Payment Request"}],9); submit(d2,8); verify(d2);
+  const d3=mk(b,heads[0]||"Programme","Learning kits & library books",[{desc:"Learning kits \u2014 400 children",qty:400,rate:850},{desc:"Library books \u2014 6 centres",qty:6,rate:18000}],[{name:"Vendor quotation.pdf",type:"Invoice"}],6); submit(d3,5); d3.status="ReturnedForCorrection"; d3.queries.push({by:"seed",byName:"Vadali Accounts Team",at:fdNow(),text:"Vendor quotation insufficient \u2014 attach the final tax invoice and centre-wise breakup."}); L(d3,"seed","Vadali Accounts Team","KRSF Vadali \u00b7 Accounts","Returned for Correction","Query raised: missing final tax invoice",null,"amber");
+  const d4=mk(b,heads[1]||"Salary","Classroom repair & flooring \u2014 Centre 3",[{desc:"Civil repair & flooring",qty:1,rate:475000}],[{name:"Civil estimate.pdf",type:"Annexure"},{name:"Photographs.pdf",type:"Annexure"}],2); submit(d4,1);
+  mk(a,heads[1]||"Salary","Farmer field school \u2014 3 villages",[{desc:"Field school sessions",qty:3,rate:45000}],[],1);
+  FD.seeded=true; fdSave();
+}
+
+/* ---------- SIGN-IN gate ---------- */
+function fdSignInScreen(){
+  const groups=Object.keys(FD_ROLES).map(r=>({r,users:FD.users.filter(u=>u.role===r)})).filter(g=>g.users.length);
+  return `
+  <div class="phead"><div class="eyebrow">Fund Disbursement &amp; Debit Notes</div><h1 class="serif">Sign in to FDNMS</h1>
+  <div class="desc">This module has its own roles, each with separate rights. Choose your account to continue. (Super Admin can add more users, including NGO logins, once signed in.)</div></div>
+  <div class="fgrid2">
+    ${groups.map(g=>`<div class="panel"><div class="panel-h"><h3>${esc(FD_ROLES[g.r].label)}</h3><span class="note">${esc(FD_ROLES[g.r].desc)}</span></div><div style="padding:12px">
+      ${g.users.map(u=>`<button class="fd-userbtn" onclick="fdSetUser('${u.id}')"><span class="av" style="background:${FD_ROLES[u.role].color}">${esc(fdInitials(u.name))}</span><span style="text-align:left"><span style="font-weight:600;font-size:13px;display:block">${esc(u.name)}</span><span style="font-size:11px;color:var(--ink-3)">@${esc(u.username||"user")}${u.role==="NGO"&&u.ngoIds&&u.ngoIds.length?" · "+u.ngoIds.map(fdNgoName).join(", "):""}</span></span></button>`).join("")}
+    </div></div>`).join("")}
+  </div>`;
+}
+function fdSetUser(id){ FD.meId=id; fdSave(); FD_TAB=null; render(); window.scrollTo(0,0); toast("Signed in to FDNMS as "+fdMeName()); }
+function fdSwitchUser(){ FD.meId=null; fdSave(); FD_TAB=null; render(); }
+
+/* ===========================================================================
+   PAGE · FDNMS
+   =========================================================================== */
+function fdTabsForRole(){
+  switch(fdRole()){
+    case"NGO":       return [["overview","Overview"],["salary","Employees & Salary"],["mine","My Debit Notes"],["new","New Debit Note"],["repo","Repository"],["search","Search"]];
+    case"Accounts":  return [["overview","Overview"],["verify","Verification Queue",true],["all","All Debit Notes"],["repo","Repository"],["audit","Audit Trail"],["search","Search"]];
+    case"Finance":   return [["overview","Overview"],["approve","Approval Queue",true],["release","Fund Release"],["all","All Debit Notes"],["repo","Repository"],["audit","Audit Trail"],["search","Search"]];
+    case"Programme": return [["overview","Overview"],["all","All Debit Notes"],["upload","Upload Debit Note"],["monitor","Fund Utilisation"],["repo","Repository"],["search","Search"]];
+    case"Admin":     return [["overview","Overview"],["all","All Debit Notes"],["upload","Upload Debit Note"],["salary","Employees & Salary"],["verify","Verification"],["approve","Approval"],["release","Fund Release"],["repo","Repository"],["audit","Audit Trail"],["search","Search"]];
+    default:         return [["overview","Overview"]];
+  }
+}
+function fdGo(tab){ FD_TAB=tab; if(tab!=="new") FD_DRAFT=null; render(); window.scrollTo(0,0); }
+function pageFDNMS(){
+  fdEnsureSeed();
+  const tabs=fdTabsForRole();
+  if(!FD_TAB || !tabs.some(t=>t[0]===FD_TAB)) FD_TAB=tabs[0][0];
+  const head=`
+    <div class="phead"><div class="phead-row">
+      <div><div class="eyebrow">${esc((DB&&DB.meta&&DB.meta.fyLabel)||"FY 2026-27")} \u00b7 Fund Disbursement \u00b7 ${esc(fdRoleLabel())}</div>
+        <h1 class="serif">Debit Note Management</h1>
+        <div class="desc">Digital debit-note approval &amp; grant disbursement \u2014 submission, two-level verification, fund release and a full audit trail.</div></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="fd-whoami"><span class="av" style="background:var(--accent)">${esc(fdInitials(fdMeName()))}</span><span><b>${esc(fdMeName())}</b><br><span style="font-size:11px;color:var(--ink-3)">${esc(fdRoleLabel())}</span></span></span>
+        ${fdCanCreate()?`<button class="btn accent" onclick="fdGo('new')">+ New Debit Note</button>`:""}
+      </div>
+    </div></div>`;
+  const cVer=FD.notes.filter(d=>["Submitted","Resubmitted","AccountsVerification"].includes(d.status)).length;
+  const cApp=FD.notes.filter(d=>d.status==="FinanceReview").length;
+  const bar=`<div class="fd-tabs">${tabs.map(t=>{ const c=t[0]==="verify"?cVer:t[0]==="approve"?cApp:null; return `<button class="fd-tab ${FD_TAB===t[0]?'on':''}" onclick="fdGo('${t[0]}')">${esc(t[1])}${c?`<span class="ct alert">${c}</span>`:""}</button>`; }).join("")}</div>`;
+  let body="";
+  switch(FD_TAB){
+    case"overview": body=fdOverview(); break;
+    case"verify":   body=fdQueue("verify"); break;
+    case"approve":  body=fdQueue("approve"); break;
+    case"mine": case"all": body=fdListView(); break;
+    case"new":      body=fdCreateView(); break;
+    case"salary":   body=fdSalaryView(); break;
+    case"upload":   body=fdUploadView(); break;
+    case"release":  body=fdReleaseView(); break;
+    case"monitor":  body=fdMonitorView(); break;
+    case"repo":     body=fdRepoView(); break;
+    case"audit":    body=fdAuditView(); break;
+    case"search":   body=fdSearchView(); break;
+    default:        body=fdOverview();
+  }
+  return head+bar+body;
+}
+function fdKpi(tile,ic,lab,val,sub){ return `<div class="kpi"><div class="ktop"><div class="ktile ${tile}">${ic}</div><div class="lab">${esc(lab)}</div></div><div class="val">${val}</div><div class="sub">${sub||""}</div></div>`; }
+
+/* ---------- OVERVIEW ---------- */
+function fdOverview(){
+  const role=fdRole(), notes=fdVisibleNotes();
+  if(role==="NGO"){
+    const released=notes.filter(d=>d.status==="FundReleased"), pending=notes.filter(d=>!["FundReleased","Closed","Rejected","Draft"].includes(d.status)), returned=notes.filter(d=>d.status==="ReturnedForCorrection");
+    return (returned.length?`<div class="fbanner amber">↩ ${returned.length} debit note(s) need correction. <a style="margin-left:auto;cursor:pointer" onclick="fdGo('mine')">Review →</a></div>`:"")+
+    `<div class="kpi-grid">${fdKpi("blue","▦","My Debit Notes",notes.length,fmtRs(fdSum(notes,d=>d.netPayable))+" total")}${fdKpi("amber","⏳","In Progress",pending.length,"awaiting KRSF")}${fdKpi("green","✓","Fund Released",released.length,fmtRs(fdSum(released,d=>d.netPayable)))}${fdKpi("red","↩","Need Correction",returned.length,"")}</div>`+fdMiniTable(notes.slice().reverse().slice(0,8),"My recent debit notes");
+  }
+  if(role==="Accounts"){
+    const vq=notes.filter(d=>["Submitted","Resubmitted","AccountsVerification"].includes(d.status)), recommended=notes.filter(d=>d.accountsApproval), overdue=vq.filter(d=>fdAge(d.submittedAt||d.createdAt)>3);
+    return (vq.length?`<div class="fbanner amber">⏳ ${vq.length} note(s) awaiting your verification — ${fmtRs(fdSum(vq,d=>d.netPayable))}. <a style="margin-left:auto;cursor:pointer" onclick="fdGo('verify')">Open queue →</a></div>`:"")+
+    `<div class="kpi-grid">${fdKpi("blue","▦","Submitted",notes.filter(d=>d.status!=="Draft").length,"")}${fdKpi("amber","⏳","Pending Verification",vq.length,fmtRs(fdSum(vq,d=>d.netPayable)))}${fdKpi("red","⚠","Overdue (>3d)",overdue.length,"")}${fdKpi("green","✓","Recommended",recommended.length,"to Finance")}</div>`+fdQueue("verify");
+  }
+  if(role==="Finance"){
+    const aq=notes.filter(d=>d.status==="FinanceReview"), appr=notes.filter(d=>d.status==="Approved"), rel=FD.payments.filter(p=>p.status==="Paid"), high=aq.filter(d=>d.netPayable>=1000000);
+    return (aq.length?`<div class="fbanner accent">📋 ${aq.length} verified note(s) awaiting final approval. <a style="margin-left:auto;cursor:pointer" onclick="fdGo('approve')">Review →</a></div>`:"")+(appr.length?`<div class="fbanner green">₹ ${appr.length} approved note(s) ready for release. <a style="margin-left:auto;cursor:pointer" onclick="fdGo('release')">Release →</a></div>`:"")+
+    `<div class="kpi-grid">${fdKpi("accent","📋","Pending Approval",aq.length,fmtRs(fdSum(aq,d=>d.netPayable)))}${fdKpi("amber","₹","Approved Awaiting",appr.length,fmtRs(fdSum(appr,d=>d.netPayable)))}${fdKpi("green","✓","Funds Released",rel.length,fmtRs(fdSum(rel,p=>p.amount)))}${fdKpi("red","★","High Value",high.length,"≥ ₹10 L")}</div>`+fdQueue("approve");
+  }
+  // Programme + Admin
+  const sub=notes.filter(d=>d.status!=="Draft"), rel=FD.payments.filter(p=>p.status==="Paid"), pend=notes.filter(d=>!["FundReleased","Closed","Rejected","Draft"].includes(d.status));
+  return `<div class="kpi-grid">${fdKpi("blue","▦","All Debit Notes",sub.length,fmtRs(fdSum(sub,d=>d.netPayable)))}${fdKpi("green","₹","Funds Disbursed",fmtRs(fdSum(rel,p=>p.amount)),rel.length+" releases")}${fdKpi("amber","⏳","In Pipeline",pend.length,fmtRs(fdSum(pend,d=>d.netPayable)))}${fdKpi("violet","◷","Avg Cycle",fdAvgCycle()+"d","submit→release")}</div>`+
+    (role==="Admin"?`<div class="fbanner accent">You are Super Admin — manage roles & NGO logins in <a style="cursor:pointer;text-decoration:underline" onclick="fdGo('users')">Users &amp; Roles</a>.</div>`:"")+fdMiniTable(sub.slice().reverse().slice(0,8),"Recent activity");
+}
+function fdAvgCycle(){ const rel=FD.notes.filter(d=>d.status==="FundReleased"&&d.paymentId&&d.submittedAt); if(!rel.length)return"—"; const days=rel.map(d=>{ const p=fdPayById(d.paymentId); return (new Date(p.date)-new Date(d.submittedAt))/864e5; }); return Math.max(1,Math.round(fdSum(days)/days.length)); }
+function fdMiniTable(rows,title){ return `<div class="panel"><div class="panel-h"><h3>${esc(title)}</h3></div><div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>NGO</th><th class="num">Net Payable</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rows.length?rows.map(d=>`<tr style="cursor:pointer" onclick="openFDN('${d.id}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(fdNgoName(d.ngoId))}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td>${fdPill(d.status)}</td><td style="font-size:11.5px;color:var(--ink-2)">${fdDate(d.submittedAt||d.createdAt)}</td></tr>`).join(""):`<tr><td colspan="5"><div class="empty"><div class="mk">▦</div><p>Nothing yet.</p></div></td></tr>`}</tbody></table></div></div>`; }
+
+/* ---------- LIST ---------- */
+let FD_LISTFILTER="all";
+function fdListView(){
+  const notes=fdVisibleNotes();
+  const filters=[["all","All"],["open","In Progress"],["Approved","Approved"],["FundReleased","Released"],["ReturnedForCorrection","Returned"],["Rejected","Rejected"]];
+  const match=(d,f)=> f==="all"?true : f==="open"?!["Approved","FundReleased","Closed","Rejected"].includes(d.status) : d.status===f;
+  const shown=notes.filter(d=>match(d,FD_LISTFILTER));
+  return `<div class="seg-toggle" style="margin-bottom:16px">${filters.map(f=>`<button class="${FD_LISTFILTER===f[0]?'on':''}" onclick="FD_LISTFILTER='${f[0]}';render()">${esc(f[1])} ${notes.filter(d=>match(d,f[0])).length}</button>`).join("")}</div>
+  <div class="panel"><div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>NGO / Project</th><th>Budget Head</th><th class="num">Net Payable</th><th>Status</th><th>Updated</th></tr></thead>
+  <tbody>${shown.length?shown.slice().reverse().map(d=>`<tr style="cursor:pointer" onclick="openFDN('${d.id}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b><div style="font-size:10.5px;color:var(--ink-3)">${d.lineItems.length} item(s)</div></td><td><b>${esc(fdNgoName(d.ngoId))}</b><div style="font-size:11px;color:var(--ink-3)">${esc(d.projectName||"—")}</div></td><td>${esc(d.budgetHead||"—")}</td><td class="num"><b>${fmtRsFull(d.netPayable)}</b></td><td>${fdPill(d.status)}</td><td style="font-size:11.5px;color:var(--ink-2)">${fdDate(d.submittedAt||d.createdAt)}</td></tr>`).join(""):`<tr><td colspan="6"><div class="empty"><div class="mk">▦</div><p>No debit notes match this filter.</p></div></td></tr>`}</tbody></table></div></div>`;
+}
+
+/* ---------- QUEUE ---------- */
+function fdQueue(kind){
+  const canAct = kind==="verify"?fdCanVerify():fdCanApprove();
+  const states = kind==="verify"?["Submitted","Resubmitted","AccountsVerification"]:["FinanceReview"];
+  const list=FD.notes.filter(d=>states.includes(d.status)).sort((a,b)=>new Date(a.submittedAt||a.createdAt)-new Date(b.submittedAt||b.createdAt));
+  return `<div class="panel"><div class="panel-h"><h3>${kind==="verify"?"First-Level Verification — Accounts":"Final Approval — Finance"}</h3><span class="note">${list.length} awaiting · ${fmtRs(fdSum(list,d=>d.netPayable))}</span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>NGO</th><th>Budget Head</th><th class="num">Net Payable</th><th>Age</th><th>Status</th><th></th></tr></thead>
+  <tbody>${list.length?list.map(d=>`<tr style="cursor:pointer" onclick="openFDN('${d.id}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(fdNgoName(d.ngoId))}</td><td>${esc(d.budgetHead||"—")}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td style="font-size:11.5px">${fdAge(d.submittedAt||d.createdAt)}d</td><td>${fdPill(d.status)}</td><td style="text-align:right">${canAct?`<button class="btn primary sm" onclick="event.stopPropagation();${kind==='verify'?`fdOpenVerify('${d.id}')`:`fdOpenApprove('${d.id}')`}">${kind==='verify'?'Verify':'Review'} →</button>`:""}</td></tr>`).join(""):`<tr><td colspan="7"><div class="empty"><div class="mk">✓</div><p>Queue is clear.</p></div></td></tr>`}</tbody></table></div></div>`;
+}
+
+/* ---------- DETAIL ---------- */
+function fdApprovalCard(title,a,color){ if(!a)return""; return `<div style="margin-bottom:10px;padding:11px;background:var(--${color}-soft);border-radius:10px"><div style="font-weight:700;color:var(--${color})">${esc(title)}</div><div style="font-size:11.5px;margin-top:3px">${esc(a.byName||fdUserName(a.by))} · ${fdDateTime(a.at)}</div><div style="font-size:11px;color:var(--ink-3)">IP ${esc(a.ip||"—")}</div>${a.comment?`<div style="font-size:12px;margin-top:5px">"${esc(a.comment)}"</div>`:""}</div>`; }
+function fdOwnsNote(d){ const ids=fdMyNgoIds(); return fdIsAdmin() || (fdRole()==="NGO" && ids && ids.has(d.ngoId)); }
+function openFDN(id){
+  const d=fdById(id); if(!d)return; const aud=fdNoteAudit(id); const pay=d.paymentId?fdPayById(d.paymentId):null;
+  let actions="";
+  if(fdCanCreate() && fdOwnsNote(d) && d.status==="Draft") actions+=`<button class="btn" onclick="fdEditDraft('${id}')">Edit Draft</button><button class="btn primary" onclick="fdSubmit('${id}')">Submit for Verification →</button>`;
+  if(fdCanCreate() && fdOwnsNote(d) && d.status==="ReturnedForCorrection") actions+=`<button class="btn" onclick="fdEditDraft('${id}')">Revise</button><button class="btn primary" onclick="fdRespond('${id}')">Respond &amp; Resubmit →</button>`;
+  if(fdCanVerify() && ["Submitted","Resubmitted","AccountsVerification"].includes(d.status)) actions+=`<button class="btn primary" onclick="fdOpenVerify('${id}')">Open Verification ▦</button>`;
+  if(fdCanApprove() && d.status==="FinanceReview") actions+=`<button class="btn primary" onclick="fdOpenApprove('${id}')">Final Review ▦</button>`;
+  if(fdCanRelease() && d.status==="Approved") actions+=`<button class="btn green" onclick="fdOpenRelease('${id}')">₹ Record Fund Release</button>`;
+  const done=Object.values(d.checklist||{}).filter(Boolean).length;
+  const body=`
+    <div class="finfo" style="margin-bottom:16px">
+      <div><div class="k">Partner NGO</div><div class="v">${esc(fdNgoFull(d.ngoId))}</div></div>
+      <div><div class="k">Project</div><div class="v">${esc(d.projectName||"—")}</div></div>
+      <div><div class="k">Grant Code</div><div class="v mono">${esc(d.grantCode||"—")}</div></div>
+      <div><div class="k">Budget Head</div><div class="v">${esc(d.budgetHead||"—")}</div></div>
+      <div><div class="k">Payment To</div><div class="v">${d.paymentTo==="Vendor"?"Vendor (on behalf of NGO)":"Partner NGO"}</div></div>
+      <div><div class="k">Raised By</div><div class="v">${esc(fdUserName(d.createdBy))}</div></div>
+    </div>
+    ${d.purpose?`<div style="background:var(--paper-2);padding:11px 13px;border-radius:10px;font-size:12.5px;margin-bottom:16px"><b>Purpose:</b> ${esc(d.purpose)}</div>`:""}
+    <div class="panel" style="margin-bottom:16px"><div class="panel-h"><h3>Line Items</h3><span class="ha" style="margin-left:auto;display:flex;gap:8px"><button class="btn sm" onclick="fdPrint('${id}')">🖨 Print Soft Copy</button><button class="btn sm" onclick="fdExcel('${id}')">⬇ Excel</button></span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Sr. No.</th><th>Description</th><th class="num">Amount (₹)</th></tr></thead><tbody>
+      ${d.lineItems.map((li,i)=>`<tr><td>${i+1}</td><td>${esc(li.desc)}</td><td class="num">${fmtRsFull(li.amount)}</td></tr>`).join("")}
+      <tr><td colspan="2" style="text-align:right;font-weight:700">Total</td><td class="num" style="font-weight:700">${fmtRsFull(d.total)}</td></tr>
+      ${d.advanceAdjusted?`<tr><td colspan="2" style="text-align:right">Less: Advance Adjusted</td><td class="num">− ${fmtRsFull(d.advanceAdjusted)}</td></tr>`:""}
+      <tr><td colspan="2" style="text-align:right;font-weight:700">Net Payable</td><td class="num" style="font-weight:800;color:var(--accent)">${fmtRsFull(d.netPayable)}</td></tr></tbody></table></div></div>
+    ${(d.paymentTo==="Vendor"&&d.vendor.name)?`<div class="panel" style="margin-bottom:16px"><div class="panel-h"><h3>Vendor / Beneficiary</h3></div><div style="padding:14px" class="finfo"><div><div class="k">Name</div><div class="v">${esc(d.vendor.name)}</div></div><div><div class="k">A/c No.</div><div class="v mono">${esc(d.vendor.ac||"—")}</div></div><div><div class="k">IFSC</div><div class="v mono">${esc(d.vendor.ifsc||"—")}</div></div><div><div class="k">Bank</div><div class="v">${esc(d.vendor.bank||"—")}</div></div><div><div class="k">PAN</div><div class="v mono">${esc(d.vendor.pan||"—")}</div></div><div><div class="k">GST</div><div class="v mono">${esc(d.vendor.gst||"—")}</div></div></div></div>`:""}
+    <div class="fgrid2">
+      <div class="panel"><div class="panel-h"><h3>Documents</h3><span class="note">${d.docs.length} file(s)</span></div><div style="padding:14px">${d.docs.length?d.docs.map((doc,di)=>`<div class="fdoc"><span class="di">${fdDocIcon(doc.type)}</span><div style="flex:1"><div class="dn">${esc(doc.name)}</div><div class="dm">${esc(doc.type)}${doc.size?` · ${Math.round(doc.size/1024)} KB`:""}</div></div>${doc.dataUrl?`<button class="btn ghost sm" onclick="fdOpenDoc('${d.id}',${di})">View</button>`:""}</div>`).join(""):`<div class="empty" style="padding:14px"><p>No documents.</p></div>`}</div></div>
+      <div class="panel"><div class="panel-h"><h3>Verification &amp; Approval</h3>${done?`<span class="badge ${done===7?'green':'amber'}">${done}/7 checks</span>`:`<span class="badge gray">pending</span>`}</div><div style="padding:14px;font-size:12.5px">${d.accountsApproval?fdApprovalCard("Verified — Accounts (Vadali)",d.accountsApproval,"violet"):`<div style="color:var(--ink-3)">Not yet verified by Accounts.</div>`}${fdApprovalCard("Approved — Finance (Ahmedabad)",d.financeApproval,"green")}${pay?`<div style="margin-top:6px;padding:11px;background:var(--green-soft);border-radius:10px"><b>${esc(pay.number)}</b> · ${fmtRsFull(pay.amount)}<div style="font-size:11.5px;color:var(--ink-2)">${esc(pay.beneficiary)} · ${esc(pay.mode)} · UTR ${esc(pay.utr||"—")} · ${esc(pay.status)}</div></div>`:""}</div></div>
+    </div>
+    ${(d.queries&&d.queries.length)?`<div class="panel" style="margin-top:16px"><div class="panel-h"><h3>Queries &amp; Responses</h3></div><div style="padding:14px">${d.queries.map(q=>`<div class="ftl-item amber" style="padding-left:0;margin-bottom:8px"><div class="cmt" style="border-left-color:var(--amber)"><b>${esc(q.byName||fdUserName(q.by))}:</b> ${esc(q.text)}<div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">${fdDateTime(q.at)}</div>${q.response?`<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--rule-2)"><b>NGO response:</b> ${esc(q.response)}</div>`:""}</div></div>`).join("")}</div></div>`:""}
+    <div class="panel" style="margin-top:16px"><div class="panel-h"><h3>Audit Trail</h3><span class="note">append-only · ${aud.length} entries</span></div><div style="padding:14px"><div class="ftl">${aud.map(a=>`<div class="ftl-item ${a.color}"><div class="pt"></div><div class="act">${esc(a.action)}</div><div class="meta">${esc(a.userName||fdUserName(a.userId))}${a.role?" · "+esc(a.role):""} · ${fdDateTime(a.at)} · IP ${esc(a.ip)}</div>${a.detail?`<div class="cmt">${esc(a.detail)}</div>`:""}</div>`).join("")}</div></div></div>`;
+  const foot=`${actions||`<span style="font-size:11.5px;color:var(--ink-3);margin-right:auto">No actions available for your role at this stage.</span>`}<button class="btn" onclick="closeModal()">Close</button>`;
+  showModal(modalShell(esc(d.number)+" &nbsp; "+fdPill(d.status), esc(d.projectName||fdNgoFull(d.ngoId)), body, foot), true);
+}
+
+/* ---------- CREATE / EDIT ---------- */
+function fdEditDraft(id){ closeModal(); FD_DRAFT=JSON.parse(JSON.stringify(fdById(id))); FD_TAB="new"; render(); window.scrollTo(0,0); }
+function fdCreateView(){
+  if(!fdCanCreate()) return `<div class="empty"><div class="mk">🔒</div><p>Only NGO users (and Super Admin) can create debit notes.</p></div>`;
+  const ng=fdAssignedNgos();
+  if(!ng.length) return `<div class="empty"><div class="mk">⚠</div><p>No NGO is assigned to your login. Ask the Super Admin to assign an NGO under Users &amp; Roles.</p></div>`;
+  if(!FD_DRAFT){ FD_DRAFT=fdNewNote(ng[0].id); }
+  return fdForm();
+}
+function fdForm(){
+  const d=FD_DRAFT; while(d.lineItems.length<3) d.lineItems.push({desc:"",qty:1,rate:0,amount:0});
+  fdRecalc(d); const ngos=fdAssignedNgos();
+  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Programme","Salary","Travel","Admin-Other"];
+  const editing=!!fdById(d.id);
+  return `
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-h"><h3>${editing?"Edit":"New"} Debit Note \u00b7 <span class="mono">${esc(d.number)}</span></h3><span class="note">spreadsheet entry \u2014 click a cell &amp; type \u00b7 Enter = next row \u00b7 paste rows straight from Excel</span></div>
+    <div class="xlbar">
+      <div class="xf"><label>Partner NGO</label><select onchange="fdDraft('ngoId',this.value)">${ngos.map(n=>`<option value="${n.id}" ${n.id===d.ngoId?'selected':''}>${esc(n.name)}</option>`).join("")}</select></div>
+      <div class="xf"><label>Budget Head</label><select onchange="fdDraft('budgetHead',this.value)"><option value="">Select\u2026</option>${heads.map(h=>`<option ${h===d.budgetHead?'selected':''}>${esc(h)}</option>`).join("")}</select></div>
+      <div class="xf"><label>Payment To</label><select onchange="fdDraft('paymentTo',this.value)"><option value="NGO" ${d.paymentTo==="NGO"?'selected':''}>Partner NGO</option><option value="Vendor" ${d.paymentTo==="Vendor"?'selected':''}>Vendor (direct)</option></select></div>
+      <div class="xf"><label>Grant Code</label><input value="${esc(d.grantCode)}" onchange="fdDraft('grantCode',this.value)" placeholder="GR-\u2026"></div>
+      <div class="xf"><label>Less: Advance (\u20b9)</label><input inputmode="decimal" value="${d.advanceAdjusted||0}" onchange="fdDraft('advanceAdjusted',fdXlNum(this.value));var a=el('fdAdv');if(a)a.textContent='\u2212 '+fmtRsFull(FD_DRAFT.advanceAdjusted||0)"></div>
+      <div class="xf grow"><label>Project / Programme</label><input value="${esc(d.projectName)}" onchange="fdDraft('projectName',this.value)" placeholder="e.g. Watershed programme"></div>
+      <div class="xf grow"><label>Purpose / Narration</label><input value="${esc(d.purpose)}" onchange="fdDraft('purpose',this.value)" placeholder="Brief description of the claim"></div>
+    </div>
+    <div class="xl" id="fdXl"><table>
+      <thead><tr><th class="xn">Sr.<br>No.</th><th>Description</th><th class="xr" style="width:170px">Amount (\u20b9)</th><th class="xn" style="width:36px"></th></tr></thead>
+      <tbody id="fdLiBody">${d.lineItems.map((li,i)=>fdLiRow(li,i)).join("")}</tbody>
+      <tfoot>
+        <tr><td colspan="2" style="text-align:right">Total</td><td class="xr" id="fdLiTotal">${fmtRsFull(d.total)}</td><td></td></tr>
+        <tr><td colspan="2" style="text-align:right">Less: Advance Adjusted</td><td class="xr" id="fdAdv">\u2212 ${fmtRsFull(d.advanceAdjusted||0)}</td><td></td></tr>
+        <tr class="big"><td colspan="2" style="text-align:right">NET PAYABLE</td><td class="xr" id="fdNet">${fmtRsFull(d.netPayable)}</td><td></td></tr>
+      </tfoot>
+    </table></div>
+    <div class="xltip">\ud83d\udca1 Tip: copy rows in Excel (Description \u21e5 Amount) and paste into any cell \u2014 rows fill automatically. &nbsp;<button class="btn sm ghost" onclick="fdAddLine()">+ Add row</button></div>
+    ${d.paymentTo==="Vendor"?`<div style="padding:0 12px 4px"><div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:6px 0 4px">Vendor / Beneficiary</div>
+    <div class="xl"><table>
+      <thead><tr><th>Vendor Name</th><th>Account No.</th><th>IFSC</th><th>Bank &amp; Branch</th><th>PAN</th><th>GST</th></tr></thead>
+      <tbody><tr>
+        <td class="xlc"><input value="${esc(d.vendor.name)}" onchange="fdVend('name',this.value)"></td>
+        <td class="xlc"><input value="${esc(d.vendor.ac)}" onchange="fdVend('ac',this.value)"></td>
+        <td class="xlc"><input value="${esc(d.vendor.ifsc)}" onchange="fdVend('ifsc',this.value)"></td>
+        <td class="xlc"><input value="${esc(d.vendor.bank)}" onchange="fdVend('bank',this.value)"></td>
+        <td class="xlc"><input value="${esc(d.vendor.pan)}" onchange="fdVend('pan',this.value)"></td>
+        <td class="xlc"><input value="${esc(d.vendor.gst)}" onchange="fdVend('gst',this.value)"></td>
+      </tr></tbody></table></div></div>`:""}
+    <div style="padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--rule)">
+      <span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700">Documents</span>
+      ${d.docs.map((doc,i)=>`<span class="badge gray">${fdDocIcon(doc.type)} ${esc(doc.name)} <a style="color:var(--red);cursor:pointer;margin-left:4px" onclick="fdRmDoc(${i})">\u00d7</a></span>`).join("")}
+      <button class="btn sm ghost" onclick="fdAddDoc()">+ Attach</button>
+      <span style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn" onclick="fdXlClean();fdSaveDraft(false)">\ud83d\udcbe Save Draft</button>
+        <button class="btn primary" onclick="fdXlClean();fdSaveDraft(true)">Submit for Verification \u2192</button>
+        <button class="btn ghost" onclick="FD_DRAFT=null;fdGo('${"${fdRole()==='NGO'?'mine':'all'}"}')">Cancel</button>
+      </span>
+    </div>
+  </div>`;
+}
+function fdLiRow(li,i){ return `<tr data-i="${i}">
+  <td class="xn">${i+1}</td>
+  <td class="xlc"><input data-r="${i}" data-c="0" value="${esc(li.desc)}" onkeydown="fdXlKey(event,${i},0)" onpaste="fdXlPaste(event,${i},0)" onchange="fdLi(${i},'desc',this.value)"></td>
+  <td class="xlc xr"><input data-r="${i}" data-c="1" inputmode="decimal" value="${li.amount||0}" onkeydown="fdXlKey(event,${i},1)" onpaste="fdXlPaste(event,${i},1)" onchange="fdLiAmt(${i},fdXlNum(this.value))"></td>
+  <td class="xn"><button class="xdel" tabindex="-1" onclick="fdRmLine(${i})">\u00d7</button></td></tr>`; }
+function fdLiAmt(i,v){ const li=FD_DRAFT.lineItems[i]; if(!li)return; li.qty=1; li.rate=v; li.amount=v; fdRecalc(FD_DRAFT); fdRefreshTotals(); }
+function fdXlNum(v){ const n=parseFloat(String(v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; }
+function fdXlGoto(r,c){ setTimeout(function(){ const inp=document.querySelector('#fdXl input[data-r="'+r+'"][data-c="'+c+'"]'); if(inp){ inp.focus(); try{inp.select();}catch(e){} } },25); }
+function fdXlKey(e,r,c){
+  if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); if(r>=FD_DRAFT.lineItems.length-1){ FD_DRAFT.lineItems.push({desc:"",qty:1,rate:0,amount:0}); render(); } fdXlGoto(r+1,c); }
+  else if(e.key==="ArrowDown"&&r<FD_DRAFT.lineItems.length-1){ e.preventDefault(); e.target.blur(); fdXlGoto(r+1,c); }
+  else if(e.key==="ArrowUp"&&r>0){ e.preventDefault(); e.target.blur(); fdXlGoto(r-1,c); }
+}
+function fdXlParse(t){ return String(t).replace(/\r/g,"").split("\n").filter(function(l){return l.trim()!=="";}).map(function(l){return l.split("\t");}); }
+function fdXlPaste(e,r,c){
+  let t=""; try{ t=(e.clipboardData||window.clipboardData).getData("text"); }catch(err){}
+  if(!t || (t.indexOf("\t")<0 && t.indexOf("\n")<0)) return;
+  e.preventDefault();
+  const grid=fdXlParse(t), d=FD_DRAFT;
+  grid.forEach(function(cells,ri){ const rr=r+ri;
+    while(d.lineItems.length<=rr) d.lineItems.push({desc:"",qty:1,rate:0,amount:0});
+    cells.forEach(function(val,ci){ const cc=c+ci;
+      if(cc===0) d.lineItems[rr].desc=String(val).trim();
+      else if(cc===1){ const n=fdXlNum(val); d.lineItems[rr].qty=1; d.lineItems[rr].rate=n; d.lineItems[rr].amount=n; }
+    });
+  });
+  fdRecalc(d); render(); toast("Pasted "+grid.length+" row(s) from clipboard"); fdXlGoto(Math.min(r+grid.length-1,d.lineItems.length-1),c);
+}
+function fdXlClean(){ if(!FD_DRAFT)return; FD_DRAFT.lineItems=FD_DRAFT.lineItems.filter(function(li){ return (li.desc&&String(li.desc).trim()) || ((+li.qty||0)*(+li.rate||0))>0; }); fdRecalc(FD_DRAFT); }
+
+function fdDraft(k,v){ FD_DRAFT[k]=v; if(k==="ngoId"||k==="paymentTo"){ render(); } else { fdRecalc(FD_DRAFT); fdRefreshTotals(); } }
+function fdVend(k,v){ FD_DRAFT.vendor[k]=v; }
+function fdAddLine(){ FD_DRAFT.lineItems.push({desc:"",qty:1,rate:0,amount:0}); render(); }
+function fdRmLine(i){ FD_DRAFT.lineItems.splice(i,1); render(); }
+function fdLi(i,k,v){ FD_DRAFT.lineItems[i][k]=v; fdRecalc(FD_DRAFT); const row=document.querySelector(`#fdLiBody tr[data-i="${i}"] [data-amt]`); if(row)row.textContent=fmtRsFull(FD_DRAFT.lineItems[i].amount); fdRefreshTotals(); }
+function fdRefreshTotals(){ fdRecalc(FD_DRAFT); const t=el("fdLiTotal"); if(t)t.textContent=fmtRsFull(FD_DRAFT.total); const n=el("fdNet"); if(n)n.textContent=fmtRsFull(FD_DRAFT.netPayable); }
+function fdAddDoc(){ showModal(modalShell("Attach","Attach Document",`<div class="field"><label>Document type</label><select id="fdDocType">${["Bill","Invoice","Annexure","Utilisation","Payment Request","Other"].map(t=>`<option>${t}</option>`).join("")}</select></div><div class="field" style="margin-top:10px"><label>File name</label><input id="fdDocName" placeholder="e.g. Contractor Bill #441.pdf"></div><div style="font-size:11px;color:var(--ink-3);margin-top:8px">Demo records the document reference. In production this uploads the actual file.</div>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdConfirmDoc()">Attach</button>`)); }
+function fdConfirmDoc(){ const name=el("fdDocName").value.trim(); if(!name){ toast("Enter a file name"); return; } FD_DRAFT.docs.push({name,type:el("fdDocType").value,by:fdMe()}); closeModal(); render(); }
+function fdRmDoc(i){ FD_DRAFT.docs.splice(i,1); render(); }
+function fdValidate(d){ const e=[]; if(!d.ngoId)e.push("Select an NGO"); if(!d.budgetHead)e.push("Select a budget head"); if(!d.lineItems.length||d.total<=0)e.push("Add at least one line item with an amount"); if(d.paymentTo==="Vendor"&&!d.vendor.name)e.push("Vendor name is required for direct vendor payment"); return e; }
+function fdSaveDraft(submit){ fdRecalc(FD_DRAFT); if(submit){ const e=fdValidate(FD_DRAFT); if(e.length){ toast(e[0]); return; } } const ex=fdById(FD_DRAFT.id); if(ex){ Object.assign(ex,FD_DRAFT); } else { FD.notes.push(FD_DRAFT); fdLog(FD_DRAFT,"Created Debit Note","Draft created"); } const d=ex||FD_DRAFT; if(submit){ d.status="Submitted"; d.submittedAt=fdNow(); fdLog(d,"Submitted for Verification","Submitted to KRSF Vadali Accounts · "+fmtRsFull(d.netPayable),"accent"); fdSave(); FD_DRAFT=null; toast("Submitted for verification → Accounts"); fdGo("mine"); } else { fdSave(); FD_DRAFT=null; toast("Draft saved"); fdGo(fdRole()==="NGO"?"mine":"all"); } }
+function fdSubmit(id){ const d=fdById(id); const e=fdValidate(d); if(e.length){ toast(e[0]); return; } d.status="Submitted"; d.submittedAt=fdNow(); fdLog(d,"Submitted for Verification","Submitted to KRSF Vadali Accounts","accent"); fdSave(); closeModal(); toast("Submitted → Accounts"); render(); }
+function fdRespond(id){ showModal(modalShell("Respond","Respond & Resubmit",`<div class="field"><label>Response to the query</label><textarea id="fdResp" placeholder="Explain the correction made (revise the draft first to add documents)"></textarea></div>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdDoRespond('${id}')">Resubmit →</button>`)); }
+function fdDoRespond(id){ const d=fdById(id); const r=(el("fdResp").value||"").trim(); if(d.queries&&d.queries.length){ const q=d.queries[d.queries.length-1]; if(!q.response) q.response=r||"Corrected and resubmitted."; } d.status="Resubmitted"; d.submittedAt=fdNow(); fdLog(d,"Resubmitted After Correction",r?("Response: "+r):"Revised and resubmitted","accent"); fdSave(); closeModal(); toast("Resubmitted → Accounts"); render(); }
+
+/* ---------- VERIFICATION ENGINE (Accounts / Admin) ---------- */
+function fdOpenVerify(id){
+  if(!fdCanVerify()){ toast("Only the Accounts team can verify"); return; }
+  const d=fdById(id); if(!d)return;
+  if(d.status!=="AccountsVerification"){ d.status="AccountsVerification"; fdLog(d,"Accounts Verification Started","Opened for first-level verification"); fdSave(); }
+  d.checklist=d.checklist||{};
+  const body=`<div class="finfo" style="margin-bottom:14px"><div><div class="k">NGO</div><div class="v">${esc(fdNgoName(d.ngoId))}</div></div><div><div class="k">Net Payable</div><div class="v">${fmtRsFull(d.netPayable)}</div></div><div><div class="k">Budget Head</div><div class="v">${esc(d.budgetHead||"—")}</div></div><div><div class="k">Documents</div><div class="v">${d.docs.length} attached</div></div></div>
+    <div class="panel" style="margin-bottom:14px"><div class="panel-h"><h3>Verification Checklist</h3><span class="note">complete all 7 before recommending</span></div><div style="padding:14px">${FD_CHECKLIST.map(c=>`<label class="fcheck ${d.checklist[c.k]?'on':''}" id="fdchk_${c.k}" onclick="fdToggleChk('${id}','${c.k}')"><span class="box">✓</span><span><span class="ct">${esc(c.t)}</span><span class="cs">${esc(c.s)}</span></span></label>`).join("")}</div></div>
+    <div class="field"><label>Verification comment</label><textarea id="fdVComment" placeholder="Notes for Finance / NGO (required to return or reject)"></textarea></div>`;
+  const foot=`<button class="btn danger" onclick="fdVerify('${id}','reject')">Reject</button><button class="btn" style="background:var(--amber);color:#fff;border-color:var(--amber)" onclick="fdVerify('${id}','return')">Send Back for Correction</button><button class="btn primary" id="fdRecBtn" onclick="fdVerify('${id}','recommend')">Recommend → Finance</button>`;
+  showModal(modalShell("First-Level Verification · Accounts","Verify · "+esc(d.number), body, foot), true); fdUpdRec(d);
+}
+function fdToggleChk(id,k){ const d=fdById(id); d.checklist[k]=!d.checklist[k]; const e=el("fdchk_"+k); if(e)e.classList.toggle("on",d.checklist[k]); fdSave(); fdUpdRec(d); }
+function fdChkDone(d){ return FD_CHECKLIST.every(c=>d.checklist[c.k]); }
+function fdUpdRec(d){ const b=el("fdRecBtn"); if(!b)return; const ok=fdChkDone(d); const n=FD_CHECKLIST.filter(c=>d.checklist[c.k]).length; b.disabled=!ok; b.textContent=ok?"Recommend → Finance":`Recommend → Finance (${n}/7)`; }
+function fdVerify(id,act){
+  if(!fdCanVerify()){ toast("Not permitted"); return; }
+  const d=fdById(id); const c=(el("fdVComment").value||"").trim();
+  if(act==="recommend"){ if(!fdChkDone(d)){ toast("Complete all 7 checklist items first"); return; } d.accountsApproval={by:fdMe(),byName:fdMeName(),at:fdNow(),ip:fdIP(),comment:c||"Verified — all checks complete. Recommended for finance approval."}; d.status="FinanceReview"; fdLog(d,"Accounts Verified & Recommended","Checklist 7/7 complete. Forwarded to Finance."+(c?" Note: "+c:""),"green"); toast("Recommended → Finance"); }
+  else if(act==="return"){ if(!c){ toast("Add a comment explaining what to correct"); return; } d.status="ReturnedForCorrection"; d.queries=d.queries||[]; d.queries.push({by:fdMe(),byName:fdMeName(),at:fdNow(),text:c}); fdLog(d,"Returned for Correction","Query: "+c,"amber"); toast("Sent back to NGO"); }
+  else if(act==="reject"){ if(!c){ toast("Add a reason for rejection"); return; } d.status="Rejected"; fdLog(d,"Rejected by Accounts","Reason: "+c,"red"); toast("Debit note rejected"); }
+  fdSave(); closeModal(); render();
+}
+
+/* ---------- APPROVAL ENGINE (Finance / Admin) ---------- */
+function fdOpenApprove(id){
+  if(!fdCanApprove()){ toast("Only Finance can approve"); return; }
+  const d=fdById(id); if(!d)return; const high=d.netPayable>=1000000;
+  const body=`<div class="finfo" style="margin-bottom:14px"><div><div class="k">NGO</div><div class="v">${esc(fdNgoName(d.ngoId))}</div></div><div><div class="k">Net Payable</div><div class="v" style="color:var(--accent)">${fmtRsFull(d.netPayable)}</div></div><div><div class="k">Budget Head</div><div class="v">${esc(d.budgetHead||"—")}</div></div><div><div class="k">Payment To</div><div class="v">${esc(d.paymentTo)}</div></div></div>
+    ${high?`<div class="fbanner amber">★ High-value request (≥ ₹10 L) — scrutinise carefully.</div>`:""}
+    ${fdApprovalCard("Verified by Accounts (Vadali)",d.accountsApproval,"violet")}
+    <div class="panel" style="margin:6px 0 14px"><div class="panel-h"><h3>Line Items</h3></div><div class="tbl-wrap"><table><thead><tr><th>Particulars</th><th class="num">Amount</th></tr></thead><tbody>${d.lineItems.map(li=>`<tr><td>${esc(li.desc)}</td><td class="num">${fmtRsFull(li.amount)}</td></tr>`).join("")}<tr><td style="text-align:right;font-weight:700">Net Payable</td><td class="num" style="font-weight:800">${fmtRsFull(d.netPayable)}</td></tr></tbody></table></div></div>
+    <div class="field"><label>Decision comment</label><textarea id="fdFComment" placeholder="Comment (required for rejection / clarification)"></textarea></div>`;
+  const foot=`<button class="btn danger" onclick="fdApprove('${id}','reject')">Final Rejection</button><button class="btn" style="background:var(--amber);color:#fff;border-color:var(--amber)" onclick="fdApprove('${id}','clarify')">Request Clarification</button><button class="btn" onclick="fdApprove('${id}','sendback')">Send Back to Accounts</button><button class="btn green" onclick="fdApprove('${id}','approve')">Approve Fund Release ✓</button>`;
+  showModal(modalShell("Final Approval Authority · Finance","Final Review · "+esc(d.number), body, foot), true);
+}
+function fdApprove(id,act){
+  if(!fdCanApprove()){ toast("Not permitted"); return; }
+  const d=fdById(id); const c=(el("fdFComment").value||"").trim();
+  if(act==="approve"){ d.financeApproval={by:fdMe(),byName:fdMeName(),at:fdNow(),ip:fdIP(),comment:c||"Approved for fund release."}; d.status="Approved"; fdLog(d,"Finance Approved Fund Release","Final approval granted."+(c?" Note: "+c:""),"green"); toast("Approved — ready for fund release"); }
+  else if(act==="reject"){ if(!c){ toast("Add a reason"); return; } d.status="Rejected"; fdLog(d,"Final Rejection by Finance","Reason: "+c,"red"); toast("Final rejection recorded"); }
+  else if(act==="clarify"){ if(!c){ toast("Add the clarification needed"); return; } d.status="ReturnedForCorrection"; d.queries=d.queries||[]; d.queries.push({by:fdMe(),byName:fdMeName(),at:fdNow(),text:"[Finance] "+c}); fdLog(d,"Finance Requested Clarification","Query: "+c,"amber"); toast("Sent back for clarification"); }
+  else if(act==="sendback"){ d.status="AccountsVerification"; d.checklist={}; fdLog(d,"Sent Back to Accounts","Returned to first-level verification."+(c?" Note: "+c:""),"amber"); toast("Sent back to Accounts"); }
+  fdSave(); closeModal(); render();
+}
+
+/* ---------- FUND RELEASE (Finance / Admin) ---------- */
+function fdReleaseView(){
+  const pays=FD.payments.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)); const approved=FD.notes.filter(d=>d.status==="Approved");
+  return `<div class="kpi-grid">${fdKpi("green","✓","Total Released",fmtRs(fdSum(pays.filter(p=>p.status==="Paid"),p=>p.amount)),pays.filter(p=>p.status==="Paid").length+" payments")}${fdKpi("amber","◷","Pending Release",fmtRs(fdSum(pays.filter(p=>p.status==="Pending"),p=>p.amount)),pays.filter(p=>p.status==="Pending").length+" in progress")}${fdKpi("accent","₹","Approved Awaiting",fmtRs(fdSum(approved,d=>d.netPayable)),approved.length+" notes")}${fdKpi("blue","#","Payment Records",pays.length,"this FY")}</div>
+  ${approved.length?`<div class="panel" style="margin-bottom:16px"><div class="panel-h"><h3>Approved — Awaiting Fund Release</h3></div><div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>Beneficiary</th><th class="num">Amount</th><th>Approved</th><th></th></tr></thead><tbody>${approved.map(d=>`<tr><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(d.paymentTo==="Vendor"?(d.vendor.name||"Vendor"):fdNgoFull(d.ngoId))}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td style="font-size:11.5px">${fdDate(d.financeApproval&&d.financeApproval.at)}</td><td style="text-align:right">${fdCanRelease()?`<button class="btn green sm" onclick="fdOpenRelease('${d.id}')">₹ Release</button>`:""}</td></tr>`).join("")}</tbody></table></div></div>`:""}
+  <div class="panel"><div class="panel-h"><h3>Payment Records</h3></div><div class="tbl-wrap"><table><thead><tr><th>Payment ID</th><th>DN No.</th><th>Beneficiary</th><th class="num">Amount</th><th>Mode / UTR</th><th>Status</th></tr></thead><tbody>${pays.length?pays.map(p=>`<tr style="cursor:pointer" onclick="openFDN('${p.noteId}')"><td class="mono" style="font-size:11.5px"><b>${esc(p.number)}</b><div style="font-size:10.5px;color:var(--ink-3)">${fdDate(p.date)}</div></td><td class="mono" style="font-size:11.5px">${esc(p.dnNumber)}</td><td>${esc(p.beneficiary)}<div style="font-size:10.5px;color:var(--ink-3)">${esc(p.beneficiaryType)}</div></td><td class="num">${fmtRsFull(p.amount)}</td><td>${esc(p.mode)}<div style="font-size:10.5px;color:var(--ink-3)" class="mono">${esc(p.utr||"—")}</div></td><td><span class="badge ${p.status==="Paid"?"green":p.status==="Failed"?"red":"amber"}">${esc(p.status)}</span></td></tr>`).join(""):`<tr><td colspan="6"><div class="empty"><div class="mk">₹</div><p>No payments recorded yet.</p></div></td></tr>`}</tbody></table></div></div>`;
+}
+function fdOpenRelease(id){
+  if(!fdCanRelease()){ toast("Only Finance can release funds"); return; }
+  const d=fdById(id); if(!d)return; closeModal(); const ngo=ngoById(d.ngoId)||{}; const ben=d.paymentTo==="Vendor"?d.vendor:(ngo.bank||{}); const benName=d.paymentTo==="Vendor"?(d.vendor.name||"Vendor"):fdNgoFull(d.ngoId);
+  const body=`<div class="fbanner green" style="margin-bottom:14px">Beneficiary: ${esc(benName)} · A/c ${esc(ben.ac||"—")} · ${esc(ben.ifsc||"")} ${esc(ben.bank||"")}</div><div class="fgrid2"><div class="field"><label>Amount (₹)</label><input id="fdpAmt" type="number" value="${d.netPayable}"></div><div class="field"><label>Payment Date</label><input id="fdpDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Payment Mode</label><select id="fdpMode"><option>NEFT</option><option>RTGS</option><option>IMPS</option><option>Cheque</option><option>Bank Transfer</option></select></div><div class="field"><label>UTR / Transaction No.</label><input id="fdpUtr" placeholder="e.g. UTR123456789012"></div><div class="field"><label>Bank Reference</label><input id="fdpRef" placeholder="Bank ref / cheque no."></div><div class="field"><label>Status</label><select id="fdpStatus"><option>Paid</option><option>Pending</option><option>Failed</option></select></div><div class="field" style="grid-column:1/-1"><label>Remarks</label><textarea id="fdpRemarks" placeholder="Optional"></textarea></div></div>`;
+  showModal(modalShell("Fund Release · "+esc(d.number),"Record Fund Release", body,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn green" onclick="fdRelease('${id}')">Record &amp; Release ✓</button>`), true);
+}
+function fdRelease(id){
+  if(!fdCanRelease()){ toast("Not permitted"); return; }
+  const d=fdById(id); const amt=+el("fdpAmt").value, utr=el("fdpUtr").value.trim(), status=el("fdpStatus").value;
+  if(!amt){ toast("Enter amount"); return; } if(status==="Paid"&&!utr){ toast("UTR / transaction no. required for a paid release"); return; }
+  const p=fdNewPayment(d); p.amount=amt; p.date=new Date(el("fdpDate").value||fdNow()).toISOString(); p.mode=el("fdpMode").value; p.utr=utr; p.bankRef=el("fdpRef").value.trim(); p.remarks=el("fdpRemarks").value.trim(); p.status=status; FD.payments.push(p); d.paymentId=p.id;
+  if(status==="Paid"){ d.status="FundReleased"; fdLog(d,"Fund Released",p.number+" · "+fmtRsFull(amt)+" · "+p.mode+" · UTR "+utr,"green"); toast("Funds released"); } else { fdLog(d,"Fund Release Initiated",p.number+" · "+fmtRsFull(amt)+" · "+status,"accent"); toast("Fund release recorded"); }
+  fdSave(); closeModal(); render();
+}
+
+/* ---------- MONITORING (Programme) ---------- */
+function fdMonitorView(){
+  const ngos=(DB&&DB.ngos)||[];
+  const rows=ngos.map(n=>{ const notes=FD.notes.filter(d=>d.ngoId===n.id&&d.status!=="Draft"); const released=fdSum(notes.filter(d=>d.status==="FundReleased"),d=>d.netPayable); const pipeline=fdSum(notes.filter(d=>!["FundReleased","Rejected","Closed"].includes(d.status)),d=>d.netPayable); return {n,count:notes.length,released,pipeline}; }).filter(r=>r.count);
+  return `<div class="panel"><div class="panel-h"><h3>Fund Utilisation by NGO</h3><span class="note">read-only monitoring</span></div><div class="tbl-wrap"><table><thead><tr><th>NGO</th><th class="num">Debit Notes</th><th class="num">Released</th><th class="num">In Pipeline</th></tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td><b>${esc(r.n.short||r.n.name)}</b></td><td class="num">${r.count}</td><td class="num">${fmtRsFull(r.released)}</td><td class="num">${fmtRsFull(r.pipeline)}</td></tr>`).join(""):`<tr><td colspan="4"><div class="empty"><div class="mk">📊</div><p>No data yet.</p></div></td></tr>`}</tbody></table></div></div>`;
+}
+
+/* ---------- USERS & ROLES (Super Admin) ---------- */
+function fdUsersAdmin(){
+  if(!fdIsAdmin()) return `<div class="empty"><div class="mk">🔒</div><p>Super Admin only.</p></div>`;
+  const byRole=Object.keys(FD_ROLES);
+  return `<div class="fbanner accent">Create and manage the people who use FDNMS. NGO users get their own login and can only raise debit notes for the NGO(s) you assign them.</div>
+  <div class="panel"><div class="panel-h"><h3>Users &amp; Roles</h3><span class="ha" style="margin-left:auto"><button class="btn accent sm" onclick="fdUserForm()">+ Add user</button></span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>User ID</th><th>Role</th><th>Assigned NGOs</th><th></th></tr></thead>
+  <tbody>${FD.users.slice().sort((a,b)=>byRole.indexOf(a.role)-byRole.indexOf(b.role)).map(u=>`<tr>
+    <td><b>${esc(u.name)}</b>${u.id===fdMe()?' <span class="badge gray">you</span>':''}</td>
+    <td class="mono" style="font-size:11.5px">@${esc(u.username||"—")}</td>
+    <td><span class="badge" style="background:${FD_ROLES[u.role].color}22;color:${FD_ROLES[u.role].color}">${esc(FD_ROLES[u.role].label)}</span></td>
+    <td style="font-size:11.5px">${u.role==="NGO"?((u.ngoIds||[]).map(fdNgoName).join(", ")||'<span style="color:var(--red)">none assigned</span>'):'<span style="color:var(--ink-3)">— all —</span>'}</td>
+    <td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdUserForm('${u.id}')">Edit</button><button class="btn ghost sm" style="color:var(--red)" onclick="fdUserDelete('${u.id}')">Remove</button></td>
+  </tr>`).join("")}</tbody></table></div></div>`;
+}
+function fdUserForm(editId){
+  const u=editId?fdUserById(editId):null; const ngos=(DB&&DB.ngos)||[];
+  const body=`<div class="fgrid2">
+    <div class="field"><label>Full name</label><input id="fuName" value="${u?esc(u.name):''}" placeholder="e.g. Sahyog Trust — Ramesh"></div>
+    <div class="field"><label>User ID (username)</label><input id="fuUser" value="${u?esc(u.username||''):''}" placeholder="lowercase, no spaces"></div>
+    <div class="field"><label>Role</label><select id="fuRole" onchange="fdToggleNgoPick(this.value)">${Object.keys(FD_ROLES).map(r=>`<option value="${r}" ${u&&u.role===r?'selected':''}>${esc(FD_ROLES[r].label)}</option>`).join("")}</select></div>
+  </div>
+  <div class="field" id="fuNgoWrap" style="margin-top:12px;display:${(u?u.role:'NGO')==='NGO'?'block':'none'}"><label>Assigned NGOs <span style="text-transform:none;font-weight:400">— NGO users see only these</span></label>
+    <div class="fgrid2" style="gap:6px">${ngos.length?ngos.map(n=>`<label class="fcheck" style="padding:8px 10px;margin:0"><input type="checkbox" class="fuNgo" value="${n.id}" ${u&&(u.ngoIds||[]).includes(n.id)?'checked':''} style="width:auto"> <span class="ct" style="font-size:12px">${esc(n.short||n.name)}</span></label>`).join(""):'<div class="hint">No NGOs exist yet — add them on the Partner NGOs page first.</div>'}</div>
+  </div>`;
+  showModal(modalShell(editId?"Edit user":"New user", editId?"Edit FDNMS user":"Add an FDNMS user", body,`${editId?`<button class="btn danger" style="margin-right:auto" onclick="fdUserDelete('${editId}')">Remove</button>`:''}<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdUserSave('${editId||''}')">${editId?'Save changes':'Add user'}</button>`));
+}
+function fdToggleNgoPick(role){ const w=el("fuNgoWrap"); if(w)w.style.display=(role==="NGO")?"block":"none"; }
+function fdUserSave(editId){
+  const name=el("fuName").value.trim(), username=el("fuUser").value.trim().toLowerCase().replace(/\s+/g,""), role=el("fuRole").value;
+  if(!name||!username){ toast("Name and User ID are required"); return; }
+  if(FD.users.find(x=>x.id!==editId && (x.username||"").toLowerCase()===username)){ toast("That User ID is already taken"); return; }
+  const ngoIds=Array.from(document.querySelectorAll(".fuNgo")).filter(c=>c.checked).map(c=>c.value);
+  if(role==="NGO" && !ngoIds.length){ toast("Assign at least one NGO to an NGO user"); return; }
+  if(editId){ const u=fdUserById(editId); Object.assign(u,{name,username,role,ngoIds:role==="NGO"?ngoIds:[]}); }
+  else { FD.users.push({id:genId("fdu"),name,username,role,ngoIds:role==="NGO"?ngoIds:[]}); }
+  fdSave(); closeModal(); render(); toast(editId?"User updated":"User created — share the User ID with them");
+}
+function fdUserDelete(id){
+  const u=fdUserById(id); if(!u)return;
+  if(u.role==="Admin" && FD.users.filter(x=>x.role==="Admin").length<=1){ toast("Cannot remove the last Super Admin"); return; }
+  confirmAction("Remove this user?",`<b>${esc(u.name)}</b> will no longer be able to use FDNMS. Debit notes and audit history are kept.`,()=>{ FD.users=FD.users.filter(x=>x.id!==id); if(FD.meId===id)FD.meId=null; fdSave(); closeModal(); render(); toast("User removed"); },"Remove",true);
+}
+
+/* ---------- REPOSITORY ---------- */
+function fdRepoView(){
+  const notes=fdVisibleNotes().filter(d=>d.status!=="Draft"||fdRole()==="NGO");
+  return `<div class="fgrid3">${notes.length?notes.slice().reverse().map(d=>{ const pay=d.paymentId?fdPayById(d.paymentId):null; const fc=1+d.docs.length+(d.accountsApproval?1:0)+(d.financeApproval?1:0)+(pay?1:0); return `<div class="panel" style="cursor:pointer" onclick="openFDN('${d.id}')"><div style="padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:24px">🗀</span><div><div class="mono" style="font-weight:700">${esc(d.number)}</div><div style="font-size:11px;color:var(--ink-3)">${esc(fdNgoName(d.ngoId))}</div></div></div>${fdPill(d.status)}<div style="margin-top:10px;font-size:11.5px;color:var(--ink-2)">${fc} document(s) · ${fmtRsFull(d.netPayable)}</div><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"><span class="badge gray">Debit Note</span>${d.docs.map(x=>`<span class="badge gray">${esc(x.type)}</span>`).join("")}${d.accountsApproval?'<span class="badge violet">Accounts Approval</span>':""}${d.financeApproval?'<span class="badge green">Finance Approval</span>':""}${pay?'<span class="badge green">Payment Proof</span>':""}</div></div></div>`; }).join(""):`<div class="empty" style="grid-column:1/-1"><div class="mk">🗀</div><p>No folders yet.</p></div>`}</div>`;
+}
+
+/* ---------- SEARCH ---------- */
+let FD_Q="";
+function fdSearchView(){ return `<div class="panel" style="margin-bottom:16px"><div style="padding:14px"><input id="fdSearchBox" value="${esc(FD_Q)}" placeholder="Search by DN no., NGO, project, vendor, amount, status, grant code, UTR…" style="width:100%;padding:11px 13px;border:1px solid var(--rule-2);border-radius:10px;font-size:14px" oninput="FD_Q=this.value;el('fdSearchRes').innerHTML=fdSearchResults()"></div></div><div id="fdSearchRes">${fdSearchResults()}</div>`; }
+function fdSearchResults(){ const q=FD_Q.trim().toLowerCase(); if(!q)return `<div class="empty"><div class="mk">⌕</div><p>Start typing to search across all debit notes and payments.</p></div>`; const notes=fdVisibleNotes().filter(d=>{ const pay=d.paymentId?fdPayById(d.paymentId):null; const hay=[d.number,fdNgoFull(d.ngoId),fdNgoName(d.ngoId),d.projectName,d.grantCode,d.budgetHead,FD_LABEL[d.status],d.vendor.name,String(d.netPayable),String(d.total),pay&&pay.utr].filter(Boolean).join(" ").toLowerCase(); return hay.includes(q); }); if(!notes.length)return `<div class="empty"><div class="mk">⌕</div><p>No matches for “${esc(FD_Q)}”.</p></div>`; return fdMiniTable(notes.slice().reverse(),notes.length+" result(s)"); }
+
+/* ---------- AUDIT ---------- */
+function fdAuditView(){ const log=FD.audit.slice().sort((a,b)=>new Date(b.at)-new Date(a.at)); return `<div class="panel"><div class="panel-h"><h3>Global Audit Trail</h3><span class="note">append-only · version-controlled · ${log.length} entries</span></div><div class="tbl-wrap"><table><thead><tr><th>Time</th><th>DN No.</th><th>Action</th><th>User</th><th>Role</th><th>IP</th></tr></thead><tbody>${log.map(a=>`<tr><td style="font-size:11.5px;white-space:nowrap">${fdDateTime(a.at)}</td><td class="mono" style="font-size:11.5px">${esc(a.number||"—")}</td><td><b>${esc(a.action)}</b>${a.detail?`<div style="font-size:11px;color:var(--ink-3)">${esc(a.detail)}</div>`:""}</td><td style="font-size:11.5px">${esc(a.userName||fdUserName(a.userId))}</td><td style="font-size:11px;color:var(--ink-3)">${esc(a.role||"")}</td><td class="mono" style="font-size:11px;color:var(--ink-3)">${esc(a.ip)}</td></tr>`).join("")}</tbody></table></div></div>`; }
+
+/* ---------- PRINT + EXCEL ---------- */
+function fdNumWords(n){ n=Math.round(n); if(n===0)return"Zero"; const a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"],b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"]; function two(x){ return x<20?a[x]:b[Math.floor(x/10)]+(x%10?" "+a[x%10]:""); } function three(x){ return (x>=100?a[Math.floor(x/100)]+" Hundred"+(x%100?" ":""):"")+(x%100?two(x%100):""); } let s="",cr=Math.floor(n/1e7);n%=1e7;let lk=Math.floor(n/1e5);n%=1e5;let th=Math.floor(n/1e3);n%=1e3; if(cr)s+=three(cr)+" Crore ";if(lk)s+=three(lk)+" Lakh ";if(th)s+=three(th)+" Thousand ";if(n)s+=three(n); return s.trim(); }
+function fdDocHTML(d){
+  const ngo=fdNgoFull(d.ngoId); const p=(typeof fdSalProfile==="function")?fdSalProfile(d.ngoId):{address:"",pan:"",prepared:"",checked:"",verified:""};
+  const td='border:1px solid #888;padding:7px 9px;font-size:12px';
+  return `<div style="font-family:Arial,sans-serif;color:#111;max-width:780px;margin:0 auto;padding:26px 8px">
+  <div style="text-align:center;font-size:18px;font-weight:800;letter-spacing:.14em;margin-bottom:16px">DEBIT NOTE</div>
+  <table style="width:100%;font-size:12px;border-collapse:collapse"><tr>
+    <td style="vertical-align:top"><b style="font-size:13px">${esc(ngo)}</b><br>Address: ${esc(p.address||"\u2014")}<br>PAN No.: ${esc(p.pan||"\u2014")}<br><b>Debit Note: ${esc(d.number)}</b></td>
+    <td style="vertical-align:top;text-align:right">Date: ${fdDate(d.submittedAt||d.createdAt)}</td>
+  </tr></table>
+  <div style="margin:14px 0 4px;font-size:12px"><b style="font-size:13px">Dr. K. R. Shroff Foundation</b><br>9, Aryans Corporate Park, Nr. Shilaj Railway Crossing, Thaltej, Ahmedabad, Gujarat - 380058<br>PAN No.: AAATD3385P</div>
+  <table style="width:100%;border-collapse:collapse;margin-top:12px">
+    <tr><th style="${td};background:#f0f0f0;width:54px">Sr. No.</th><th style="${td};background:#f0f0f0;text-align:left">Description</th><th style="${td};background:#f0f0f0;width:130px">Amount (\u20b9)</th></tr>
+    ${d.lineItems.map((li,i)=>`<tr><td style="${td};text-align:center">${i+1}</td><td style="${td}">${esc(li.desc)}</td><td style="${td};text-align:right">${(+li.amount||0).toLocaleString("en-IN")}</td></tr>`).join("")}
+    <tr><td style="${td}"></td><td style="${td};text-align:right;font-weight:700">Total</td><td style="${td};text-align:right;font-weight:700">${d.total.toLocaleString("en-IN")}</td></tr>
+    ${d.advanceAdjusted?`<tr><td style="${td}"></td><td style="${td};text-align:right">Less: Advance Adjusted</td><td style="${td};text-align:right">\u2212 ${(+d.advanceAdjusted).toLocaleString("en-IN")}</td></tr><tr><td style="${td}"></td><td style="${td};text-align:right;font-weight:700">Net Payable</td><td style="${td};text-align:right;font-weight:700">${d.netPayable.toLocaleString("en-IN")}</td></tr>`:""}
+  </table>
+  <p style="font-size:12px;margin-top:10px"><b>Amount (in words):</b> ${esc(fdNumWords(d.netPayable))} Rupees only</p>
+  ${d.purpose?`<p style="font-size:12px;margin-top:6px"><b>Remark</b> \u2013 ${esc(d.purpose)}</p>`:""}
+  <table style="width:100%;font-size:12px;margin-top:34px;border-collapse:collapse"><tr>
+    <td style="width:33%"><b>Prepared by</b><br><br><br>${esc(p.prepared||"")}</td>
+    <td style="width:33%;text-align:center"><b>Checked By</b><br><br><br>${esc(p.checked||"")}</td>
+    <td style="width:33%;text-align:right"><b>Verified By</b><br><br><br>${esc(p.verified||"")}</td>
+  </tr></table>
+  <p style="font-size:12px;margin-top:34px"><br><br><b>Authorized Signatory</b><br>${esc(ngo)}</p>
+  <p style="font-size:9.5px;color:#444;margin-top:22px;white-space:pre-line"><b>Note:</b>
+1. We hereby confirm that we have not claimed or received afore-said amount from any other NGO/Trust/Organization as a reimbursement and will not submit a duplicate reimbursement claim of the said amount to any other NGO/Trust/Organization.
+2. Supporting documents have been maintained by us and we assure to produce the same to you for your Audit or any other Statutory compliance.
+3. Direct/Indirect Tax deduction on the above payments has already been taken care of by ${esc(ngo)} wherever applicable.
+4. This amount has not and shall not be considered as donation in our books of account and also shall not be reported as donation in Form No. 113 under Income Tax Act 1961.
+5. E. &amp; O.E</p></div>`;
+}
+function fdPrint(id){ const d=fdById(id); const w=window.open("","_blank"); if(!w){ toast("Allow pop-ups to print"); return; } w.document.write("<html><head><title>"+esc(d.number)+"</title></head><body>"+fdDocHTML(d)+"</body></html>"); w.document.close(); setTimeout(()=>{ w.print(); },250); }
+function fdExcel(id){ if(typeof XLSX==="undefined"){ toast("Excel library not loaded"); return; } const d=fdById(id); const rows=[["Dr. K. R. Shroff Foundation — Debit Note"],[],["Debit Note No.",d.number,"Date",fdDate(d.submittedAt||d.createdAt)],["Partner NGO",fdNgoFull(d.ngoId),"Grant Code",d.grantCode],["Project",d.projectName,"Budget Head",d.budgetHead],["Payment To",d.paymentTo,"",""],["Purpose",d.purpose||""],[],["Sr. No.","Description","Amount (Rs.)"],...d.lineItems.map((li,i)=>[i+1,li.desc,li.amount]),[],["","Total",d.total],["","Less: Advance Adjusted",-(d.advanceAdjusted||0)],["","Net Payable",d.netPayable]]; const ws=XLSX.utils.aoa_to_sheet(rows); ws["!cols"]=[{wch:8},{wch:64},{wch:16}]; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Debit Note"); XLSX.writeFile(wb,d.number.replace(/\//g,"-")+".xlsx"); }
 
 
+
+
+
+
+
+/* ===========================================================================
+   FDNMS · EMPLOYEE & SALARY MANAGEMENT  (module 3 — Excel-schema edition)
+   The monthly sheet uses the exact Employee Details columns from the KRSF
+   sample workbook. Fully inline-editable (Excel-style), paste from Excel,
+   auto totals. Processing generates the Debit Note + Payment Scroll.
+   =========================================================================== */
+let FD_SAL_NGO=null, FD_SAL_MONTH=null;
+const FD_MONTHS=["","January","February","March","April","May","June","July","August","September","October","November","December"];
+const FD_SAL_COLS=["doe","name","pan","aadhar","amount","ac","bank","branch","ifsc","head","particulars"];
+function fdSalEnsure(){
+  if(!FD.employees||typeof FD.employees!=="object")FD.employees={};
+  if(!Array.isArray(FD.salaryCycles))FD.salaryCycles=[];
+  if(!FD.salaryDrafts||typeof FD.salaryDrafts!=="object")FD.salaryDrafts={};
+  if(!FD.ngoProfiles||typeof FD.ngoProfiles!=="object")FD.ngoProfiles={};
+  if(!FD.scrollSeq)FD.scrollSeq=1;
+}
+function fdSalMonthLong(m){ if(!m)return"—"; const[y,mo]=m.split("-"); return FD_MONTHS[+mo]+" "+y; }
+function fdSalAmt(x){ const n=+((x&&x.amount!==undefined)?x.amount:((+x.gross||0)-(+x.ded||0))); return isNaN(n)?0:n; }
+function fdSalNgoId(){ const ngos=fdAssignedNgos(); if(!ngos.length)return null; if(FD_SAL_NGO&&ngos.some(n=>n.id===FD_SAL_NGO))return FD_SAL_NGO; FD_SAL_NGO=ngos[0].id; return FD_SAL_NGO; }
+function fdSalMonth(){ if(!FD_SAL_MONTH){ const d=new Date(); FD_SAL_MONTH=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); } return FD_SAL_MONTH; }
+function fdSalEmps(ngoId){ if(!FD.employees[ngoId])FD.employees[ngoId]=[]; return FD.employees[ngoId]; }
+function fdSalProfile(ngoId){ if(!FD.ngoProfiles[ngoId]){ const n=ngoById(ngoId)||{}; FD.ngoProfiles[ngoId]={address:"",pan:"",bankAc:(n.bank&&n.bank.ac)||"",bankName:(n.bank&&n.bank.bank)||"",branch:"",ifsc:(n.bank&&n.bank.ifsc)||"",prepared:"",checked:"",verified:""}; } return FD.ngoProfiles[ngoId]; }
+function fdSalCycle(ngoId,month){ return FD.salaryCycles.find(c=>c.ngoId===ngoId&&c.month===month); }
+function fdSalDraftKey(ngoId,month){ return ngoId+"|"+month; }
+function fdSalBlankRow(){ return {empId:"",doe:fdDate(fdNow()),name:"",pan:"",aadhar:"",amount:0,ac:"",bank:"",branch:"",ifsc:"",head:"Salary",particulars:"NEFT"}; }
+function fdSalRows(ngoId,month){
+  const dk=fdSalDraftKey(ngoId,month);
+  if(FD.salaryDrafts[dk]){ FD.salaryDrafts[dk].forEach(r=>{ if(r.amount===undefined)r.amount=fdSalAmt(r); if(!r.head)r.head="Salary"; if(!r.particulars)r.particulars="NEFT"; if(!r.doe)r.doe=fdDate(fdNow()); }); return FD.salaryDrafts[dk]; }
+  const rows=fdSalEmps(ngoId).filter(e=>e.active!==false).map(e=>({empId:e.id,doe:fdDate(fdNow()),name:e.name,pan:e.pan||"",aadhar:e.aadhar||"",amount:fdSalAmt(e),ac:e.ac||"",bank:e.bank||"",branch:e.branch||"",ifsc:e.ifsc||"",head:e.head||"Salary",particulars:e.particulars||"NEFT"}));
+  FD.salaryDrafts[dk]=rows; fdSave(); return rows;
+}
+function fdSalTotal(rows){ return rows.reduce((s,r)=>s+fdSalAmt(r),0); }
+
+/* ---------------- VIEW (exact Employee Details columns) ---------------- */
+function fdSalaryView(){
+  fdSalEnsure();
+  if(!(fdCanCreate()||fdIsAdmin())) return `<div class="empty"><div class="mk">🔒</div><p>Employee &amp; salary management is for Partner NGO logins (and Super Admin).</p></div>`;
+  const ngos=fdAssignedNgos(); const ngoId=fdSalNgoId();
+  if(!ngoId) return `<div class="empty"><div class="mk">⚠</div><p>No NGO assigned to your login.</p></div>`;
+  const month=fdSalMonth(); const cyc=fdSalCycle(ngoId,month);
+  const rows=cyc?cyc.rows:fdSalRows(ngoId,month);
+  const total=cyc?cyc.total:fdSalTotal(rows);
+  const prof=fdSalProfile(ngoId); const profOk=prof.bankAc&&prof.ifsc&&prof.bankName;
+  const hist=FD.salaryCycles.filter(c=>c.ngoId===ngoId).sort((a,b)=>b.month.localeCompare(a.month));
+  const C=(r,i,c,field,right)=> cyc
+    ? `<td class="${right?'xla xr':'xla'}" style="font-size:11px">${field==="amount"?fmtRsFull(fdSalAmt(r)):esc(r[field]||"")}</td>`
+    : `<td class="xlc ${right?'xr':''}"><input data-r="${i}" data-c="${c}" ${field==="amount"?'inputmode="decimal"':''} value="${field==="amount"?fdSalAmt(r):esc(r[field]||"")}" onkeydown="fdSalKey(event,${i},${c})" onpaste="fdSalPaste(event,${i},${c})" onchange="fdSalEdit(${i},'${field}',this.value)"></td>`;
+  return `
+  <div class="panel" style="margin-bottom:14px"><div style="padding:12px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    ${ngos.length>1?`<div class="field" style="min-width:220px"><label>NGO</label><select onchange="FD_SAL_NGO=this.value;render()">${ngos.map(n=>`<option value="${n.id}" ${n.id===ngoId?'selected':''}>${esc(n.name)}</option>`).join("")}</select></div>`:`<div><div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700">NGO</div><b>${esc(fdNgoFull(ngoId))}</b></div>`}
+    <div class="field"><label>Salary Month</label><input type="month" value="${month}" onchange="FD_SAL_MONTH=this.value;render()"></div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      ${profOk?'':'<span class="badge amber">Set NGO bank profile first →</span>'}
+      <button class="btn sm" onclick="fdSalProfileForm('${ngoId}')">⚙ NGO Profile &amp; Signatories</button>
+    </div>
+  </div></div>
+
+  ${cyc?`<div class="fbanner green">✓ Salary for <b>&nbsp;${esc(fdSalMonthLong(month))}&nbsp;</b> processed on ${fdDate(cyc.createdAt)} · Scroll ID <b>&nbsp;${esc(cyc.scrollNo)}&nbsp;</b> · ${fmtRsFull(cyc.total)}
+    <span style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn sm" onclick="openFDN('${cyc.dnId}')">View Debit Note ${esc((fdById(cyc.dnId)||{}).number||"")}</button>
+      <button class="btn sm" onclick="fdSalPrintDN('${cyc.id}')">🖨 Debit Note PDF</button>
+      <button class="btn sm" onclick="fdSalPrintScroll('${cyc.id}')">🖨 Payment Scroll PDF</button>
+    </span></div>`:""}
+
+  <div class="panel" style="margin-bottom:14px">
+    <div class="panel-h"><h3>Employee Details — ${esc(fdSalMonthLong(month))}</h3><span class="note">${rows.length} payee(s)${cyc?' · processed (locked)':' · spreadsheet entry · paste rows straight from Excel'}</span>
+      <span class="ha" style="margin-left:auto;display:flex;gap:8px">${cyc?"":`<button class="btn sm" onclick="fdSalAddRow()">+ Add row</button><button class="btn sm ghost" onclick="fdSalRepopulate()">↻ Re-populate from master</button>`}</span></div>
+    <div class="xl" id="fdSalXl"><table>
+      <thead><tr><th class="xn">Sr.<br>No</th><th style="width:90px">Date of<br>Entry</th><th style="min-width:170px">Name of<br>the Payee</th><th style="width:105px">PAN<br>Number</th><th style="width:110px">Aadhar<br>Number</th><th class="xr" style="width:100px">Amount<br>in Rs.</th><th style="width:140px">Bank Account<br>Number</th><th style="width:110px">Name of<br>the Bank</th><th style="width:100px">Branch</th><th style="width:105px">IFSC<br>code</th><th style="width:90px">Accounting<br>Head</th><th style="width:85px">Particulars</th>${cyc?"":'<th class="xn" style="width:34px"></th>'}</tr></thead>
+      <tbody>${rows.length?rows.map((r,i)=>`<tr data-i="${i}"><td class="xn">${i+1}</td>${C(r,i,0,"doe")}${C(r,i,1,"name")}${C(r,i,2,"pan")}${C(r,i,3,"aadhar")}${C(r,i,4,"amount",true)}${C(r,i,5,"ac")}${C(r,i,6,"bank")}${C(r,i,7,"branch")}${C(r,i,8,"ifsc")}${C(r,i,9,"head")}${C(r,i,10,"particulars")}${cyc?"":`<td class="xn"><button class="xdel" tabindex="-1" onclick="fdSalDropRow(${i})">×</button></td>`}</tr>`).join(""):`<tr><td colspan="13"><div class="empty"><div class="mk">👥</div><p>No employees yet — click <b>+ Add row</b> and type, or paste rows from your Excel.</p></div></td></tr>`}</tbody>
+      <tfoot><tr class="big"><td colspan="5" style="text-align:right">TOTAL</td><td class="xr" id="fdSalTot">${fmtRsFull(total)}</td><td colspan="${cyc?6:7}"></td></tr></tfoot>
+    </table></div>
+    ${cyc?"":`<div class="xltip">💡 Paste from Excel in this column order: Date ⇥ Name ⇥ PAN ⇥ Aadhar ⇥ Amount ⇥ Account ⇥ Bank ⇥ Branch ⇥ IFSC ⇥ Head ⇥ Particulars</div>
+    <div style="padding:10px 14px;border-top:1px solid var(--rule);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font-size:11.5px;color:var(--ink-2)">Processing auto-generates the <b>Debit Note</b> (sent to Vadali Accounts) and the <b>Payment Scroll + Annexure A</b> in the standard KRSF formats, and saves these employees to the master for next month.</div>
+      <button class="btn green" style="margin-left:auto" onclick="fdSalProcess()" ${rows.length&&total>0&&profOk?"":"disabled"}>⚙ Process Salary → Debit Note + Scroll</button>
+    </div>`}
+  </div>
+
+  <div class="fgrid2">
+    <div class="panel"><div class="panel-h"><h3>Employee Master</h3><span class="note">${fdSalEmps(ngoId).length} on record · auto-fills every month · updated on each processing</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Name of the Payee</th><th class="num">Amount in Rs.</th><th>Status</th><th></th></tr></thead>
+      <tbody>${fdSalEmps(ngoId).length?fdSalEmps(ngoId).map(e=>`<tr><td><b>${esc(e.name)}</b><div style="font-size:10.5px;color:var(--ink-3)" class="mono">${esc(e.ac||"—")} · ${esc(e.ifsc||"")}</div></td><td class="num">${fmtRsFull(fdSalAmt(e))}</td><td>${e.active!==false?'<span class="badge green">Active</span>':'<span class="badge gray">Inactive</span>'}</td><td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdSalToggle('${e.id}')">${e.active!==false?'Deactivate':'Activate'}</button><button class="btn ghost sm" style="color:var(--red)" onclick="fdEmpDelete('${e.id}')">Remove</button></td></tr>`).join(""):`<tr><td colspan="4"><div class="empty" style="padding:16px"><p>Master fills automatically when you process the first month.</p></div></td></tr>`}</tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Salary History</h3><span class="note">${hist.length} cycle(s) · records are never deleted</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Month</th><th>Scroll</th><th class="num">Payees</th><th class="num">Total</th><th>Debit Note</th><th></th></tr></thead>
+      <tbody>${hist.length?hist.map(c=>{ const d=fdById(c.dnId); return `<tr><td><b>${esc(fdSalMonthLong(c.month))}</b></td><td class="mono" style="font-size:11px">${esc(c.scrollNo)}</td><td class="num">${c.rows.length}</td><td class="num">${fmtRsFull(c.total)}</td><td>${d?`<a style="cursor:pointer" onclick="openFDN('${d.id}')" class="mono">${esc(d.number)}</a><div>${fdPill(d.status)}</div>`:"—"}</td><td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdSalPrintDN('${c.id}')">DN</button><button class="btn ghost sm" onclick="fdSalPrintScroll('${c.id}')">Scroll</button></td></tr>`; }).join(""):`<tr><td colspan="6"><div class="empty" style="padding:16px"><p>No processed cycles yet.</p></div></td></tr>`}</tbody></table></div></div>
+  </div>`;
+}
+/* ---------------- sheet behaviours ---------------- */
+function fdSalEdit(i,field,val){ const dk=fdSalDraftKey(fdSalNgoId(),fdSalMonth()); const rows=FD.salaryDrafts[dk]; if(!rows||!rows[i])return;
+  rows[i][field]= field==="amount"? fdXlNum(val) : String(val);
+  fdSave(); const t=el("fdSalTot"); if(t)t.textContent=fmtRsFull(fdSalTotal(rows)); }
+function fdSalAddRow(){ const dk=fdSalDraftKey(fdSalNgoId(),fdSalMonth()); const rows=FD.salaryDrafts[dk]||fdSalRows(fdSalNgoId(),fdSalMonth()); rows.push(fdSalBlankRow()); fdSave(); render(); }
+function fdSalDropRow(i){ const dk=fdSalDraftKey(fdSalNgoId(),fdSalMonth()); const rows=FD.salaryDrafts[dk]; if(rows){ rows.splice(i,1); fdSave(); render(); } }
+function fdSalRepopulate(){ delete FD.salaryDrafts[fdSalDraftKey(fdSalNgoId(),fdSalMonth())]; fdSave(); render(); toast("Re-populated from employee master"); }
+function fdSalGoto(r,c){ setTimeout(function(){ const inp=document.querySelector('#fdSalXl input[data-r="'+r+'"][data-c="'+c+'"]'); if(inp){ inp.focus(); try{inp.select();}catch(e){} } },25); }
+function fdSalKey(e,r,c){ const rows=FD.salaryDrafts[fdSalDraftKey(fdSalNgoId(),fdSalMonth())]||[];
+  if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); if(r>=rows.length-1){ rows.push(fdSalBlankRow()); fdSave(); render(); } fdSalGoto(r+1,c); }
+  else if(e.key==="ArrowDown"&&r<rows.length-1){ e.preventDefault(); e.target.blur(); fdSalGoto(r+1,c); }
+  else if(e.key==="ArrowUp"&&r>0){ e.preventDefault(); e.target.blur(); fdSalGoto(r-1,c); } }
+function fdSalPaste(e,r,c){
+  let t=""; try{ t=(e.clipboardData||window.clipboardData).getData("text"); }catch(err){}
+  if(!t || (t.indexOf("\t")<0 && t.indexOf("\n")<0)) return;
+  e.preventDefault();
+  const grid=fdXlParse(t); const dk=fdSalDraftKey(fdSalNgoId(),fdSalMonth()); const rows=FD.salaryDrafts[dk]||fdSalRows(fdSalNgoId(),fdSalMonth());
+  grid.forEach(function(cells,ri){ const rr=r+ri; while(rows.length<=rr) rows.push(fdSalBlankRow());
+    cells.forEach(function(val,ci){ const cc=c+ci; const f=FD_SAL_COLS[cc]; if(!f)return;
+      rows[rr][f]= f==="amount"? fdXlNum(val) : String(val).trim(); }); });
+  fdSave(); render(); toast("Pasted "+grid.length+" row(s)"); fdSalGoto(Math.min(r+grid.length-1,rows.length-1),c);
+}
+function fdSalToggle(empId){ const e=fdSalEmps(fdSalNgoId()).find(x=>x.id===empId); if(!e)return; e.active=e.active===false; delete FD.salaryDrafts[fdSalDraftKey(fdSalNgoId(),fdSalMonth())]; fdSave(); render(); }
+function fdEmpDelete(empId){ const ngoId=fdSalNgoId();
+  confirmAction("Remove this employee?","They will be removed from the master list. Past salary cycles and history are kept unchanged.",function(){ FD.employees[ngoId]=fdSalEmps(ngoId).filter(x=>x.id!==empId); delete FD.salaryDrafts[fdSalDraftKey(ngoId,fdSalMonth())]; fdSave(); closeModal(); render(); toast("Employee removed"); },"Remove",true); }
+/* ---------------- NGO PROFILE ---------------- */
+function fdSalProfileForm(ngoId){
+  const p=fdSalProfile(ngoId);
+  const body=`<div class="fgrid2">
+    <div class="field" style="grid-column:1/-1"><label>Registered address (printed on Debit Note)</label><input id="prAddr" value="${esc(p.address)}"></div>
+    <div class="field"><label>NGO PAN No.</label><input id="prPan" value="${esc(p.pan)}"></div>
+    <div class="field"><label>Bank Account No. (reimbursement)</label><input id="prAc" value="${esc(p.bankAc)}"></div>
+    <div class="field"><label>Bank Name</label><input id="prBank" value="${esc(p.bankName)}"></div>
+    <div class="field"><label>Branch</label><input id="prBr" value="${esc(p.branch)}"></div>
+    <div class="field"><label>IFSC</label><input id="prIfsc" value="${esc(p.ifsc)}"></div>
+    <div class="field"><label>Prepared by</label><input id="prPrep" value="${esc(p.prepared)}"></div>
+    <div class="field"><label>Checked by</label><input id="prChk" value="${esc(p.checked)}"></div>
+    <div class="field"><label>Verified by</label><input id="prVer" value="${esc(p.verified)}"></div>
+  </div>`;
+  showModal(modalShell("NGO profile","Profile & Signatories — "+esc(fdNgoFull(ngoId)), body,
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdSalProfileSave('${ngoId}')">Save</button>`));
+}
+function fdSalProfileSave(ngoId){
+  const p=fdSalProfile(ngoId);
+  Object.assign(p,{address:el("prAddr").value.trim(),pan:el("prPan").value.trim().toUpperCase(),bankAc:el("prAc").value.trim(),bankName:el("prBank").value.trim(),branch:el("prBr").value.trim(),ifsc:el("prIfsc").value.trim().toUpperCase(),prepared:el("prPrep").value.trim(),checked:el("prChk").value.trim(),verified:el("prVer").value.trim()});
+  fdSave(); closeModal(); render(); toast("NGO profile saved");
+}
+/* ---------------- PROCESS ---------------- */
+function fdSalProcess(){
+  fdSalEnsure();
+  const ngoId=fdSalNgoId(), month=fdSalMonth();
+  if(fdSalCycle(ngoId,month)){ toast("Salary for this month is already processed"); return; }
+  let rows=(FD.salaryDrafts[fdSalDraftKey(ngoId,month)]||[]).filter(r=>(r.name&&r.name.trim())||fdSalAmt(r)>0);
+  rows=rows.map(r=>({...r,amount:fdSalAmt(r),net:fdSalAmt(r)}));
+  const total=fdSalTotal(rows);
+  if(!rows.length||total<=0){ toast("Add employees with amounts first"); return; }
+  const prof=fdSalProfile(ngoId);
+  if(!(prof.bankAc&&prof.ifsc&&prof.bankName)){ toast("Set the NGO bank profile first (⚙ NGO Profile)"); return; }
+  // upsert master so next month auto-populates
+  const master=fdSalEmps(ngoId);
+  rows.forEach(r=>{ let e=r.empId?master.find(x=>x.id===r.empId):null;
+    if(!e){ e={id:genId("emp"),active:true}; master.push(e); r.empId=e.id; }
+    Object.assign(e,{name:r.name,pan:r.pan,aadhar:r.aadhar,ac:r.ac,bank:r.bank,branch:r.branch,ifsc:r.ifsc,head:r.head||"Salary",particulars:r.particulars||"NEFT",amount:fdSalAmt(r),active:true});
+  });
+  const scrollNo=String(FD.scrollSeq++).padStart(4,"0");
+  const ml=fdSalMonthLong(month);
+  const d=fdNewNote(ngoId);
+  d.budgetHead="Salary"; d.paymentTo="NGO";
+  d.projectName=fdNgoFull(ngoId)+" — Staff Salary"; d.grantCode="SAL-"+month;
+  d.purpose="Being Debit Note issued for reimbursement of salary and consultancy fees for the month of "+ml;
+  d.lineItems=[{desc:"Debit Note for staff salary and consultancy fees for the month of "+ml+" (scroll ID - "+scrollNo+") (As Per Annexure A attached to this Debit Note)",qty:1,rate:total,amount:total}];
+  d.docs=[{name:"Payment Scroll "+scrollNo+" — "+ml+".pdf",type:"Payment Request",by:fdMe()},{name:"Employee Details (Annexure A) — "+ml+".pdf",type:"Annexure",by:fdMe()}];
+  fdRecalc(d);
+  d.status="Submitted"; d.submittedAt=fdNow();
+  FD.notes.push(d);
+  fdLog(d,"Created Debit Note","Auto-generated by Employee & Salary module · "+rows.length+" payee(s) · scroll "+scrollNo);
+  fdLog(d,"Submitted for Verification","Salary for "+ml+" · "+fmtRsFull(total)+" · routed to KRSF Vadali Accounts","accent");
+  const cyc={id:genId("sal"),ngoId,month,scrollNo,rows,total,dnId:d.id,createdAt:fdNow(),createdBy:fdMe()};
+  d.salaryCycleId=cyc.id;
+  FD.salaryCycles.push(cyc);
+  delete FD.salaryDrafts[fdSalDraftKey(ngoId,month)];
+  fdSave(); render();
+  toast("Salary processed — Debit Note "+d.number+" submitted + Payment Scroll "+scrollNo+" generated");
+}
+/* ---------------- PRINT TEMPLATES (exact sample formats) ---------------- */
+function fdSalDNHTML(c){
+  const ngo=fdNgoFull(c.ngoId), p=fdSalProfile(c.ngoId), d=fdById(c.dnId)||{};
+  const ml=fdSalMonthLong(c.month);
+  const td='border:1px solid #888;padding:7px 9px;font-size:12px';
+  return `<div style="font-family:Arial,sans-serif;color:#111;max-width:780px;margin:0 auto;padding:26px 8px">
+  <div style="text-align:center;font-size:18px;font-weight:800;letter-spacing:.14em;margin-bottom:16px">DEBIT NOTE</div>
+  <table style="width:100%;font-size:12px;border-collapse:collapse"><tr>
+    <td style="vertical-align:top"><b style="font-size:13px">${esc(ngo)}</b><br>Address: ${esc(p.address||"—")}<br>PAN No.: ${esc(p.pan||"—")}<br><b>Debit Note: ${esc(d.number||("DB-"+c.scrollNo))}</b></td>
+    <td style="vertical-align:top;text-align:right">${esc(ml)}<br>Date: ${esc(fdDate(c.createdAt))}</td>
+  </tr></table>
+  <div style="margin:14px 0 4px;font-size:12px"><b style="font-size:13px">Dr. K. R. Shroff Foundation</b><br>9, Aryans Corporate Park, Nr. Shilaj Railway Crossing, Thaltej, Ahmedabad, Gujarat - 380058<br>PAN No.: AAATD3385P</div>
+  <table style="width:100%;border-collapse:collapse;margin-top:12px">
+    <tr><th style="${td};background:#f0f0f0;width:50px">Sr. No.</th><th style="${td};background:#f0f0f0;text-align:left">Description</th><th style="${td};background:#f0f0f0;width:120px">Amount (₹)</th></tr>
+    <tr><td style="${td};text-align:center">1</td><td style="${td}">Debit Note for staff salary and consultancy fees for the month of ${esc(ml)} (scroll ID - ${esc(c.scrollNo)})<br>(As Per Annexure A attached to this Debit Note)</td><td style="${td};text-align:right">${c.total.toLocaleString("en-IN")}</td></tr>
+    <tr><td style="${td}"></td><td style="${td};text-align:right;font-weight:700">Total</td><td style="${td};text-align:right;font-weight:700">${c.total.toLocaleString("en-IN")}</td></tr>
+  </table>
+  <p style="font-size:12px;margin-top:10px"><b>Amount (in words):</b> ${esc(fdNumWords(c.total))} Rupees only</p>
+  <p style="font-size:12px;margin-top:6px"><b>Remark</b> – Being Debit Note issued for reimbursement of salary and consultancy fees for the month of ${esc(ml)}</p>
+  <table style="width:100%;font-size:12px;margin-top:34px;border-collapse:collapse"><tr>
+    <td style="width:33%"><b>Prepared by</b><br><br><br>${esc(p.prepared||"")}</td>
+    <td style="width:33%;text-align:center"><b>Checked By</b><br><br><br>${esc(p.checked||"")}</td>
+    <td style="width:33%;text-align:right"><b>Verified By</b><br><br><br>${esc(p.verified||"")}</td>
+  </tr></table>
+  <p style="font-size:12px;margin-top:34px"><br><br><b>Authorized Signatory</b><br>${esc(ngo)}</p>
+  <p style="font-size:9.5px;color:#444;margin-top:22px;white-space:pre-line"><b>Note:</b>
+1. We hereby confirm that we have not claimed or received afore-said amount from any other NGO/Trust/Organization as a reimbursement and will not submit a duplicate reimbursement claim of said Salary/Professional fees amount to any other NGO/Trust/Organization.
+2. Employment/Consultancy/Contractual engagement related documents of all our Employees/Consultant/Contractor has been maintained by us and we assure to produce the same to you for your Audit or any other Statutory compliance.
+3. Please Note that the Direct/Indirect Tax Deduction on Salary/Consulting Fees/Professional Charges payments has already been taken care of by ${esc(ngo)} wherever applicable.
+4. This amount has not and shall not be considered as donation in our books of account and also shall not be reported as donation in Form No. 113 under Income Tax Act 1961.
+5. E. &amp; O.E</p></div>`;
+}
+function fdSalScrollHTML(c){
+  const ngo=fdNgoFull(c.ngoId), p=fdSalProfile(c.ngoId);
+  const ml=fdSalMonthLong(c.month);
+  const th='border:1px solid #888;padding:5px 6px;background:#f0f0f0;font-size:10px';
+  const td='border:1px solid #888;padding:5px 6px;font-size:10.5px';
+  const entryDate=fdDate(c.createdAt);
+  return `<div style="font-family:Arial,sans-serif;color:#111;max-width:980px;margin:0 auto;padding:22px 8px">
+  <div style="font-size:14px;font-weight:800">${esc(ngo)}</div>
+  <div style="font-size:12px;font-weight:700">Dr. K. R. Shroff Foundation</div>
+  <div style="font-size:11.5px;margin-top:3px"><b>Payment scroll for Salary Expenses Reimbursement for ${esc(ml)}</b></div>
+  <div style="font-size:11.5px;margin-bottom:10px">Payment to be made for ${esc(ml)}</div>
+  <table style="width:100%;border-collapse:collapse">
+    <tr><th style="${th}">Scroll ID</th><th style="${th}">Date of Entry</th><th style="${th}">Name of the Payee</th><th style="${th}">Amount in Rs.</th><th style="${th}">Bank Account Number</th><th style="${th}">Name of the Bank</th><th style="${th}">Branch</th><th style="${th}">IFSC code</th><th style="${th}">Accounting Head</th><th style="${th}">Particulars</th></tr>
+    <tr><td style="${td};text-align:center">${esc(c.scrollNo)}</td><td style="${td}">${esc(entryDate)}</td><td style="${td}"><b>${esc(ngo)}</b></td><td style="${td};text-align:right"><b>${c.total.toLocaleString("en-IN")}</b></td><td style="${td}">${esc(p.bankAc)}</td><td style="${td}">${esc(p.bankName)}</td><td style="${td}">${esc(p.branch)}</td><td style="${td}">${esc(p.ifsc)}</td><td style="${td}">Salary</td><td style="${td}">NEFT</td></tr>
+    <tr><td style="${td}" colspan="2"></td><td style="${td};font-weight:700">Total</td><td style="${td};text-align:right;font-weight:700">${c.total.toLocaleString("en-IN")}</td><td style="${td}" colspan="6"></td></tr>
+  </table>
+  <div style="font-size:12.5px;font-weight:800;margin:22px 0 6px">Annexure A — Employee Details</div>
+  <div style="font-size:11px;margin-bottom:8px">Payment scroll for Salary Expenses Reimbursement for ${esc(ml)} · Payment to be made for ${esc(ml)}</div>
+  <table style="width:100%;border-collapse:collapse">
+    <tr><th style="${th}">Sr. No</th><th style="${th}">Date of Entry</th><th style="${th}">Name of the Payee</th><th style="${th}">PAN Number</th><th style="${th}">Aadhar Number</th><th style="${th}">Amount in Rs.</th><th style="${th}">Bank Account Number</th><th style="${th}">Name of the Bank</th><th style="${th}">Branch</th><th style="${th}">IFSC code</th><th style="${th}">Accounting Head</th><th style="${th}">Particulars</th></tr>
+    ${c.rows.map((r,i)=>`<tr><td style="${td};text-align:center">${i+1}</td><td style="${td}">${esc(r.doe||entryDate)}</td><td style="${td}">${esc(r.name)}</td><td style="${td}">${esc(r.pan||"—")}</td><td style="${td}">${esc(r.aadhar||"—")}</td><td style="${td};text-align:right">${(+(r.amount!==undefined?r.amount:r.net)||0).toLocaleString("en-IN")}</td><td style="${td}">${esc(r.ac||"—")}</td><td style="${td}">${esc(r.bank||"—")}</td><td style="${td}">${esc(r.branch||"—")}</td><td style="${td}">${esc(r.ifsc||"—")}</td><td style="${td}">${esc(r.head||"Salary")}</td><td style="${td}">${esc(r.particulars||"NEFT")}</td></tr>`).join("")}
+    <tr><td style="${td}" colspan="2"></td><td style="${td};font-weight:700">TOTAL</td><td style="${td}" colspan="2"></td><td style="${td};text-align:right;font-weight:700">${c.total.toLocaleString("en-IN")}</td><td style="${td}" colspan="6"></td></tr>
+  </table>
+  <p style="font-size:9.5px;color:#444;margin-top:18px;white-space:pre-line"><b>Note:</b>
+1. We hereby confirm that we have not claimed or received afore-said amount from any other NGO/Trust/Organization as a reimbursement and will not submit a duplicate reimbursement claim of said Salary/Professional fees amount to any other NGO/Trust/Organization.
+2. Please note that the direct/indirect tax deduction on salary/consulting fees/professional charges payments has already been taken care of by ${esc(ngo)} wherever applicable.
+3. This amount has not and shall not be considered as Donation in our books of account and also shall not be reported as donation in Form No 113 under Income Tax Act 1961.
+4. E. &amp; O.E</p></div>`;
+}
+function fdSalPrintDN(cid){ const c=FD.salaryCycles.find(x=>x.id===cid); if(!c)return; const w=window.open("","_blank"); if(!w){toast("Allow pop-ups to print");return;} w.document.write("<html><head><title>Debit Note "+esc(c.scrollNo)+"</title></head><body>"+fdSalDNHTML(c)+"</body></html>"); w.document.close(); setTimeout(()=>w.print(),250); }
+function fdSalPrintScroll(cid){ const c=FD.salaryCycles.find(x=>x.id===cid); if(!c)return; const w=window.open("","_blank"); if(!w){toast("Allow pop-ups to print");return;} w.document.write("<html><head><title>Payment Scroll "+esc(c.scrollNo)+"</title></head><body>"+fdSalScrollHTML(c)+"</body></html>"); w.document.close(); setTimeout(()=>w.print(),250); }
+
+
+/* ===========================================================================
+   FDNMS · DIRECT FILE UPLOAD  (Program-team provision)
+   If the NGO or Accounts team is not using the app, the Program team can
+   record a debit note by uploading the actual PDF / Excel file. The file is
+   stored in the record and viewable anytime. The note can be saved at the
+   stage it reached offline (Submitted / Approved / Fund Released).
+   =========================================================================== */
+let FD_UP={files:[]};
+function fdCanUpload(){ return ["Admin","Programme"].includes(fdRole()); }
+function fdUploadView(){
+  if(!fdCanUpload()) return `<div class="empty"><div class="mk">🔒</div><p>File upload is for the KRSF Program team.</p></div>`;
+  const ngos=(DB&&DB.ngos)||[];
+  if(!ngos.length) return `<div class="empty"><div class="mk">⚠</div><p>Add a Partner NGO first (Partner NGOs page).</p></div>`;
+  const heads=(typeof BUDGET_CATS!=="undefined")?BUDGET_CATS:["Salary","Travel","Programme","Admin-Other"];
+  return `
+  <div class="fbanner accent">📄 For NGOs / Accounts teams not using the app — record a debit note here by uploading the actual <b>&nbsp;PDF or Excel&nbsp;</b> file. It enters the same register, repository, search and audit trail.</div>
+  <div class="panel">
+    <div class="panel-h"><h3>Upload Debit Note</h3><span class="note">minimal entry — the file is the document of record</span></div>
+    <div class="xlbar">
+      <div class="xf" style="min-width:200px"><label>Partner NGO</label><select id="upNgo">${ngos.map(n=>`<option value="${n.id}">${esc(n.name)}</option>`).join("")}</select></div>
+      <div class="xf"><label>Budget Head</label><select id="upHead">${heads.map(h=>`<option>${esc(h)}</option>`).join("")}</select></div>
+      <div class="xf"><label>Month</label><input type="month" id="upMonth"></div>
+      <div class="xf"><label>Debit Note No. (from file, optional)</label><input id="upNo" placeholder="e.g. DB-07 — blank = auto"></div>
+      <div class="xf"><label>Net Amount (₹)</label><input id="upAmt" inputmode="decimal" placeholder="0"></div>
+      <div class="xf"><label>Processed offline up to</label><select id="upStatus" onchange="var u=el('upUtrWrap');if(u)u.style.display=this.value==='FundReleased'?'flex':'none'">
+        <option value="Submitted">Submitted (Accounts will verify in app)</option>
+        <option value="Approved">Approved (verified &amp; approved offline)</option>
+        <option value="FundReleased">Fund Released (paid offline)</option>
+      </select></div>
+      <div class="xf" id="upUtrWrap" style="display:none"><label>UTR / Transaction No.</label><input id="upUtr" placeholder="UTR…"></div>
+      <div class="xf grow"><label>Purpose / Remarks</label><input id="upPurpose" placeholder="e.g. Debit note for staff salary — April 2026"></div>
+    </div>
+    <div style="padding:14px">
+      <label class="btn" style="cursor:pointer">📎 Choose PDF / Excel file(s)
+        <input type="file" multiple accept=".pdf,.xls,.xlsx,.csv,.png,.jpg,.jpeg" style="display:none" onchange="fdUpFilePick(this)">
+      </label>
+      <span style="font-size:11px;color:var(--ink-3);margin-left:10px">PDF, Excel, CSV or images · up to ~2 MB per file</span>
+      <div id="upFiles" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">${fdUpFileChips()}</div>
+    </div>
+    <div style="padding:10px 14px;border-top:1px solid var(--rule);display:flex;align-items:center;gap:10px">
+      <span style="font-size:11.5px;color:var(--ink-2)">Every upload is stamped in the audit trail with your name, date, time &amp; IP.</span>
+      <button class="btn green" style="margin-left:auto" onclick="fdUploadSave()">⬆ Save Debit Note Record</button>
+    </div>
+  </div>`;
+}
+function fdUpFileChips(){ return FD_UP.files.map((f,i)=>`<span class="badge gray">${fdDocIcon(f.type)} ${esc(f.name)} <span style="color:var(--ink-3)">(${Math.round(f.size/1024)} KB)</span> <a style="color:var(--red);cursor:pointer;margin-left:4px" onclick="FD_UP.files.splice(${i},1);el('upFiles').innerHTML=fdUpFileChips()">×</a></span>`).join("")||'<span style="font-size:11.5px;color:var(--ink-3)">No file chosen yet.</span>'; }
+function fdUpDocType(name){ const n=String(name).toLowerCase(); if(n.endsWith(".pdf"))return"Bill"; if(n.endsWith(".xls")||n.endsWith(".xlsx")||n.endsWith(".csv"))return"Utilisation"; return"Annexure"; }
+function fdUpFilePick(input){
+  const files=Array.from(input.files||[]); input.value="";
+  files.forEach(function(file){
+    if(file.size>2*1024*1024){ toast(file.name+" is over 2 MB — please compress it"); return; }
+    const rd=new FileReader();
+    rd.onload=function(){ FD_UP.files.push({name:file.name,type:fdUpDocType(file.name),size:file.size,dataUrl:rd.result,by:fdMe()}); const w=el("upFiles"); if(w)w.innerHTML=fdUpFileChips(); };
+    rd.readAsDataURL(file);
+  });
+}
+function fdUploadSave(){
+  if(!fdCanUpload()){ toast("Not permitted"); return; }
+  const ngoId=el("upNgo").value, amt=fdXlNum(el("upAmt").value), status=el("upStatus").value;
+  const month=el("upMonth").value, no=(el("upNo").value||"").trim(), utr=(el("upUtr").value||"").trim();
+  const purpose=(el("upPurpose").value||"").trim();
+  if(!ngoId){ toast("Select the NGO"); return; }
+  if(!amt||amt<=0){ toast("Enter the net amount"); return; }
+  if(!FD_UP.files.length){ toast("Attach the debit note file (PDF / Excel)"); return; }
+  if(status==="FundReleased"&&!utr){ toast("Enter the UTR for a released payment"); return; }
+  const d=fdNewNote(ngoId);
+  if(no) d.number=no;
+  d.budgetHead=el("upHead").value; d.paymentTo="NGO";
+  d.projectName=fdNgoFull(ngoId)+(month?" — "+month:"");
+  d.purpose=purpose||"Debit note uploaded as file"+(month?" for "+month:"");
+  d.lineItems=[{desc:(purpose||"As per attached debit note file")+(month?" ("+month+")":""),qty:1,rate:amt,amount:amt}];
+  d.docs=FD_UP.files.slice();
+  fdRecalc(d);
+  d.uploadedRecord=true;
+  d.status="Submitted"; d.submittedAt=fdNow();
+  FD.notes.push(d);
+  fdLog(d,"Debit Note Uploaded (file)","Recorded by Program team from uploaded file · "+FD_UP.files.map(f=>f.name).join(", "));
+  fdLog(d,"Submitted for Verification","File-based record · "+fmtRsFull(amt),"accent");
+  if(status==="Approved"||status==="FundReleased"){
+    d.checklist={}; FD_CHECKLIST.forEach(c=>d.checklist[c.k]=true);
+    d.accountsApproval={by:fdMe(),byName:fdMeName()+" (offline record)",at:fdNow(),ip:fdIP(),comment:"Verified offline — debit note file on record."};
+    fdLog(d,"Accounts Verified & Recommended","Marked as verified offline (file upload provision)","green");
+    d.financeApproval={by:fdMe(),byName:fdMeName()+" (offline record)",at:fdNow(),ip:fdIP(),comment:"Approved offline — debit note file on record."};
+    d.status="Approved";
+    fdLog(d,"Finance Approved Fund Release","Marked as approved offline (file upload provision)","green");
+  }
+  if(status==="FundReleased"){
+    const p=fdNewPayment(d); p.utr=utr; p.status="Paid"; p.remarks="Paid offline — recorded via file upload";
+    FD.payments.push(p); d.paymentId=p.id; d.status="FundReleased";
+    fdLog(d,"Fund Released",p.number+" · "+fmtRsFull(amt)+" · UTR "+utr+" (offline payment, file on record)","green");
+  }
+  FD_UP={files:[]};
+  fdSave(); toast("Debit note recorded — "+d.number); FD_TAB="all"; render();
+}
+/* ---- real-file support in the regular Attach modal too ---- */
+function fdAddDoc(){
+  showModal(modalShell("Attach","Attach Document",
+    `<div class="field"><label>Document type</label><select id="fdDocType">${["Bill","Invoice","Annexure","Utilisation","Payment Request","Other"].map(t=>`<option>${t}</option>`).join("")}</select></div>
+     <div class="field" style="margin-top:10px"><label>Upload file (PDF / Excel / image — optional)</label><input type="file" id="fdDocFile" accept=".pdf,.xls,.xlsx,.csv,.png,.jpg,.jpeg"></div>
+     <div class="field" style="margin-top:10px"><label>Or just record a file name</label><input id="fdDocName" placeholder="e.g. Contractor Bill #441.pdf"></div>`,
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdConfirmDoc()">Attach</button>`));
+}
+function fdConfirmDoc(){
+  const fileInp=el("fdDocFile"); const type=el("fdDocType").value;
+  const file=fileInp&&fileInp.files&&fileInp.files[0];
+  if(file){
+    if(file.size>2*1024*1024){ toast(file.name+" is over 2 MB — please compress it"); return; }
+    const rd=new FileReader();
+    rd.onload=function(){ FD_DRAFT.docs.push({name:file.name,type,size:file.size,dataUrl:rd.result,by:fdMe()}); closeModal(); render(); toast("File attached"); };
+    rd.readAsDataURL(file); return;
+  }
+  const name=(el("fdDocName").value||"").trim();
+  if(!name){ toast("Choose a file or enter a file name"); return; }
+  FD_DRAFT.docs.push({name,type,by:fdMe()}); closeModal(); render();
+}
+function fdOpenDoc(noteId,di){
+  const d=fdById(noteId); const doc=d&&d.docs[di];
+  if(!doc||!doc.dataUrl){ toast("This document is a reference only (no file stored)"); return; }
+  const w=window.open("","_blank"); if(!w){ toast("Allow pop-ups to view"); return; }
+  if(String(doc.dataUrl).startsWith("data:application/pdf")||String(doc.dataUrl).startsWith("data:image")){
+    w.document.write('<html><head><title>'+esc(doc.name)+'</title></head><body style="margin:0"><iframe src="'+doc.dataUrl+'" style="border:none;width:100vw;height:100vh"></iframe></body></html>');
+    w.document.close();
+  } else {
+    w.document.write('<html><body style="font-family:Arial;padding:30px"><p>Downloading <b>'+esc(doc.name)+'</b>…</p><a id="dl" href="'+doc.dataUrl+'" download="'+esc(doc.name)+'">Click here if it does not start</a><script>document.getElementById("dl").click();<\\/script></body></html>');
+    w.document.close();
+  }
+}
 
 </script>
 </body>
