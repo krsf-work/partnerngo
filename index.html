@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Goals, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V5</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V5</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1113,7 +1113,7 @@ const DN_STATUS_COLOR = {
 /* Partner scorecard — 8 criteria, each scored 0–5, total out of 40.
    key = short column header, label = full name shown on hover/tooltip. */
 const SCORE_CRITERIA = [
-  { key:"OKR",   label:"OKR / Goal delivery" },
+  { key:"OKR",   label:"OKR / Milestone delivery" },
   { key:"Data",  label:"Data quality & timeliness" },
   { key:"Docs",  label:"Compliance documents" },
   { key:"Funds", label:"Fund utilisation" },
@@ -1787,7 +1787,7 @@ function migrateDB(db){
       b.annualTarget = isNaN(n)?0:n;
     }
     if(!b.unit) b.unit = "";
-    if(!b.title) b.title = "Untitled goal";
+    if(!b.title) b.title = "Untitled milestone";
   });
   // budget monthlyPlan must be a numeric array
   Object.keys(db.budgets).forEach(k=>{
@@ -1849,10 +1849,13 @@ function visibleNgos(){
     const assigned = Array.isArray(ME.ngoIds) ? ME.ngoIds : [];
     return DB.ngos.filter(n=>assigned.includes(n.id));
   }
+  if(ME && ME.role==="Programme" && Array.isArray(ME.ngoIds) && ME.ngoIds.length){
+    return DB.ngos.filter(n=>ME.ngoIds.includes(n.id));
+  }
   return DB.ngos.slice();
 }
 // can the current user edit at all?  (Viewer is read-only)
-function canEdit(){ return ME && (ME.role==="PM"||ME.role==="APL"); }
+function canEdit(){ return ME && (ME.role==="PM"||ME.role==="APL"||ME.role==="Programme"); }
 // can the current user edit THIS specific NGO?
 //  - PM edits everything
 //  - APL edits only the NGOs assigned to them in the Admin panel
@@ -1860,6 +1863,7 @@ function canEdit(){ return ME && (ME.role==="PM"||ME.role==="APL"); }
 function canEditNgo(ngoId){
   if(!ME || ME.role==="Viewer") return false;
   if(ME.role==="PM") return true;
+  if(ME.role==="Programme") return !Array.isArray(ME.ngoIds) || !ME.ngoIds.length || ME.ngoIds.includes(ngoId);
   return Array.isArray(ME.ngoIds) && ME.ngoIds.includes(ngoId);
 }
 // only PM can add/remove partner NGOs or manage logins
@@ -2095,7 +2099,7 @@ function loginRecovery(){
 }
 function confirmResetDatabase(){
   confirmAction("Reset the entire database?",
-    `This permanently erases <b>all data</b> in Firebase — every NGO, goal, debit
+    `This permanently erases <b>all data</b> in Firebase — every NGO, milestone, debit
      note, task and login — and recreates a clean database with the single
      default login <b>admin / krsf@2026</b>. This cannot be undone.`,
     async ()=>{
@@ -2200,7 +2204,7 @@ function navItems(){
   if(!ME) return [];
   const items = [
     { id:"dash",    label:"Dashboard",     ic:"◆", sec:"Overview" },
-    { id:"bets",    label:"Goals",      ic:"◎", sec:"Overview", count:visibleBets().length },
+    { id:"bets",    label:"Milestones",      ic:"◎", sec:"Overview", count:visibleBets().length },
     { id:"ngos",    label:"Partner NGOs",  ic:"▤", sec:"Portfolio", count:visibleNgos().length },
     { id:"budget",  label:"Finance",       ic:"₹", sec:"Portfolio" },
     { id:"debits",  label:"Debit Notes",   ic:"▦", sec:"Portfolio",
@@ -2217,8 +2221,9 @@ function navItems(){
     { id:"okrupload", label:"Team OKR", ic:"↑", sec:"Work" },
     { id:"docs",    label:"Documents",     ic:"▣", sec:"Work" }
   ];
-  // FDNMS: finance-side roles only see Finance + Debit Notes (no programmatic tabs)
-  const FD_RESTRICTED = ["APL","Accounts","Finance"];
+  // FDNMS: KRSF finance-side staff only see Finance + Debit Notes.
+  // Partnership Leads (APL) and Programme see the full app, scoped to their assigned NGOs.
+  const FD_RESTRICTED = ["Accounts","Finance"];
   if(FD_RESTRICTED.includes(ME.role)){
     const allow = new Set(["budget","fdnms"]);
     return items.filter(it=>allow.has(it.id));
@@ -2414,7 +2419,7 @@ function pageDash(){
     <div class="kpi split">
       <div class="ktop">
         <div class="ktile accent">🎯</div>
-        <div class="lab">Goals — Delivery</div>
+        <div class="lab">Milestones — Delivery</div>
       </div>
       <div class="band-row">
         <div class="band green"><div class="bn">${betGreen}</div><div class="bl">70% achieved</div></div>
@@ -2439,7 +2444,7 @@ function pageDash(){
   <div class="panel" style="margin-bottom:14px">
     <div class="panel-h">
       <h3>Partner NGOs</h3>
-      <span class="note">click a row to see its goals</span>
+      <span class="note">click a row to see its milestones</span>
       <div class="ha"><button class="btn sm" onclick="go('ngos')">All NGOs →</button></div>
     </div>
     <div class="tbl-wrap">
@@ -2468,7 +2473,7 @@ function pageDash(){
   <div class="panel" style="margin-top:14px">
     <div class="panel-h">
       <h3>Recent activity across partners</h3>
-      <span class="note">latest debit notes, goal updates &amp; documents</span>
+      <span class="note">latest debit notes, milestone updates &amp; documents</span>
     </div>
     <div class="panel-b">
       ${(()=>{
@@ -2667,7 +2672,7 @@ function dashNgoRow(n){
       </td>
       <td><span class="badge ${sc.status}"><span class="dot ${sc.status}"></span>${scLabel}</span></td>
       <td>
-        <div style="display:flex;align-items:center;gap:9px" title="${onTrack} of ${bets.length} goals on track · ${avgProg}% of annual targets">
+        <div style="display:flex;align-items:center;gap:9px" title="${onTrack} of ${bets.length} milestones on track · ${avgProg}% of annual targets">
           <div class="mini-bar"><i class="${aBand}" style="width:${Math.min(avgProg,100)}%"></i></div>
           <b style="font-size:11.5px;color:var(--${aBand});white-space:nowrap">${bets.length?onTrack+'/'+bets.length:'—'}</b>
         </div>
@@ -2687,7 +2692,7 @@ function dashNgoRow(n){
       <div class="mini-bar"><i class="${band==='gray'?'amber':band}" style="width:${Math.min(p,100)}%"></i></div>
       <b style="font-size:12px;width:42px;text-align:right;color:var(--${band==='gray'?'ink-3':band})">${p}%</b>
     </div>`;
-  }).join("") : `<div class="bet-sub-inner"><span class="bt" style="color:var(--ink-3)">No goals defined for this NGO yet.</span></div>`;
+  }).join("") : `<div class="bet-sub-inner"><span class="bt" style="color:var(--ink-3)">No milestones defined for this NGO yet.</span></div>`;
 
   return mainRow + `<tr class="bet-sub"><td colspan="6">${sub}</td></tr>`;
 }
@@ -2732,8 +2737,8 @@ function pageBets(){
   return `
   <div class="phead slim">
     <div class="eyebrow">Outcome tracking</div>
-    <h1 class="serif">Goals</h1>
-    ${canEdit()?`<button class="btn accent" style="margin-left:auto" onclick="openBetForm()">+ New Goal</button>`:''}
+    <h1 class="serif">Milestones</h1>
+    ${canEdit()?`<button class="btn accent" style="margin-left:auto" onclick="openBetForm()">+ New Milestone</button>`:''}
   </div>
 
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
@@ -2747,7 +2752,7 @@ function pageBets(){
       <option value="all" ${BETS_NGO==='all'?'selected':''}>All NGOs</option>
       ${ngos.map(n=>`<option value="${n.id}" ${BETS_NGO===n.id?'selected':''}>${esc(n.short)}</option>`).join("")}
     </select>
-    <span style="font-size:12px;color:var(--ink-3);margin-left:auto">${bets.length} goal${bets.length!==1?'s':''} · click a row to expand</span>
+    <span style="font-size:12px;color:var(--ink-3);margin-left:auto">${bets.length} milestone${bets.length!==1?'s':''} · click a row to expand</span>
   </div>
 
   ${bets.length ? orderedNgoIds.map(nid=>{
@@ -2761,7 +2766,7 @@ function pageBets(){
       ${byNgo[nid].map(renderBetRow).join("")}
     </div>`;
   }).join("")
-    : `<div class="panel"><div class="empty"><div class="mk">◎</div><p>No goals match this filter.</p></div></div>`}
+    : `<div class="panel"><div class="empty"><div class="mk">◎</div><p>No milestones match this filter.</p></div></div>`}
   `;
 }
 
@@ -3014,7 +3019,7 @@ async function saveCellEdit(betId, month){
   await saveDB();
   closeModal();
   render();
-  toast("Saved "+monthLabel(month)+" for this goal");
+  toast("Saved "+monthLabel(month)+" for this milestone");
 }
 
 /* ---------- new / edit goal ---------- */
@@ -3025,7 +3030,7 @@ function openBetForm(editId){
   // when creating, only offer NGOs this user is allowed to edit
   const ngos = visibleNgos().filter(n=>canEditNgo(n.id));
   if(!ngos.length){
-    toast("You don't have any NGOs assigned to add a goal to");
+    toast("You don't have any NGOs assigned to add a milestone to");
     return;
   }
   const icons = ["🌳","💰","📚","🏥","🌾","🤝","💪","♻️","🎒","🛒","💡","🏛️","✏️","📈","⛺","🪪","📲","🧑‍🏫","👩‍🌾","🎯"];
@@ -3037,7 +3042,7 @@ function openBetForm(editId){
       </select>
     </div>
     <div class="field">
-      <label>Goal — the annual outcome goal</label>
+      <label>Milestone — the annual outcome milestone</label>
       <textarea id="bfTitle" placeholder="e.g. Enrol 6,240 beneficiaries into the dairy programme">${bet?esc(bet.title):''}</textarea>
       <div class="hint">State it the way your org does — the headline outcome for the year.</div>
     </div>
@@ -3049,7 +3054,7 @@ function openBetForm(editId){
       <div class="field">
         <label>Unit of measure</label>
         <input type="text" id="bfUnit" value="${bet?esc(bet.unit):''}" placeholder="beneficiaries / farmers / ₹ / students"/>
-        <div class="hint">Type <b>₹</b> for money goals.</div>
+        <div class="hint">Type <b>₹</b> for money milestones.</div>
       </div>
     </div>
     <div class="field">
@@ -3062,7 +3067,7 @@ function openBetForm(editId){
         <option value="false" ${bet&&betIsLevelType(bet)?'':'selected'}>Cumulative — monthly numbers add together toward the target</option>
         <option value="true"  ${bet&&betIsLevelType(bet)?'selected':''}>Running level — each month reports the latest level (e.g. average income)</option>
       </select>
-      <div class="hint">Pick <b>Running level</b> for "average income" style goals where the figure is a level, not a sum.</div>
+      <div class="hint">Pick <b>Running level</b> for "average income" style milestones where the figure is a level, not a sum.</div>
     </div>
     <div class="field">
       <label>Pick an icon</label>
@@ -3076,9 +3081,9 @@ function openBetForm(editId){
   const footer = `
     ${editId?`<button class="btn" style="margin-right:auto;color:var(--red)" onclick="deleteBet('${editId}')">Delete</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveBet('${editId||''}')">${editId?'Save changes':'Create goal'}</button>`;
-  showModal(modalShell(editId?"Edit goal":"New goal",
-    editId?"Edit Goal":"Add a Goal", body, footer));
+    <button class="btn primary" onclick="saveBet('${editId||''}')">${editId?'Save changes':'Create milestone'}</button>`;
+  showModal(modalShell(editId?"Edit milestone":"New milestone",
+    editId?"Edit Milestone":"Add a Milestone", body, footer));
   // preselect icon
   setTimeout(()=>{
     const cur = bet?bet.icon:'🎯';
@@ -3112,19 +3117,19 @@ async function saveBet(editId){
   await saveDB();
   closeModal();
   render();
-  toast(editId?"Big bet updated":"Big bet created");
+  toast(editId?"Milestone updated":"Milestone created");
 }
 function deleteBet(id){
   const bet = DB.bigBets.find(b=>b.id===id);
-  confirmAction("Delete this goal?",
+  confirmAction("Delete this milestone?",
     `“${esc(bet?bet.title:'')}” and all of its monthly plan &amp; achieved data will be removed permanently.`,
     async ()=>{
       DB.bigBets = DB.bigBets.filter(b=>b.id!==id);
       await saveDB();
       closeModal();
       render();
-      toast("Big bet deleted");
-    }, "Delete goal", true);
+      toast("Milestone deleted");
+    }, "Delete milestone", true);
 }
 
 /* =================================================================
@@ -3284,7 +3289,7 @@ async function saveNgo(editId){
   await saveDB();
   closeModal();
   render();
-  toast(editId?"Partner updated":"Partner added — set up its budget & goals next");
+  toast(editId?"Partner updated":"Partner added — set up its budget & milestones next");
 }
 function deleteNgo(id){
   const n = ngoById(id);
@@ -3292,7 +3297,7 @@ function deleteNgo(id){
   const betN = betsForNgo(id).length;
   const dnN  = DB.debits.filter(d=>d.ngoId===id).length;
   confirmAction("Delete this partner NGO?",
-    `<b>${esc(n.name)}</b> will be removed along with ${betN} goal${betN!==1?'s':''},
+    `<b>${esc(n.name)}</b> will be removed along with ${betN} milestone${betN!==1?'s':''},
      ${dnN} debit note${dnN!==1?'s':''}, its budget, documents, tasks, scorecards and outcomes.
      This cannot be undone.`,
     async ()=>{
@@ -3406,7 +3411,7 @@ function ngoActivityStream(ngoId){
       items.push({
         sort:lm+"-15",
         icon:bet.icon||"◎",
-        title:`Goal progress logged`,
+        title:`Milestone progress logged`,
         detail:`${bet.title.slice(0,54)}${bet.title.length>54?'…':''} — ${fmtN(c.actual)} ${esc(bet.unit)} in ${monthLabel(lm)}`,
         date:monthLabel(lm)
       });
@@ -3446,7 +3451,7 @@ function portfolioActivityStream(ngos, limit){
         const c = bet.months[lm]||{};
         items.push({
           sort:lm+"-15", icon:bet.icon||"◎",
-          title:`${n.short} · goal progress logged`,
+          title:`${n.short} · milestone progress logged`,
           detail:`${bet.title.slice(0,48)}${bet.title.length>48?'…':''} — ${fmtN(c.actual)} ${esc(bet.unit)} in ${monthLabel(lm)}`,
           date:monthLabel(lm), ngoId:n.id
         });
@@ -3475,13 +3480,13 @@ function ngoOverviewTab(ngoId){
   <div class="grid-3" style="align-items:start">
     <div class="panel" style="grid-column:span 2">
       <div class="panel-h">
-        <h3>Goals</h3>
-        <span class="note">${bets.length} outcome goal${bets.length!==1?'s':''} · click a row to see its monthly ladder</span>
-        <div class="ha"><button class="btn sm" onclick="go('bets')">Open Goals →</button></div>
+        <h3>Milestones</h3>
+        <span class="note">${bets.length} outcome milestone${bets.length!==1?'s':''} · click a row to see its monthly ladder</span>
+        <div class="ha"><button class="btn sm" onclick="go('bets')">Open Milestones →</button></div>
       </div>
       ${bets.length
         ? `<div class="bet-list" style="border-radius:0;border:none;box-shadow:none">${bets.map(renderBetRow).join("")}</div>`
-        : `<div class="empty"><div class="mk">◎</div><p>No goals defined for ${esc(n.short)} yet.</p></div>`}
+        : `<div class="empty"><div class="mk">◎</div><p>No milestones defined for ${esc(n.short)} yet.</p></div>`}
     </div>
     <div class="panel">
       <div class="panel-h"><h3>Partnership profile</h3></div>
@@ -3494,7 +3499,7 @@ function ngoOverviewTab(ngoId){
         <div class="dl-row"><span class="k">Status</span>
           <span class="v"><span class="badge ${sc.status}" style="font-size:10.5px">${
             sc.scored?scoreStatusLabel(sc.total)+' · '+fmtScore(sc.total)+'/'+SCORE_MAX:'Not scored'}</span></span></div>
-        <div class="dl-row"><span class="k">Goals</span><span class="v">${bets.length}</span></div>
+        <div class="dl-row"><span class="k">Milestones</span><span class="v">${bets.length}</span></div>
       </div>
     </div>
     <div class="panel" style="grid-column:span 3">
@@ -4166,7 +4171,7 @@ function downloadBudgetTemplate(ngoId){
 
 /* budget plan upload — APL sets the annual + monthly plan once */
 function openBudgetUpload(ngoId){
-  if(!(ME && (ME.role==="PM" || ME.role==="Programme" || canEditNgo(ngoId)))){ toast("You don't have access to edit this NGO's budget"); return; }
+  if(!canEditNgo(ngoId)){ toast("You don't have access to edit this NGO's budget"); return; }
   const n = ngoById(ngoId);
   const b = DB.budgets[ngoId];
   const body = `
@@ -4375,7 +4380,7 @@ async function saveBudgetPlan(ngoId){
 }
 
 function clearBudget(ngoId){
-  if(!(ME && (ME.role==="PM" || ME.role==="Programme" || canEditNgo(ngoId)))){ toast("You don't have access to change this NGO's budget"); return; }
+  if(!canEditNgo(ngoId)){ toast("You don't have access to change this NGO's budget"); return; }
   const n = ngoById(ngoId);
   confirmAction("Clear budget plan?",
     `The entire budget plan for <b>${esc(n?n.short:'this NGO')}</b> — including the annual amount and all monthly figures — will be removed. Debit notes are not affected.`,
@@ -5592,7 +5597,7 @@ function pageBudget(){
       ${FIN_NGO!=='all'?(()=>{
         const _fn = FIN_NGO;
         const _nb = DB.budgets[_fn];
-        const _can = canEditNgo(_fn) || (ME && ME.role==="Programme");
+        const _can = canEditNgo(_fn);
         return `<button class="btn ghost sm" onclick="FIN_NGO='all';render()">Clear filter</button>
           ${_can?`<button class="btn ghost sm" onclick="openBudgetUpload('${_fn}')" title="Edit or replace the budget plan for this NGO">✎ Edit budget</button>`:''}
           ${_can&&_nb?`<button class="btn ghost sm" style="color:var(--red)" onclick="clearBudget('${_fn}')" title="Delete the current budget plan for this NGO">✕ Clear budget</button>`:''}
@@ -5828,6 +5833,7 @@ function clearTaskFilters(){ TASK_F={ngo:"all",priority:"all",from:"",to:""}; re
 function pageTasks(){
   let tasks = DB.tasks.slice();
   if(ME.role==="APL") tasks = tasks.filter(t=>t.aplId===ME.id);
+  if(ME.role==="Programme"){ const _ids=new Set(visibleNgos().map(n=>n.id)); tasks=tasks.filter(t=>_ids.has(t.ngoId)); }
   const ngos = visibleNgos();
 
   // apply filters
@@ -6161,7 +6167,7 @@ function openAplForm(editId){
       </select>
     </div>
     <div class="field">
-      <label>Assigned NGOs <span style="text-transform:none;font-weight:400">— Partner NGO logins raise/edit only these</span></label>
+      <label>Assigned NGOs <span style="text-transform:none;font-weight:400">— limits Partner NGO &amp; Programme logins to these NGOs (leave empty on a Programme login for all NGOs)</span></label>
       ${ngos.length? `<div class="chk-grid">
         ${ngos.map(n=>`<label class="chk">
           <input type="checkbox" class="apNgo" value="${n.id}" ${u&&(u.ngoIds||[]).includes(n.id)?'checked':''}>
@@ -6371,8 +6377,8 @@ function fdCanRelease(){ return ["Finance","Admin"].includes(fdRole()); }
 function fdReadOnly(){ return fdRole()==="Programme"; }
 function fdUserById(id){ return (typeof userById==="function")?userById(id):null; }
 function fdUserName(id){ const u=fdUserById(id); if(u)return u.name; if(id==="seed")return"Partner NGO"; return id===fdMe()?fdMeName():"—"; }
-function fdMyNgoIds(){ const m=FD_ME(); if(m&&m.role==="APL") return new Set(Array.isArray(m.ngoIds)?m.ngoIds:[]); return null; }
-function fdAssignedNgos(){ const m=FD_ME(); const all=(DB&&DB.ngos)||[]; if(m&&m.role==="APL") return all.filter(n=>(m.ngoIds||[]).includes(n.id)); return all; }
+function fdMyNgoIds(){ const m=FD_ME(); if(m&&m.role==="APL") return new Set(Array.isArray(m.ngoIds)?m.ngoIds:[]); if(m&&m.role==="Programme"&&Array.isArray(m.ngoIds)&&m.ngoIds.length) return new Set(m.ngoIds); return null; }
+function fdAssignedNgos(){ const m=FD_ME(); const all=(DB&&DB.ngos)||[]; if(m&&m.role==="APL") return all.filter(n=>(m.ngoIds||[]).includes(n.id)); if(m&&m.role==="Programme"&&Array.isArray(m.ngoIds)&&m.ngoIds.length) return all.filter(n=>m.ngoIds.includes(n.id)); return all; }
 function fdVisibleNotes(){ const ids=fdMyNgoIds(); return ids? FD.notes.filter(d=>ids.has(d.ngoId)) : FD.notes.slice(); }
 function fdNgoName(id){ const n=(typeof ngoById==="function")?ngoById(id):null; return n?(n.short||n.name):"—"; }
 function fdNgoFull(id){ const n=(typeof ngoById==="function")?ngoById(id):null; return n?n.name:"—"; }
