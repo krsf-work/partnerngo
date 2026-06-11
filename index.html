@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V5</title>
+<title>KRSF · NGO Partnership Program · V17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V5</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V17</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V5</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V17</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -5030,8 +5030,8 @@ function ngoDebitsTab(ngoId){
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
             <td><span class="badge ${s}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
             <td>${d.url
-              ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)">↗ Open</a>`
-              :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Original debit-note email in Gmail">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
+              ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the debit-note file (shared Drive)">📄 Open</a>`
+              :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
             <td>${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
         }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes uploaded yet.</p></div></td></tr>`}
@@ -6366,11 +6366,13 @@ function pageDebits(){
   /* email-captured PDF notes awaiting a human okay live in their own queue,
      not in the ledger (and don't count in actuals until approved) */
   const pending = DB.debits.filter(d=>ids.has(d.ngoId) && d.pendingReview);
-  let dn = DB.debits.filter(d=>ids.has(d.ngoId) && !d.pendingReview);
+  /* the rest of this page is scoped to the CURRENT MONTH so the status-count
+     tabs and the table below show the same scope (the "All 49" vs "2 shown"
+     mismatch was confusing — both now reflect this month) */
+  let dn = DB.debits.filter(d=>ids.has(d.ngoId) && !d.pendingReview && d.month===CUR_MONTH);
   const counts = { all: dn.length };
   DN_STATUS.forEach(s=>{ counts[s] = dn.filter(d=>(d.status||DN_STATUS_DEFAULT)===s).length; });
   if(DN_FILTER!=="all") dn = dn.filter(d=>(d.status||DN_STATUS_DEFAULT)===DN_FILTER);
-  dn = dn.filter(d=>d.month===CUR_MONTH);
   dn.sort((a,b)=> a.ngoId.localeCompare(b.ngoId));
 
   const monthTotal = dn.reduce((s,d)=>s+d.amount,0);
@@ -6419,7 +6421,9 @@ function pageDebits(){
               :`<b>${fmtRsFull(d.amount)}</b>`}</td>
             <td style="font-size:11.5px;color:var(--ink-3);max-width:330px">
               ${esc(src.slice(0,90))}
-              ${d.emailId?`<div style="margin-top:4px"><a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px">📧 Open email + PDF →</a></div>`:''}
+              ${d.url
+                ?`<div style="margin-top:4px"><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the debit-note file (shared Drive)">📄 Open debit note →</a></div>`
+                :(d.emailId?`<div style="margin-top:4px"><a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the source email (Gmail — only the owner can view)">📧 Open email →</a></div>`:'')}
             </td>
             <td style="white-space:nowrap">${can?`
               <button class="btn accent sm" onclick="okayPendingDebit('${d.id}')">✓ Okay</button>
@@ -6462,8 +6466,8 @@ function pageDebits(){
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
             <td><span class="badge ${sc}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
             <td>${d.url
-              ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)">↗ Open</a>`
-              :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Original debit-note email in Gmail">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
+              ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the debit-note file (shared Drive)">📄 Open</a>`
+              :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
             <td>${canEditNgo(d.ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${d.ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
         }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes for ${monthLong(CUR_MONTH)} match this filter.</p></div></td></tr>`}
