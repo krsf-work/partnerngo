@@ -1587,10 +1587,7 @@ function cloudListen(){
         incoming.forEach(u=>{ u.ngoIds = toArr(u.ngoIds); });
       }
       if(part==="budgets" && incoming && typeof incoming==="object"){
-        Object.keys(incoming).forEach(k=>{
-          if(incoming[k] && incoming[k].monthlyPlan!==undefined)
-            incoming[k].monthlyPlan = toArr(incoming[k].monthlyPlan, 12);
-        });
+        Object.keys(incoming).forEach(k=>normalizeBudgetRec(incoming[k]));
       }
       if(part==="debits"){
         incoming.forEach(d=>{
@@ -1760,6 +1757,23 @@ function toArr(v, padLen){
   return padLen ? new Array(padLen).fill(0) : [];
 }
 
+/* normalise one budget record — array coercion + the Salary/Other monthly
+   split needed by the finalized budget workbook. Used by BOTH migrateDB and
+   the live Firebase listener, so the derived fields survive a remote refresh. */
+function normalizeBudgetRec(bg){
+  if(!bg || typeof bg!=="object") return;
+  if(bg.monthlyPlan!==undefined) bg.monthlyPlan = toArr(bg.monthlyPlan, 12);
+  if(bg.salaryPlan !==undefined) bg.salaryPlan  = toArr(bg.salaryPlan, 12);
+  if(bg.otherPlan  !==undefined) bg.otherPlan   = toArr(bg.otherPlan, 12);
+  if(Array.isArray(bg.monthlyPlan) && (!Array.isArray(bg.salaryPlan) || !Array.isArray(bg.otherPlan))){
+    const tot   = (+bg.totalAnnual) || bg.monthlyPlan.reduce((a,c)=>a+(+c||0),0);
+    const sal   = bg.annual ? (+bg.annual.Salary||0) : 0;
+    const share = tot>0 ? Math.min(1, Math.max(0, sal/tot)) : 0;
+    bg.salaryPlan = bg.monthlyPlan.map(v=>Math.round((+v||0)*share));
+    bg.otherPlan  = bg.monthlyPlan.map((v,i)=>(+v||0)-bg.salaryPlan[i]);
+  }
+}
+
 /* fill in fields added after a DB was first saved */
 function migrateDB(db){
   if(!db || typeof db!=="object") db = skeletonData();
@@ -1789,11 +1803,9 @@ function migrateDB(db){
     if(!b.unit) b.unit = "";
     if(!b.title) b.title = "Untitled milestone";
   });
-  // budget monthlyPlan must be a numeric array
-  Object.keys(db.budgets).forEach(k=>{
-    const bg = db.budgets[k];
-    if(bg && bg.monthlyPlan!==undefined) bg.monthlyPlan = toArr(bg.monthlyPlan, 12);
-  });
+  // budget arrays must be numeric arrays; budgets saved before the
+  // finalized-workbook format get a derived Salary/Other monthly split
+  Object.keys(db.budgets).forEach(k=>normalizeBudgetRec(db.budgets[k]));
   // debit notes — coerce nested scroll/history arrays and back-fill status
   db.debits.forEach(d=>{
     if(d.scrolls!==undefined) d.scrolls = toArr(d.scrolls);
@@ -1843,7 +1855,8 @@ function migrateDB(db){
 /* a safe zero budget — used when an NGO has no plan yet */
 function emptyBudget(){
   const annual={}; BUDGET_CATS.forEach(c=>annual[c]=0);
-  return { annual, totalAnnual:0, monthlyPlan:FY_MONTHS.map(()=>0) };
+  return { annual, totalAnnual:0, monthlyPlan:FY_MONTHS.map(()=>0),
+           salaryPlan:FY_MONTHS.map(()=>0), otherPlan:FY_MONTHS.map(()=>0) };
 }
 
 /* =================================================================
@@ -1960,7 +1973,9 @@ function betHealth(bet){
 /* Budget actuals from debit notes. A debit note counts toward utilised
    budget as soon as it is logged — the budget tracker reflects all
    recorded spend regardless of which processing stage it is at. */
-function dnCounts(d){ return true; }
+/* a debit note counts towards spend/actuals unless it is an email-captured
+   PDF note still waiting for a human okay in the review queue */
+function dnCounts(d){ return !(d && d.pendingReview); }
 
 /* a human timestamp for the audit trail, e.g. "18 May 2026, 2:14 PM" */
 function stamp(){
@@ -4197,7 +4212,31 @@ function openBudgetUpload(ngoId){
         <option value="even">Spread evenly across 12 months</option>
         <option value="keep">Keep the existing monthly shape</option>
       </select>
-      <div class="hint">For an uneven plan, upload a sheet below — it overrides this.</div>
+      <div class="hint">For an uneven plan, fill the grid or upload a sheet below — they override this.</div>
+    </div>
+    <div class="field">
+      <label>Monthly plan — Salary &amp; Other (finalized budget format)</label>
+      <div style="max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:8px">
+        <table style="border-collapse:collapse;width:100%;font-size:12.5px">
+          <tr style="position:sticky;top:0;background:var(--bg-2)">
+            <th style="text-align:left;padding:6px 10px">Month</th>
+            <th style="text-align:left;padding:6px 10px">Salary (₹)</th>
+            <th style="text-align:left;padding:6px 10px">Other (₹)</th>
+          </tr>
+          ${FY_MONTHS.map((m,i)=>`<tr>
+            <td style="padding:3px 10px;color:var(--ink-2);white-space:nowrap">${monthLabel(m)}</td>
+            <td style="padding:3px 6px"><input id="bbS${i}" type="number" min="0" style="width:110px" value="${b&&b.salaryPlan&&b.salaryPlan[i]?b.salaryPlan[i]:''}" oninput="bbGridTotals()"></td>
+            <td style="padding:3px 6px"><input id="bbO${i}" type="number" min="0" style="width:110px" value="${b&&b.otherPlan&&b.otherPlan[i]?b.otherPlan[i]:''}" oninput="bbGridTotals()"></td>
+          </tr>`).join("")}
+          <tr style="border-top:1px solid var(--line);font-weight:700">
+            <td style="padding:6px 10px">Total <span id="bbGt" style="float:right;color:var(--ink-2)"></span></td>
+            <td style="padding:6px 10px" id="bbSt"></td>
+            <td style="padding:6px 10px" id="bbOt"></td>
+          </tr>
+        </table>
+      </div>
+      <div class="hint">If the grid has any figures it <b>becomes the plan</b> (the annual amount above is ignored).
+        These two rows feed the <b>budget workbook export</b> on the Finance page.</div>
     </div>
     <div class="field">
       <label>Or upload a monthly plan sheet (.xlsx / .csv)</label>
@@ -4213,6 +4252,7 @@ function openBudgetUpload(ngoId){
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
     <button class="btn accent" onclick="saveBudgetPlan('${ngoId}')">Save budget plan</button>`;
   showModal(modalShell("Budget", "Set Budget Plan", body, foot));
+  bbGridTotals();
 }
 
 /* parse an uploaded monthly-plan sheet into a 12-element array (or null).
@@ -4357,6 +4397,17 @@ async function saveBudgetPlan(ngoId){
   }
   const existing = DB.budgets[ngoId];
 
+  // the Salary/Other monthly grid, if filled, defines the plan next
+  let salaryPlan=null, otherPlan=null;
+  if(!monthlyPlan && el("bbS0")){
+    const gs = FY_MONTHS.map((m,i)=>parseFloat(el("bbS"+i).value)||0);
+    const go = FY_MONTHS.map((m,i)=>parseFloat(el("bbO"+i).value)||0);
+    if(gs.some(v=>v>0) || go.some(v=>v>0)){
+      salaryPlan = gs; otherPlan = go;
+      monthlyPlan = FY_MONTHS.map((m,i)=>gs[i]+go[i]);
+    }
+  }
+
   if(!monthlyPlan){
     if(!annualInput || annualInput<=0){ toast("Enter a valid annual budget amount"); return; }
     const split = el("bgSplit").value;
@@ -4369,20 +4420,40 @@ async function saveBudgetPlan(ngoId){
     }
   }
   const annual = monthlyPlan.reduce((a,c)=>a+c,0);
-  // category split: keep proportions if known, else a sensible default
-  let annualCats;
-  if(existing && existing.annual && Object.values(existing.annual).some(v=>v>0)){
-    const oldT = Object.values(existing.annual).reduce((a,c)=>a+c,0) || 1;
-    annualCats = {};
-    BUDGET_CATS.forEach(c=>annualCats[c]=Math.round((existing.annual[c]||0)/oldT*annual));
-  } else {
-    annualCats = {Salary:Math.round(annual*0.4), Travel:Math.round(annual*0.1),
-                  Programme:Math.round(annual*0.4), "Other":Math.round(annual*0.1)};
+  // keep the Salary/Other monthly split in step when the grid wasn't used
+  if(!salaryPlan){
+    const exS = (existing && existing.annual && +existing.annual.Salary) || 0;
+    const exT = (existing && +existing.totalAnnual) || 0;
+    const share = exT>0 ? Math.min(1, Math.max(0, exS/exT)) : 0;
+    salaryPlan = monthlyPlan.map(v=>Math.round(v*share));
+    otherPlan  = monthlyPlan.map((v,i)=>v-salaryPlan[i]);
   }
-  DB.budgets[ngoId] = { annual:annualCats, totalAnnual:annual, monthlyPlan,
-                        editedBy:ME?ME.name:"—", editedAt:TODAY_ISO };
+  const salarySum = salaryPlan.reduce((a,c)=>a+c,0), otherSum = annual-salarySum;
+  // category split: Salary is exact; spread the rest over known proportions
+  let annualCats = {}; BUDGET_CATS.forEach(c=>annualCats[c]=0);
+  annualCats.Salary = salarySum;
+  const exNon = existing && existing.annual
+    ? BUDGET_CATS.filter(c=>c!=="Salary").reduce((a,c)=>a+(+existing.annual[c]||0),0) : 0;
+  if(exNon>0) BUDGET_CATS.filter(c=>c!=="Salary").forEach(c=>annualCats[c]=Math.round((+existing.annual[c]||0)/exNon*otherSum));
+  else annualCats.Programme = otherSum;
+  const rec = { annual:annualCats, totalAnnual:annual, monthlyPlan, salaryPlan, otherPlan,
+                editedBy:ME?ME.name:"—", editedAt:TODAY_ISO };
+  if(existing && existing.book) rec.book = existing.book;  // keep workbook export metadata
+  DB.budgets[ngoId] = rec;
   await saveDB(); closeModal(); render();
   toast("Budget plan saved for "+ngoById(ngoId).short);
+}
+
+/* live totals under the Salary/Other grid in the budget modal */
+function bbGridTotals(){
+  let s=0,o=0;
+  FY_MONTHS.forEach((m,i)=>{
+    s += parseFloat(el("bbS"+i)&&el("bbS"+i).value)||0;
+    o += parseFloat(el("bbO"+i)&&el("bbO"+i).value)||0;
+  });
+  if(el("bbSt")) el("bbSt").textContent = fmtRsFull(s);
+  if(el("bbOt")) el("bbOt").textContent = fmtRsFull(o);
+  if(el("bbGt")) el("bbGt").textContent = fmtRsFull(s+o);
 }
 
 function clearBudget(ngoId){
@@ -4395,6 +4466,470 @@ function clearBudget(ngoId){
       await saveDB(); closeModal(); render();
       toast("Budget plan cleared for "+(n?n.short:'NGO'));
     }, "Clear budget", true);
+}
+
+/* =====================================================================
+   FINALIZED BUDGET WORKBOOK — import + export
+   Reproduces the finalized "Partnership Budget" file: a Summary sheet,
+   an All Trusts (budget vs actual) sheet and one sheet per partner
+   trust, with the same layout, merges and formulas. Budgets come from
+   DB.budgets (salaryPlan/otherPlan); actuals flow from debit notes.
+   ===================================================================== */
+const BB_FY       = "FY "+FY_MONTHS[0].slice(0,4)+"-"+FY_MONTHS[11].slice(2,4);
+const BB_FY_SHORT = FY_MONTHS[0].slice(0,4)+"-"+FY_MONTHS[11].slice(2,4);
+/* 0-based column index of each month's Budget column (its Actual is +1):
+   F H J · N P R · V X Z · AD AF AH, with a quarter pair after each block */
+const BB_MCOL = [5,7,9, 13,15,17, 21,23,25, 29,31,33];
+const BB_QCOL = [11,19,27,35];   /* L T AB AJ */
+const BB_YCOL = 37;              /* AL (year Budget), AM = Actual */
+
+function bbToday(){ const d=new Date();
+  return String(d.getDate()).padStart(2,"0")+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+d.getFullYear(); }
+function bbCol(c){ return XLSX.utils.encode_col(c); }
+function bbSheetSafe(s){ return String(s||"Sheet").replace(/[\[\]\*\?\/\\:]/g," ").replace(/\s+/g," ").trim().slice(0,31)||"Sheet"; }
+
+/* per-month Salary vs Other actuals for one NGO, from debit notes */
+function bbMonthActuals(ngoId){
+  const sal=FY_MONTHS.map(()=>0), oth=FY_MONTHS.map(()=>0);
+  DB.debits.forEach(d=>{
+    if(d.ngoId!==ngoId || !dnCounts(d)) return;
+    const i=FY_MONTHS.indexOf(d.month); if(i<0) return;
+    if(d.category==="Salary") sal[i]+=(+d.amount||0); else oth[i]+=(+d.amount||0);
+  });
+  return {sal,oth};
+}
+
+/* the NGOs that appear in the workbook, in workbook order.
+   After an import every included NGO carries budget.book metadata; before
+   any import, fall back to every NGO that has a budget. */
+function bbExportList(){
+  const withBook = DB.ngos.filter(n=>DB.budgets[n.id] && DB.budgets[n.id].book);
+  if(withBook.length)
+    return withBook.slice().sort((a,b)=>(DB.budgets[a.id].book.order||999)-(DB.budgets[b.id].book.order||999));
+  return DB.ngos.filter(n=>DB.budgets[n.id] && DB.budgets[n.id].totalAnnual>0);
+}
+function bbMeta(n){
+  const b=DB.budgets[n.id]||{}, k=b.book||{};
+  return { sheet: bbSheetSafe(k.sheet||n.short||n.name),
+           trust: k.trust||n.name,
+           summaryName: k.summaryName||k.trust||n.name,
+           atName: k.atName||k.trust||n.name,
+           /* with workbook metadata the objective is authoritative even when
+              blank (the finalized file leaves some blank on purpose) */
+           objective: b.book ? (k.objective||"") : (n.vertical||""),
+           site: k.site||"" };
+}
+
+/* ---------- export ---------- */
+/* styles only take effect when the style-capable writer loads; the plain
+   SheetJS build silently ignores them, so the export still works offline */
+function bbStyles(){
+  const bd={style:"thin",color:{rgb:"C9C9C9"}};
+  const border={top:bd,bottom:bd,left:bd,right:bd};
+  return {
+    title:{font:{bold:true,sz:13}},
+    sub:{font:{sz:10,color:{rgb:"7A7A7A"}}},
+    th:{font:{bold:true,sz:10},alignment:{horizontal:"center",vertical:"center"},
+        fill:{patternType:"solid",fgColor:{rgb:"DDE8F4"}},border},
+    thQ:{font:{bold:true,sz:10},alignment:{horizontal:"center",vertical:"center"},
+        fill:{patternType:"solid",fgColor:{rgb:"C5D9F1"}},border},
+    lab:{font:{bold:true}},
+    tot:{font:{bold:true},fill:{patternType:"solid",fgColor:{rgb:"F2F2F2"}}},
+    grand:{font:{bold:true},fill:{patternType:"solid",fgColor:{rgb:"C5D9F1"}}}
+  };
+}
+async function bbLib(){
+  if(window._XLSXS) return window._XLSXS;
+  try{
+    const prev=window.XLSX;
+    await new Promise((res,rej)=>{ const s=document.createElement("script");
+      s.src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js";
+      s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+    window._XLSXS=window.XLSX; window.XLSX=prev;
+    return window._XLSXS||prev;
+  }catch(e){ return window.XLSX; }
+}
+function bbCell(ws,r,c,cell){ ws[XLSX.utils.encode_cell({r,c})]=cell; }
+function bbMoney(v,s){ const c={t:"n",v:Math.round(+v||0),z:"#,##0"}; if(s)c.s=s; return c; }
+/* formula cell WITH its computed value cached — without the cached value,
+   Excel/most viewers show freshly-written formula cells as blank until a
+   manual full recalc, which made Summary/All Trusts look empty */
+function bbFml(f,s,v){ const c={t:"n",f,z:"#,##0"}; if(s)c.s=s; if(v!=null&&isFinite(v))c.v=Math.round(v); return c; }
+/* per-column computed values for one Budget-vs-Actual data row:
+   months, quarter roll-ups and the FY total, for budget AND actual */
+function bbRowVals(plan,act){
+  const v={};
+  FY_MONTHS.forEach((m,i)=>{ v[BB_MCOL[i]]=(+plan[i]||0); v[BB_MCOL[i]+1]=(+act[i]||0); });
+  BB_QCOL.forEach((c,qi)=>{
+    v[c]  =(+plan[3*qi]||0)+(+plan[3*qi+1]||0)+(+plan[3*qi+2]||0);
+    v[c+1]=(+act [3*qi]||0)+(+act [3*qi+1]||0)+(+act [3*qi+2]||0);
+  });
+  v[BB_YCOL]  =plan.reduce((a,x)=>a+(+x||0),0);
+  v[BB_YCOL+1]=act .reduce((a,x)=>a+(+x||0),0);
+  return v;
+}
+
+/* rows 2-3: month/quarter header pairs + Budget/Actual labels (shared by
+   the All Trusts sheet and every trust sheet) */
+function bbHeadRows(ws,merges,S){
+  FY_MONTHS.forEach((mo,i)=>{
+    const c=BB_MCOL[i], [y,mm]=mo.split("-");
+    bbCell(ws,1,c,{t:"d",v:new Date(+y,+mm-1,1),z:"mmm-yy",s:S.th});
+    merges.push({s:{r:1,c},e:{r:1,c:c+1}});
+  });
+  ["Q1","Q2","Q3","Q4"].forEach((q,i)=>{ const c=BB_QCOL[i];
+    bbCell(ws,1,c,{t:"s",v:q,s:S.thQ}); merges.push({s:{r:1,c},e:{r:1,c:c+1}}); });
+  bbCell(ws,1,BB_YCOL,{t:"s",v:BB_FY_SHORT,s:S.thQ});
+  merges.push({s:{r:1,c:BB_YCOL},e:{r:1,c:BB_YCOL+1}});
+  ["Sr No","Trust","Project","Site Name","Expense Type"].forEach((h,c)=>bbCell(ws,2,c,{t:"s",v:h,s:S.th}));
+  for(let c=5;c<=BB_YCOL+1;c+=2){ bbCell(ws,2,c,{t:"s",v:"Budget",s:S.th}); bbCell(ws,2,c+1,{t:"s",v:"Actual",s:S.th}); }
+}
+function bbWide(){ const cols=[{wch:6},{wch:38},{wch:26},{wch:16},{wch:12}];
+  for(let c=5;c<=BB_YCOL+1;c++) cols.push({wch:12}); return cols; }
+/* quarter + year roll-up formulas for one row (budget and actual),
+   with their computed values cached from `vals` */
+function bbRollups(ws,r0,vals,S){
+  const R=r0+1;
+  BB_QCOL.forEach((c,qi)=>{
+    const mc=BB_MCOL.slice(qi*3,qi*3+3);
+    bbCell(ws,r0,c,  bbFml(mc.map(x=>bbCol(x)+R).join("+"),S,vals[c]));
+    bbCell(ws,r0,c+1,bbFml(mc.map(x=>bbCol(x+1)+R).join("+"),S,vals[c+1]));
+  });
+  bbCell(ws,r0,BB_YCOL,  bbFml(BB_QCOL.map(x=>bbCol(x)+R).join("+"),S,vals[BB_YCOL]));
+  bbCell(ws,r0,BB_YCOL+1,bbFml(BB_QCOL.map(x=>bbCol(x+1)+R).join("+"),S,vals[BB_YCOL+1]));
+}
+
+/* one sheet per trust: r4 Salary, r5 Total A, r6 Other, r7 Total B, r8 Total */
+function bbTrustSheet(n,S){
+  const b=DB.budgets[n.id]||emptyBudget(), m=bbMeta(n);
+  const {sal,oth}=bbMonthActuals(n.id);
+  const vSal=bbRowVals(b.salaryPlan||[],sal), vOth=bbRowVals(b.otherPlan||[],oth);
+  const ws={}, merges=[];
+  bbCell(ws,0,0,{t:"s",v:m.trust+" - Budget vs Actual Expense "+BB_FY,s:S.title});
+  bbHeadRows(ws,merges,S);
+  const line=(r0,type,plans,acts,vals)=>{
+    bbCell(ws,r0,1,{t:"s",v:m.trust});
+    if(m.objective) bbCell(ws,r0,2,{t:"s",v:m.objective});
+    if(m.site)      bbCell(ws,r0,3,{t:"s",v:m.site});
+    bbCell(ws,r0,4,{t:"s",v:type});
+    FY_MONTHS.forEach((mo,i)=>{
+      bbCell(ws,r0,BB_MCOL[i],bbMoney(plans[i]||0));
+      if(acts[i]>0) bbCell(ws,r0,BB_MCOL[i]+1,bbMoney(acts[i]));
+    });
+    bbRollups(ws,r0,vals);
+  };
+  line(3,"Salary",b.salaryPlan||[],sal,vSal);
+  line(5,"Other", b.otherPlan ||[],oth,vOth);
+  const sumRow=(r0,srcR,label,sr,vals)=>{
+    if(sr!=null) bbCell(ws,r0,0,{t:"n",v:sr});
+    bbCell(ws,r0,2,{t:"s",v:label,s:S.lab});
+    for(let c=5;c<=BB_YCOL+1;c++) bbCell(ws,r0,c,bbFml("SUM("+bbCol(c)+srcR+")",S.tot,vals[c]));
+  };
+  sumRow(4,4,"Salary - Total A",1,vSal);
+  sumRow(6,6,"Other - Total B",2,vOth);
+  bbCell(ws,7,2,{t:"s",v:"Total (A+B)",s:S.lab});
+  for(let c=5;c<=BB_YCOL+1;c++) bbCell(ws,7,c,bbFml(bbCol(c)+"5+"+bbCol(c)+"7",S.tot,(vSal[c]||0)+(vOth[c]||0)));
+  ws["!merges"]=merges; ws["!cols"]=bbWide();
+  ws["!ref"]="A1:"+XLSX.utils.encode_cell({r:7,c:BB_YCOL+1});
+  return ws;
+}
+
+/* the consolidated All Trusts sheet: 3 rows per trust + grand total */
+function bbAllTrustsSheet(list,S){
+  const ws={}, merges=[];
+  bbCell(ws,0,0,{t:"s",v:"All Partner Trusts - Budget vs Actual Expense "+BB_FY,s:S.title});
+  bbHeadRows(ws,merges,S);
+  const gv={}; for(let c=5;c<=BB_YCOL+1;c++) gv[c]=0;
+  list.forEach((n,i)=>{
+    const b=DB.budgets[n.id]||emptyBudget(), m=bbMeta(n), q="'"+m.sheet.replace(/'/g,"''")+"'";
+    const {sal,oth}=bbMonthActuals(n.id);
+    const vSal=bbRowVals(b.salaryPlan||[],sal), vOth=bbRowVals(b.otherPlan||[],oth);
+    const base=3+i*3;                       /* 0-based Salary row */
+    const refRow=(r0,srcR,type,vals)=>{
+      bbCell(ws,r0,1,{t:"s",v:m.atName});
+      if(m.objective) bbCell(ws,r0,2,{t:"s",v:m.objective});
+      if(m.site)      bbCell(ws,r0,3,{t:"s",v:m.site});
+      bbCell(ws,r0,4,{t:"s",v:type});
+      BB_MCOL.forEach(c=>{
+        bbCell(ws,r0,c,  bbFml(q+"!"+bbCol(c)+srcR,null,vals[c]));
+        bbCell(ws,r0,c+1,bbFml(q+"!"+bbCol(c+1)+srcR,null,vals[c+1]));
+      });
+      bbRollups(ws,r0,vals);
+    };
+    bbCell(ws,base,0,{t:"n",v:i+1});
+    refRow(base,  4,"Salary",vSal);
+    refRow(base+1,6,"Other", vOth);
+    /* trust total row: every column = Salary+Other; AL/AM from the trust sheet */
+    const tr=base+2, R=base+1;
+    bbCell(ws,tr,2,{t:"s",v:m.atName+" - Total",s:S.lab});
+    bbCell(ws,tr,4,{t:"s",v:"Total",s:S.lab});
+    for(let c=5;c<BB_YCOL;c++) bbCell(ws,tr,c,bbFml(bbCol(c)+R+"+"+bbCol(c)+(R+1),S.tot,(vSal[c]||0)+(vOth[c]||0)));
+    bbCell(ws,tr,BB_YCOL,  bbFml(q+"!AL8",S.tot,(vSal[BB_YCOL]||0)+(vOth[BB_YCOL]||0)));
+    bbCell(ws,tr,BB_YCOL+1,bbFml(q+"!AM8",S.tot,(vSal[BB_YCOL+1]||0)+(vOth[BB_YCOL+1]||0)));
+    for(let c=5;c<=BB_YCOL+1;c++) gv[c]+=(vSal[c]||0)+(vOth[c]||0);
+  });
+  const gr=3+list.length*3;
+  bbCell(ws,gr,2,{t:"s",v:"GRAND TOTAL (All Trusts)",s:S.lab});
+  const totRows=list.map((n,i)=>3+i*3+2+1);          /* 1-based trust-total rows */
+  for(let c=5;c<=BB_YCOL+1;c++)
+    bbCell(ws,gr,c,bbFml(totRows.map(r=>bbCol(c)+r).join("+"),S.grand,gv[c]));
+  ws["!merges"]=merges; ws["!cols"]=bbWide();
+  ws["!ref"]="A1:"+XLSX.utils.encode_cell({r:gr,c:BB_YCOL+1});
+  return ws;
+}
+
+/* the front Summary sheet */
+function bbSummarySheet(list,S){
+  const ws={};
+  const merges=[ {s:{r:0,c:0},e:{r:0,c:5}}, {s:{r:1,c:0},e:{r:1,c:5}},
+                 {s:{r:3,c:0},e:{r:3,c:2}}, {s:{r:3,c:3},e:{r:3,c:5}} ];
+  bbCell(ws,0,0,{t:"s",v:"Partnership Budget Summary — "+BB_FY,s:S.title});
+  bbCell(ws,1,0,{t:"s",v:"Front summary · "+BB_FY+" budget · figures in ₹ (exported from the Partnership Dashboard on "+bbToday()+")",s:S.sub});
+  bbCell(ws,3,0,{t:"s",v:"Partner NGOs — "+BB_FY,s:S.lab});
+  bbCell(ws,3,3,{t:"s",v:BB_FY,s:S.lab});
+  ["No.","Name of the Trust","Objective","Salary","Other Exp.","Total"].forEach((h,c)=>bbCell(ws,4,c,{t:"s",v:h,s:S.th}));
+  let gSal=0, gOth=0;
+  list.forEach((n,i)=>{
+    const b=DB.budgets[n.id]||emptyBudget();
+    const sB=(b.salaryPlan||[]).reduce((a,x)=>a+(+x||0),0);
+    const oB=(b.otherPlan ||[]).reduce((a,x)=>a+(+x||0),0);
+    gSal+=sB; gOth+=oB;
+    const m=bbMeta(n), q="'"+m.sheet.replace(/'/g,"''")+"'", r=5+i;
+    bbCell(ws,r,0,{t:"n",v:i+1});
+    bbCell(ws,r,1,{t:"s",v:m.summaryName});
+    if(m.objective) bbCell(ws,r,2,{t:"s",v:m.objective});
+    bbCell(ws,r,3,bbFml("'All Trusts'!AL"+(4+i*3),null,sB));
+    bbCell(ws,r,4,bbFml("'All Trusts'!AL"+(5+i*3),null,oB));
+    bbCell(ws,r,5,bbFml(q+"!AL8",null,sB+oB));
+  });
+  const tr=5+list.length;
+  bbCell(ws,tr,1,{t:"s",v:"Grand Total (All "+list.length+" NGOs)",s:S.lab});
+  [gSal,gOth,gSal+gOth].forEach((gvv,j)=>{
+    const L=["D","E","F"][j];
+    bbCell(ws,tr,3+j,bbFml("SUM("+L+"6:"+L+(5+list.length)+")",S.grand,gvv));
+  });
+  ws["!merges"]=merges;
+  ws["!cols"]=[{wch:5},{wch:38},{wch:24},{wch:14},{wch:14},{wch:15}];
+  ws["!ref"]="A1:F"+(tr+1);
+  return ws;
+}
+
+async function exportBudgetBook(){
+  const list=bbExportList();
+  if(!list.length){ toast("No budgets to export yet — set budget plans (or import the workbook) first"); return; }
+  toast("Building the budget workbook…");
+  const X=await bbLib(), S=bbStyles();
+  const wb=X.utils.book_new();
+  X.utils.book_append_sheet(wb,bbSummarySheet(list,S),"Summary");
+  X.utils.book_append_sheet(wb,bbAllTrustsSheet(list,S),"All Trusts");
+  const used=new Set(["summary","all trusts"]);
+  /* trust tabs follow the original workbook's tab order (it can differ from
+     the Summary row order) */
+  const tabList=list.slice().sort((a,b)=>{
+    const ka=(DB.budgets[a.id].book||{}).tabOrder||999, kb=(DB.budgets[b.id].book||{}).tabOrder||999;
+    return ka-kb;
+  });
+  tabList.forEach(n=>{
+    let nm=bbMeta(n).sheet, base=nm, k=2;
+    while(used.has(nm.toLowerCase())) nm=bbSheetSafe(base.slice(0,27)+" "+(k++));
+    used.add(nm.toLowerCase());
+    /* NOTE: bbMeta().sheet must resolve to the same name the formulas use —
+       duplicates only happen if two NGOs share a short code */
+    X.utils.book_append_sheet(wb,bbTrustSheet(n,S),nm);
+  });
+  X.writeFile(wb,"Partnership Budget "+bbToday()+".xlsx");
+  toast("Budget workbook downloaded");
+}
+
+/* ---------- import ---------- */
+function bbNorm(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,""); }
+function bbLev(a,b){
+  if(a===b) return 0;
+  const m=a.length,n=b.length; if(!m||!n) return m||n;
+  let prev=Array.from({length:n+1},(x,i)=>i);
+  for(let i=1;i<=m;i++){
+    const cur=[i];
+    for(let j=1;j<=n;j++)
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    prev=cur;
+  }
+  return prev[n];
+}
+function bbMatchNgo(t){
+  const keys=[t.trust,t.summaryName,t.atName,t.sheet].filter(Boolean).map(bbNorm);
+  let best=null, bestScore=0;
+  DB.ngos.forEach(n=>{
+    let score=0;
+    [n.name,n.short].filter(Boolean).map(bbNorm).forEach(c=>{
+      keys.forEach(k=>{
+        if(!k||!c) return;
+        if(k===c) score=Math.max(score,100);
+        else if(k.length>=5&&c.length>=5&&(k.includes(c)||c.includes(k))) score=Math.max(score,80);
+        else if(Math.min(k.length,c.length)>=5&&bbLev(k,c)<=2) score=Math.max(score,60);
+      });
+    });
+    if(score>bestScore){ bestScore=score; best=n; }
+  });
+  return bestScore>=60?best:null;
+}
+
+async function bbParseBook(file){
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:"array"});
+  const names=wb.SheetNames;
+  const find=t=>names.find(s=>s.trim().toLowerCase()===t);
+  const sumName=find("summary"), atName=find("all trusts");
+  const skip=new Set([sumName,atName].filter(Boolean));
+  const cv=(ws,a)=>{ const c=ws[a]; return c?c.v:undefined; };
+  /* tie Summary rows to trust sheets through the F-column formula =Sheet!AL8 */
+  const sumMeta={};
+  if(sumName){
+    const sws=wb.Sheets[sumName];
+    for(let r=6;r<300;r++){
+      const bv=cv(sws,"B"+r); if(bv==null) continue;
+      if(/grand total/i.test(String(bv))) break;
+      const f=(sws["F"+r]||{}).f||"";
+      const mm=f.match(/^=?'?([^'!]+)'?!/);   /* SheetJS stores .f without the leading = */
+      if(mm) sumMeta[mm[1].trim().toLowerCase()]={
+        summaryName:String(bv).trim(),
+        objective:String(cv(sws,"C"+r)||"").trim(),
+        order:r-5 };
+    }
+  }
+  /* the trust-name variant used on the All Trusts sheet, via its F refs */
+  const atMeta={};
+  if(atName){
+    const aws=wb.Sheets[atName];
+    for(let r=4;r<600;r++){
+      const f=(aws["F"+r]||{}).f||"";
+      const mm=f.match(/^=?'?([^'!]+)'?!F\d+$/);
+      if(mm){ const key=mm[1].trim().toLowerCase();
+        if(!atMeta[key]) atMeta[key]=String(cv(aws,"B"+r)||"").trim(); }
+    }
+  }
+  const out=[]; let ord=0, tab=0;
+  const num=v=>{ const x=typeof v==="number"?v:parseFloat(String(v??"").replace(/[^0-9.\-]/g,"")); return isNaN(x)?0:x; };
+  names.forEach(sn=>{
+    if(skip.has(sn)) return;
+    const ws=wb.Sheets[sn];
+    /* finalized trust-sheet layout: row 4 = Salary, row 6 = Other */
+    if(String(cv(ws,"E4")||"").trim().toLowerCase()!=="salary") return;
+    if(String(cv(ws,"E6")||"").trim().toLowerCase()!=="other")  return;
+    const readRow=R=>BB_MCOL.map(c=>num(cv(ws,bbCol(c)+R)));
+    const sal=readRow(4), oth=readRow(6);
+    const key=sn.trim().toLowerCase(), sm=sumMeta[key]||{};
+    out.push({ sheet:sn,
+      trust:String(cv(ws,"B4")||cv(ws,"B6")||sn).trim(),
+      objective:sm.objective||String(cv(ws,"C4")||"").trim(),
+      site:String(cv(ws,"D4")||"").trim(),
+      summaryName:sm.summaryName||"", atName:atMeta[key]||"",
+      /* the Summary row order drives Summary/All Trusts rows; the workbook
+         tab order can differ, so keep both for a faithful round-trip */
+      order:sm.order!=null?sm.order:(++ord)+1000,
+      tabOrder:++tab,
+      salaryPlan:sal, otherPlan:oth,
+      salTotal:sal.reduce((a,c)=>a+c,0), othTotal:oth.reduce((a,c)=>a+c,0) });
+  });
+  out.sort((a,b)=>a.order-b.order);
+  return out;
+}
+
+function openBudgetBookImport(){
+  if(!ME || ME.role!=="PM"){ toast("Only the Program Manager can import the budget workbook"); return; }
+  const body=`
+    <div style="font-size:12.5px;color:var(--ink-3);line-height:1.6;margin-bottom:14px">
+      Upload the finalized <b>Partnership Budget workbook</b> (.xlsx — Summary + All Trusts + one
+      sheet per trust). Each trust sheet's monthly <b>Salary</b> and <b>Other</b> budget rows are
+      saved as that NGO's budget plan in the app. Actuals are <b>not</b> imported — they flow in
+      from debit notes. You can re-download the same workbook any time with
+      <b>Export budget workbook</b> on the Finance page.
+    </div>
+    <div class="field"><label>Budget workbook (.xlsx)</label>
+      <input type="file" id="bbFile" accept=".xlsx,.xls" onchange="bbPreviewImport()">
+    </div>
+    <div id="bbPrev"></div>`;
+  const foot=`<button class="btn ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn accent" id="bbApplyBtn" disabled onclick="bbApplyImport()">Import budgets</button>`;
+  showModal(modalShell("Budget","Import Budget Workbook",body,foot));
+}
+
+async function bbPreviewImport(){
+  const f=el("bbFile")&&el("bbFile").files[0]; if(!f) return;
+  let trusts=null;
+  try{ trusts=await bbParseBook(f); }catch(e){ console.error(e); }
+  const box=el("bbPrev");
+  if(!trusts||!trusts.length){
+    box.innerHTML='<div class="fbanner amber">Couldn&rsquo;t read any trust sheets in the finalized layout (row 4 = Salary, row 6 = Other). Check the file and try again.</div>';
+    el("bbApplyBtn").disabled=true; return;
+  }
+  window._bbImport=trusts;
+  const matches=trusts.map(t=>bbMatchNgo(t));
+  const opts=def=>['<option value="__skip"'+(def==="__skip"?" selected":"")+'>— skip —</option>',
+    '<option value="__create"'+(def==="__create"?" selected":"")+'>➕ create as new NGO</option>']
+    .concat(DB.ngos.map(n=>`<option value="${n.id}" ${def===n.id?'selected':''}>${esc(n.short)} — ${esc(n.name)}</option>`)).join("");
+  const rows=trusts.map((t,i)=>{
+    const m=matches[i], def=m?m.id:"__create";
+    return `<tr>
+      <td style="padding:5px 8px">${i+1}</td>
+      <td style="padding:5px 8px"><b>${esc(t.trust)}</b><br><span style="font-size:11px;color:var(--ink-3)">sheet: ${esc(t.sheet)}</span></td>
+      <td style="padding:5px 8px;text-align:right">${fmtRs(t.salTotal)}</td>
+      <td style="padding:5px 8px;text-align:right">${fmtRs(t.othTotal)}</td>
+      <td style="padding:5px 8px;text-align:right"><b>${fmtRs(t.salTotal+t.othTotal)}</b></td>
+      <td style="padding:5px 8px"><select id="bbMap${i}" class="sel-inp" style="max-width:220px">${opts(def)}</select>
+        ${m?'':'<div style="color:var(--amber);font-size:11px;margin-top:2px">no matching NGO — will be created</div>'}</td>
+    </tr>`; }).join("");
+  const grand=trusts.reduce((a,t)=>a+t.salTotal+t.othTotal,0);
+  const inBook=new Set(matches.filter(Boolean).map(n=>n.id));
+  const outside=DB.ngos.filter(n=>!inBook.has(n.id));
+  box.innerHTML=`
+    <div style="max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:8px">
+      <table style="border-collapse:collapse;width:100%;font-size:12.5px">
+        <tr style="position:sticky;top:0;background:var(--bg-2);font-weight:700">
+          <td style="padding:6px 8px">#</td><td style="padding:6px 8px">Trust (workbook)</td>
+          <td style="padding:6px 8px;text-align:right">Salary</td><td style="padding:6px 8px;text-align:right">Other</td>
+          <td style="padding:6px 8px;text-align:right">Total</td><td style="padding:6px 8px">Save to NGO</td></tr>
+        ${rows}
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:12.5px">Workbook grand total: <b>${fmtRsFull(grand)}</b> across ${trusts.length} trusts.
+      Existing budget plans for the selected NGOs will be <b>replaced</b> (a backup of the previous plans is kept).</div>
+    ${outside.length?`<div class="hint" style="margin-top:6px">In the app but not in this workbook (budgets kept unchanged; excluded from the export): ${outside.map(n=>esc(n.short)).join(", ")}</div>`:''}`;
+  el("bbApplyBtn").disabled=false;
+}
+
+async function bbApplyImport(){
+  const data=window._bbImport; if(!data||!data.length) return;
+  /* keep a one-shot backup of the previous plans (restorable from a JSON backup too) */
+  try{ DB.meta.budgetsBackup={at:TODAY_ISO, by:ME?ME.name:"—", data:JSON.parse(JSON.stringify(DB.budgets))}; }catch(e){}
+  let applied=0, created=0;
+  data.forEach((t,i)=>{
+    const sel=el("bbMap"+i), v=sel?sel.value:"__skip";
+    if(v==="__skip") return;
+    let ngoId=v;
+    if(v==="__create"){
+      const rec={ id:genId("n"), name:t.trust, short:bbSheetSafe(t.sheet).slice(0,18)||t.trust.slice(0,18),
+                  state:"—", vertical:/educat/i.test(t.objective)?"Education":"Livelihood",
+                  lead:"—", since:TODAY_ISO.slice(0,7), partnership:"Active" };
+      DB.ngos.push(rec); ngoId=rec.id; created++;
+    }
+    const monthlyPlan=FY_MONTHS.map((m,j)=>(t.salaryPlan[j]||0)+(t.otherPlan[j]||0));
+    const salSum=t.salTotal, othSum=t.othTotal;
+    const prev=DB.budgets[ngoId];
+    const annual={}; BUDGET_CATS.forEach(c=>annual[c]=0);
+    annual.Salary=salSum;
+    const exNon=prev&&prev.annual?BUDGET_CATS.filter(c=>c!=="Salary").reduce((a,c)=>a+(+prev.annual[c]||0),0):0;
+    if(exNon>0) BUDGET_CATS.filter(c=>c!=="Salary").forEach(c=>annual[c]=Math.round((+prev.annual[c]||0)/exNon*othSum));
+    else annual.Programme=othSum;
+    DB.budgets[ngoId]={ annual, totalAnnual:salSum+othSum, monthlyPlan,
+      salaryPlan:t.salaryPlan, otherPlan:t.otherPlan,
+      book:{ order:i+1, tabOrder:t.tabOrder||i+1, sheet:t.sheet, trust:t.trust,
+             summaryName:t.summaryName||t.trust, atName:t.atName||t.trust,
+             objective:t.objective||"", site:t.site||"" },
+      editedBy:ME?ME.name:"—", editedAt:TODAY_ISO };
+    applied++;
+  });
+  await saveDB(); closeModal(); render();
+  toast("Imported budgets for "+applied+" NGO(s)"+(created?" · created "+created+" new NGO record(s)":""));
 }
 
 /* =====================================================================
@@ -4494,7 +5029,9 @@ function ngoDebitsTab(ngoId){
             <td style="font-size:12px;color:var(--ink-2)">${nScrolls?nScrolls+' scroll'+(nScrolls>1?'s':''):'—'}</td>
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
             <td><span class="badge ${s}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
-            <td>${d.url?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)">↗ Open</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>'}</td>
+            <td>${d.url
+              ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)">↗ Open</a>`
+              :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Original debit-note email in Gmail">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
             <td>${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
         }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes uploaded yet.</p></div></td></tr>`}
@@ -5650,6 +6187,12 @@ function pageBudget(){
         <option value="all" ${FIN_NGO==='all'?'selected':''}>All partner NGOs</option>
         ${ngos.map(n=>`<option value="${n.id}" ${FIN_NGO===n.id?'selected':''}>${esc(n.short)} — ${esc(n.name)}</option>`).join("")}
       </select>
+      <span style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn ghost sm" onclick="exportBudgetBook()"
+          title="Download the finalized Partnership Budget workbook (.xlsx) — Summary, All Trusts and one sheet per trust — built from the budgets in the app">⬇ Export budget workbook</button>
+        ${ME&&ME.role==="PM"?`<button class="btn ghost sm" onclick="openBudgetBookImport()"
+          title="Load every NGO's budget plan from the finalized Partnership Budget workbook">↑ Import budget workbook</button>`:''}
+      </span>
       ${FIN_NGO!=='all'?(()=>{
         const _fn = FIN_NGO;
         const _nb = DB.budgets[_fn];
@@ -5820,7 +6363,10 @@ function pageBudget(){
 let DN_FILTER = "all";
 function pageDebits(){
   const ids = new Set(visibleNgos().map(n=>n.id));
-  let dn = DB.debits.filter(d=>ids.has(d.ngoId));
+  /* email-captured PDF notes awaiting a human okay live in their own queue,
+     not in the ledger (and don't count in actuals until approved) */
+  const pending = DB.debits.filter(d=>ids.has(d.ngoId) && d.pendingReview);
+  let dn = DB.debits.filter(d=>ids.has(d.ngoId) && !d.pendingReview);
   const counts = { all: dn.length };
   DN_STATUS.forEach(s=>{ counts[s] = dn.filter(d=>(d.status||DN_STATUS_DEFAULT)===s).length; });
   if(DN_FILTER!=="all") dn = dn.filter(d=>(d.status||DN_STATUS_DEFAULT)===DN_FILTER);
@@ -5839,6 +6385,51 @@ function pageDebits(){
       </div>
     </div>
   </div>
+
+  ${pending.length?`
+  <div class="panel" style="margin-bottom:20px;border:1px solid var(--amber);border-radius:12px">
+    <div style="padding:14px 16px 4px">
+      <div style="font-weight:700;font-size:14px">📥 Captured from email — waiting for your okay <span class="badge amber" style="margin-left:6px">${pending.length}</span></div>
+      <div style="font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.5">
+        These came in as <b>PDF attachments</b>, so the amount was read by OCR and must be checked
+        against the document before it counts. Correct the amount if needed, then <b>Okay</b> — the
+        note moves into the ledger and the budget actuals. <b>Reject</b> deletes it (the email stays in Gmail).
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>NGO</th><th>DN No.</th><th>Month</th><th>Category</th>
+          <th class="num">Amount (₹) — edit if wrong</th><th>Captured from</th><th></th>
+        </tr></thead>
+        <tbody>
+        ${pending.map(d=>{
+          const n=ngoById(d.ngoId)||{short:'?'};
+          const can=canEditNgo(d.ngoId);
+          const src=(d.note||'').replace(/^.*Auto-captured from email /,'').replace(/"/g,'');
+          return `<tr>
+            <td><b>${esc(n.short)}</b></td>
+            <td class="mono" style="font-size:11.5px">${esc(d.dnNo)}</td>
+            <td style="font-size:12px">${monthLabel(d.month)}</td>
+            <td>${can
+              ?`<select id="pr_cat_${d.id}" class="sel-inp" style="padding:4px 8px;font-size:12px">${BUDGET_CATS.map(c=>`<option ${d.category===c?'selected':''}>${c}</option>`).join("")}</select>`
+              :esc(d.category)}</td>
+            <td class="num">${can
+              ?`<input id="pr_amt_${d.id}" type="number" min="1" value="${d.amount}" style="width:130px;text-align:right;font-weight:700">`
+              :`<b>${fmtRsFull(d.amount)}</b>`}</td>
+            <td style="font-size:11.5px;color:var(--ink-3);max-width:330px">
+              ${esc(src.slice(0,90))}
+              ${d.emailId?`<div style="margin-top:4px"><a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px">📧 Open email + PDF →</a></div>`:''}
+            </td>
+            <td style="white-space:nowrap">${can?`
+              <button class="btn accent sm" onclick="okayPendingDebit('${d.id}')">✓ Okay</button>
+              <button class="btn ghost sm" style="color:var(--red)" onclick="rejectPendingDebit('${d.id}')">✕ Reject</button>`:''}</td>
+          </tr>`;
+        }).join("")}
+        </tbody>
+      </table>
+    </div>
+  </div>`:''}
 
   <div style="display:flex;gap:14px;align-items:center;margin-bottom:18px;flex-wrap:wrap">
     <div class="seg-toggle">
@@ -5860,6 +6451,7 @@ function pageDebits(){
         <tbody>
         ${dn.length? dn.map(d=>{
           const n=ngoById(d.ngoId);
+          if(!n) return '';
           const sc = DN_STATUS_COLOR[d.status] || "amber";
           const nScrolls = Array.isArray(d.scrolls)?d.scrolls.length:0;
           return `<tr>
@@ -5869,7 +6461,9 @@ function pageDebits(){
             <td style="font-size:12px;color:var(--ink-2)">${nScrolls?nScrolls+' scroll'+(nScrolls>1?'s':''):'—'}</td>
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
             <td><span class="badge ${sc}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
-            <td>${d.url?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)">↗ Open</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>'}</td>
+            <td>${d.url
+              ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)">↗ Open</a>`
+              :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Original debit-note email in Gmail">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
             <td>${canEditNgo(d.ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${d.ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
         }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes for ${monthLong(CUR_MONTH)} match this filter.</p></div></td></tr>`}
@@ -5877,6 +6471,40 @@ function pageDebits(){
       </table>
     </div>
   </div>`;
+}
+
+/* ---- email-capture review queue: okay / reject ---- */
+async function okayPendingDebit(id){
+  const d = DB.debits.find(x=>x.id===id);
+  if(!d){ toast("Note not found"); return; }
+  if(!canEditNgo(d.ngoId)){ toast("You don't have access to approve this NGO's notes"); return; }
+  const inp = el("pr_amt_"+id);
+  const v = inp ? parseFloat(inp.value) : NaN;
+  if(isNaN(v) || v<=0){ toast("Enter a valid amount before okaying"); return; }
+  d.amount = Math.round(v);
+  if(Array.isArray(d.scrolls) && d.scrolls.length===1) d.scrolls[0].amount = d.amount;
+  const catSel = el("pr_cat_"+id);
+  if(catSel && BUDGET_CATS.includes(catSel.value)) d.category = catSel.value;
+  delete d.pendingReview;
+  d.note = (d.note||"").replace(/^⚠ From PDF — verify amount during review\.\s*/,
+            "From PDF — amount okayed in review by "+(ME?ME.name:"—")+" on "+TODAY_ISO+". ");
+  d.history = Array.isArray(d.history) ? d.history : [];
+  d.history.push({ status:d.status, at:stamp(), by:(ME?ME.name:"—")+" · okayed email capture" });
+  await saveDB(); render();
+  toast("Debit note "+d.dnNo+" approved — now in the ledger and budget actuals");
+}
+function rejectPendingDebit(id){
+  const d = DB.debits.find(x=>x.id===id);
+  if(!d) return;
+  if(!canEditNgo(d.ngoId)){ toast("You don't have access to reject this NGO's notes"); return; }
+  confirmAction("Reject this captured note?",
+    `<b>${esc(d.dnNo)}</b> (${fmtRsFull(d.amount)}, ${esc((ngoById(d.ngoId)||{}).short||'')}) will be deleted from the queue.
+     The original email stays in Gmail, so you can always log it manually.`,
+    async ()=>{
+      DB.debits = DB.debits.filter(x=>x.id!==id);
+      await saveDB(); closeModal(); render();
+      toast("Captured note rejected");
+    }, "Reject & delete", true);
 }
 
 /* =================================================================
@@ -6521,7 +7149,11 @@ function fdGo(tab){ FD_TAB=tab; if(tab!=="new") FD_DRAFT=null; render(); window.
 function pageFDNMS(){
   fdEnsureSeed();
   const tabs=fdTabsForRole();
-  if(!FD_TAB || !tabs.some(t=>t[0]===FD_TAB)) FD_TAB=tabs[0][0];
+  // "new" is reachable via the "+ New Debit Note" button even for roles (e.g.
+  // Super Admin) that don't carry it as a visible tab — treat it as valid so
+  // the button isn't silently bounced back to the overview.
+  const tabIsValid = tabs.some(t=>t[0]===FD_TAB) || (FD_TAB==="new" && fdCanCreate());
+  if(!FD_TAB || !tabIsValid) FD_TAB=tabs[0][0];
   const head=`
     <div class="phead"><div class="phead-row">
       <div><div class="eyebrow">${esc((DB&&DB.meta&&DB.meta.fyLabel)||"FY 2026-27")} \u00b7 Fund Disbursement \u00b7 ${esc(fdRoleLabel())}</div>
