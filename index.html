@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V25</title>
+<title>KRSF · NGO Partnership Program · V26</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- Firebase (compat build — exposes a global `firebase`, works without ES modules) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -48,9 +48,9 @@ window.FIREBASE_CONFIG = {
     --violet-soft:#e9e3f9;
     --shadow:0 1px 2px rgba(27,35,51,.04),0 3px 12px rgba(27,35,51,.055);
     --shadow-lg:0 2px 8px rgba(27,35,51,.07),0 16px 44px rgba(27,35,51,.12);
-    --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
-    --display:'Fraunces',Georgia,serif;
-    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --sans:'Roboto',-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+    --display:'Roboto',-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+    --mono:'Roboto Mono','Roboto',ui-monospace,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V25</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V26</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V25</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V26</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1136,6 +1136,14 @@ function shortDate(s){
   return (+m[3])+" "+MONTH_NAMES[+m[2]]+" "+m[1].slice(2);
 }
 function fmtN(n){ if(n==null||isNaN(n))return"—"; return Math.round(n).toLocaleString("en-IN"); }
+/* re-format an amount-input as the user types — adds Indian commas
+   (1,38,000) without losing cursor position for the most-common case
+   of typing at the end. Strip non-digits, parse, then format. */
+function fmtAmtInput(inp){
+  const raw = (inp.value||"").replace(/[^0-9]/g,"");
+  if(!raw){ inp.value=""; return; }
+  inp.value = parseInt(raw,10).toLocaleString("en-IN");
+}
 function fmtRs(n){
   if(n==null||isNaN(n))return"—";
   if(Math.abs(n)>=1e7) return "₹"+(n/1e7).toFixed(2)+" Cr";
@@ -6429,7 +6437,7 @@ function pageDebits(){
               ?`<select id="pr_cat_${d.id}" class="sel-inp" style="padding:4px 8px;font-size:12px">${BUDGET_CATS.map(c=>`<option ${d.category===c?'selected':''}>${c}</option>`).join("")}</select>`
               :esc(d.category)}</td>
             <td class="num">${can
-              ?`<input id="pr_amt_${d.id}" type="number" min="1" value="${d.amount}" style="width:130px;text-align:right;font-weight:700">`
+              ?`<input id="pr_amt_${d.id}" type="text" inputmode="numeric" value="${(+d.amount||0).toLocaleString('en-IN')}" oninput="fmtAmtInput(this)" style="width:130px;text-align:right;font-weight:700">`
               :`<b>${fmtRsFull(d.amount)}</b>`}</td>
             <td style="font-size:11.5px;color:var(--ink-3);max-width:330px">
               ${esc(src.slice(0,90))}
@@ -6548,7 +6556,8 @@ async function okayPendingDebit(id){
   if(!d){ toast("Note not found"); return; }
   if(!canEditNgo(d.ngoId)){ toast("You don't have access to approve this NGO's notes"); return; }
   const inp = el("pr_amt_"+id);
-  const v = inp ? parseFloat(inp.value) : NaN;
+  /* the input is comma-formatted ("1,38,000") — strip commas before parsing */
+  const v = inp ? parseFloat(String(inp.value||"").replace(/,/g,"")) : NaN;
   if(isNaN(v) || v<=0){ toast("Enter a valid amount before okaying"); return; }
   d.amount = Math.round(v);
   if(Array.isArray(d.scrolls) && d.scrolls.length===1) d.scrolls[0].amount = d.amount;
