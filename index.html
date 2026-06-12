@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V20</title>
+<title>KRSF · NGO Partnership Program · V21</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V20</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V21</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V20</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V21</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1128,6 +1128,13 @@ const VERT_CLASS = {Livelihood:"live",Advocacy:"adv",Education:"edu",Healthcare:
 /* ---------- helpers ---------- */
 function monthLabel(m){ if(!m)return"—"; const[y,mo]=m.split("-"); return MONTH_NAMES[+mo]+" "+y.slice(2); }
 function monthLong(m){ if(!m)return"—"; const[y,mo]=m.split("-"); return MONTH_NAMES[+mo]+" 20"+y.slice(2); }
+/* shortDate("2026-06-11") → "11 Jun 26", for the debit-note "Received" column */
+function shortDate(s){
+  if(!s) return "—";
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return s;
+  return (+m[3])+" "+MONTH_NAMES[+m[2]]+" "+m[1].slice(2);
+}
 function fmtN(n){ if(n==null||isNaN(n))return"—"; return Math.round(n).toLocaleString("en-IN"); }
 function fmtRs(n){
   if(n==null||isNaN(n))return"—";
@@ -6373,7 +6380,11 @@ function pageDebits(){
   const counts = { all: dn.length };
   DN_STATUS.forEach(s=>{ counts[s] = dn.filter(d=>(d.status||DN_STATUS_DEFAULT)===s).length; });
   if(DN_FILTER!=="all") dn = dn.filter(d=>(d.status||DN_STATUS_DEFAULT)===DN_FILTER);
-  dn.sort((a,b)=> a.ngoId.localeCompare(b.ngoId));
+  /* sort latest-received at the top — by editedAt (capture date) descending,
+     falling back to the note's own date when editedAt is missing */
+  const _recv = d => d.editedAt || d.date || "";
+  dn.sort((a,b)=> _recv(b).localeCompare(_recv(a)) || a.ngoId.localeCompare(b.ngoId));
+  pending.sort((a,b)=> _recv(b).localeCompare(_recv(a)));
 
   const monthTotal = dn.reduce((s,d)=>s+d.amount,0);
 
@@ -6449,7 +6460,7 @@ function pageDebits(){
     <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>NGO</th><th>DN No.</th><th>Category</th><th>Scrolls</th>
+          <th>NGO</th><th>DN No.</th><th>Received</th><th>Category</th><th>Scrolls</th>
           <th class="num">Amount</th><th>Status</th><th>PDF</th><th></th>
         </tr></thead>
         <tbody>
@@ -6461,6 +6472,7 @@ function pageDebits(){
           return `<tr>
             <td><b>${esc(n.short)}</b></td>
             <td class="mono" style="font-size:11.5px">${esc(d.dnNo)}</td>
+            <td style="font-size:12px;color:var(--ink-2);white-space:nowrap">${shortDate(_recv(d))}</td>
             <td>${esc(d.category)}</td>
             <td style="font-size:12px;color:var(--ink-2)">${nScrolls?nScrolls+' scroll'+(nScrolls>1?'s':''):'—'}</td>
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
@@ -6470,7 +6482,7 @@ function pageDebits(){
               :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
             <td>${canEditNgo(d.ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${d.ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
-        }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes for ${monthLong(CUR_MONTH)} match this filter.</p></div></td></tr>`}
+        }).join("") : `<tr><td colspan="9"><div class="empty"><div class="mk">▦</div><p>No debit notes for ${monthLong(CUR_MONTH)} match this filter.</p></div></td></tr>`}
         </tbody>
       </table>
     </div>
