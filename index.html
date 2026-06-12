@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V24</title>
+<title>KRSF · NGO Partnership Program · V25</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V24</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V25</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V24</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V25</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -6496,17 +6496,18 @@ function pageDebits(){
        it isn't a debit note. */
     const fl = Object.values(DB.flagged||{}).filter(f=>f && !f.dismissed)
                  .sort((a,b)=> (b.receivedAt||"").localeCompare(a.receivedAt||""));
-    if(!fl.length) return "";
+    /* always show the section so the user knows the feature exists —
+       empty state explains what would appear here */
     return `
-    <div class="panel" style="margin-top:24px;border:1px solid var(--amber);border-radius:12px">
+    <div class="panel" style="margin-top:24px;border:1px solid var(--${fl.length?'amber':'rule'});border-radius:12px">
       <div style="padding:14px 16px 4px">
-        <div style="font-weight:700;font-size:14px">🚩 Flagged emails — couldn't classify as debit notes <span class="badge amber" style="margin-left:6px">${fl.length}</span></div>
+        <div style="font-weight:700;font-size:14px">🚩 Flagged emails — couldn't classify as debit notes ${fl.length?`<span class="badge amber" style="margin-left:6px">${fl.length}</span>`:`<span style="margin-left:6px;font-size:11px;color:var(--ink-3);font-weight:500">nothing flagged right now</span>`}</div>
         <div style="font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.5">
-          These emails had a debit-note-style subject, but the attachment didn't mention <b>Shroff</b> or <b>KRSF</b> anywhere — likely bank statements, vendor invoices, or other documents.
-          Open the file to verify, then <b>Dismiss</b> if it's not a debit note. If it IS a debit note (just missing the recipient name), log it manually via the NGO's page.
+          When an email comes in with a debit-note-style subject but the attachment doesn't mention <b>Shroff</b> or <b>KRSF</b> anywhere (i.e. it's a bank statement, vendor invoice, or other document), it lands here for your review.
+          ${fl.length?`Open the file to verify, then <b>Dismiss</b> if it's not a debit note. If it IS a debit note (just missing the recipient name), log it manually via the NGO's page, then dismiss this row.`:`Nothing has been flagged since the guard was deployed — this section will populate automatically when something gets caught.`}
         </div>
       </div>
-      <div class="tbl-wrap">
+      ${!fl.length?'':`<div class="tbl-wrap">
         <table>
           <thead><tr>
             <th>Received</th><th>Subject</th><th>Sender</th><th>Attachment</th><th>Reason</th><th></th>
@@ -6525,7 +6526,7 @@ function pageDebits(){
           </tr>`).join("")}
           </tbody>
         </table>
-      </div>
+      </div>`}
     </div>`;
   })()}`;
 }
