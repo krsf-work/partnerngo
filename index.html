@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V23</title>
+<title>KRSF · NGO Partnership Program · V24</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V23</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V24</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V23</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V24</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1517,7 +1517,7 @@ function seedData(){
 const STORE_KEY   = "npp_tracker_cache_v3";   // local offline cache
 const SESSION_KEY = "npp_tracker_session_v3";
 const DB_PARTS = ["meta","users","ngos","bigBets","budgets","debits",
-                  "documents","tasks","scorecards","mbo","refFiles"];
+                  "documents","tasks","scorecards","mbo","refFiles","flagged"];
 
 let fb = { app:null, db:null, storage:null, ready:false };
 let CLOUD_OK = false;            // is the live connection healthy?
@@ -1790,6 +1790,7 @@ function migrateDB(db){
     .forEach(p=>{ db[p] = toArr(db[p]); });
   if(!db.scorecards || typeof db.scorecards!=="object" || Array.isArray(db.scorecards)) db.scorecards = {};
   if(!db.budgets   || typeof db.budgets  !=="object" || Array.isArray(db.budgets))   db.budgets   = {};
+  if(!db.flagged   || typeof db.flagged  !=="object" || Array.isArray(db.flagged))   db.flagged   = {};
   // ---- coerce arrays NESTED inside records (Firebase turns these into objects too) ----
   db.users.forEach(u=>{
     // ngoIds must be a real array or APL permission checks silently fail
@@ -6486,7 +6487,58 @@ function pageDebits(){
         </tbody>
       </table>
     </div>
-  </div>`;
+  </div>
+
+  ${(()=>{
+    /* Flagged emails — files the script saw but couldn't classify as debit
+       notes (no Shroff/KRSF fingerprint). Sorted latest-first. The dismiss
+       button hides the row (sets dismissed=true) once the user has decided
+       it isn't a debit note. */
+    const fl = Object.values(DB.flagged||{}).filter(f=>f && !f.dismissed)
+                 .sort((a,b)=> (b.receivedAt||"").localeCompare(a.receivedAt||""));
+    if(!fl.length) return "";
+    return `
+    <div class="panel" style="margin-top:24px;border:1px solid var(--amber);border-radius:12px">
+      <div style="padding:14px 16px 4px">
+        <div style="font-weight:700;font-size:14px">🚩 Flagged emails — couldn't classify as debit notes <span class="badge amber" style="margin-left:6px">${fl.length}</span></div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.5">
+          These emails had a debit-note-style subject, but the attachment didn't mention <b>Shroff</b> or <b>KRSF</b> anywhere — likely bank statements, vendor invoices, or other documents.
+          Open the file to verify, then <b>Dismiss</b> if it's not a debit note. If it IS a debit note (just missing the recipient name), log it manually via the NGO's page.
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Received</th><th>Subject</th><th>Sender</th><th>Attachment</th><th>Reason</th><th></th>
+          </tr></thead>
+          <tbody>
+          ${fl.map(f=>`<tr>
+            <td style="font-size:12px;color:var(--ink-2);white-space:nowrap">${shortDate(f.receivedAt)}</td>
+            <td style="font-size:12px;max-width:300px">${esc((f.subject||"").slice(0,80))}</td>
+            <td style="font-size:11.5px;color:var(--ink-3)">${esc(f.sender||"")}</td>
+            <td>${f.url
+              ?`<a href="${esc(f.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the flagged attachment (shared Drive)">📄 ${esc((f.fileName||"open").slice(0,40))}</a>`
+              :esc(f.fileName||"—")}
+              ${f.emailId?`<div style="margin-top:3px"><a href="https://mail.google.com/mail/u/0/#all/${esc(f.emailId)}" target="_blank" rel="noopener" style="color:var(--ink-3);font-size:11px">📧 source email →</a></div>`:''}</td>
+            <td style="font-size:11.5px;color:var(--ink-3);max-width:300px">${esc(f.reason||"")}</td>
+            <td><button class="btn ghost sm" onclick="dismissFlagged('${f.id}')">Dismiss</button></td>
+          </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  })()}`;
+}
+
+async function dismissFlagged(id){
+  const f = DB.flagged && DB.flagged[id];
+  if(!f){ toast("Already dismissed"); return; }
+  f.dismissed = true;
+  f.dismissedBy = ME?ME.name:"—";
+  f.dismissedAt = TODAY_ISO;
+  await saveDB();
+  render();
+  toast("Dismissed — flagged email removed from review");
 }
 
 /* ---- email-capture review queue: okay / reject ---- */
