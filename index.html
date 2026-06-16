@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V36</title>
+<title>KRSF · NGO Partnership Program · V37</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V36</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V37</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V36</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V37</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -6092,8 +6092,23 @@ async function commitDebit(ngoId, editId, obj){
   }
   await saveDB();
   closeModal();
+  /* auto-dismiss the source flagged row when this save came via
+     the "Accept flagged email" flow */
+  let acceptMsg = "";
+  if(!editId && window._acceptingFlaggedId){
+    const fid = window._acceptingFlaggedId;
+    delete window._acceptingFlaggedId;
+    const fl = DB.flagged && DB.flagged[fid];
+    if(fl && !fl.dismissed){
+      fl.dismissed = true;
+      fl.dismissedBy = ME?ME.name:"—";
+      fl.dismissedAt = TODAY_ISO;
+      await saveDB();
+      acceptMsg = " · flagged row auto-dismissed";
+    }
+  }
   render();
-  toast(editId?"Debit note updated":"Debit note logged · budget actuals refreshed");
+  toast(editId?"Debit note updated":"Debit note logged · budget actuals refreshed"+acceptMsg);
 }
 function deleteDebit(id){
   const d = DB.debits.find(x=>x.id===id);
@@ -6512,7 +6527,7 @@ function pageDebits(){
         <div style="font-weight:700;font-size:14px">🚩 Flagged emails — couldn't classify as debit notes ${fl.length?`<span class="badge amber" style="margin-left:6px">${fl.length}</span>`:`<span style="margin-left:6px;font-size:11px;color:var(--ink-3);font-weight:500">nothing flagged right now</span>`}</div>
         <div style="font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.5">
           When an email comes in with a debit-note-style subject but the attachment doesn't mention <b>Shroff</b> or <b>KRSF</b> anywhere (i.e. it's a bank statement, vendor invoice, or other document), it lands here for your review.
-          ${fl.length?`Open the file to verify, then <b>Dismiss</b> if it's not a debit note. If it IS a debit note (just missing the recipient name), log it manually via the NGO's page, then dismiss this row.`:`Nothing has been flagged since the guard was deployed — this section will populate automatically when something gets caught.`}
+          ${fl.length?`Open the file to verify. If it's a genuine debit note, hit <b>Accept</b> — the debit-note form opens pre-filled with the file link and a best-guess NGO; on save the row auto-dismisses. If it isn't a debit note, just hit <b>Dismiss</b>.`:`Nothing has been flagged since the guard was deployed — this section will populate automatically when something gets caught.`}
         </div>
       </div>
       ${!fl.length?'':`<div class="tbl-wrap">
@@ -6530,7 +6545,10 @@ function pageDebits(){
               :esc(f.fileName||"—")}
               ${f.emailId?`<div style="margin-top:3px"><a href="https://mail.google.com/mail/u/0/#all/${esc(f.emailId)}" target="_blank" rel="noopener" style="color:var(--ink-3);font-size:11px">📧 source email →</a></div>`:''}</td>
             <td style="font-size:11.5px;color:var(--ink-3);max-width:300px">${esc(f.reason||"")}</td>
-            <td><button class="btn ghost sm" onclick="dismissFlagged('${f.id}')">Dismiss</button></td>
+            <td style="white-space:nowrap">
+              <button class="btn primary sm" onclick="acceptFlagged('${f.id}')" style="margin-right:4px">Accept</button>
+              <button class="btn ghost sm" onclick="dismissFlagged('${f.id}')">Dismiss</button>
+            </td>
           </tr>`).join("")}
           </tbody>
         </table>
@@ -6548,6 +6566,75 @@ async function dismissFlagged(id){
   await saveDB();
   render();
   toast("Dismissed — flagged email removed from review");
+}
+
+/* "Accept as debit note" — opens the regular New Debit Note form pre-filled
+   with the flagged email's Drive link and a best-guess NGO. The source
+   flagged row is auto-dismissed when the debit note is saved (commitDebit
+   checks window._acceptingFlaggedId at the end). */
+function acceptFlagged(id){
+  const f = DB.flagged && DB.flagged[id];
+  if(!f){ toast("Flagged record not found"); return; }
+  const ngos = (DB.ngos||[]).filter(n=>canEditNgo(n.id));
+  if(!ngos.length){ toast("You don't have edit access to any NGO"); return; }
+  const guess = guessNgoFromFlagged(f);
+  const opts = ngos
+    .slice().sort((a,b)=>(a.short||"").localeCompare(b.short||""))
+    .map(n=>`<option value="${n.id}" ${guess&&guess.id===n.id?'selected':''}>${esc(n.short)} — ${esc(n.name)}</option>`)
+    .join("");
+  const body = `
+    <div style="font-size:12px;color:var(--ink-3);margin-bottom:14px;line-height:1.7;background:var(--paper-2);border:1px solid var(--rule);border-radius:9px;padding:11px 13px">
+      <div><b>Subject:</b> ${esc((f.subject||"").slice(0,140))}</div>
+      <div><b>From:</b> ${esc(f.sender||"—")}</div>
+      <div><b>File:</b> ${esc(f.fileName||"—")}</div>
+      ${guess?`<div style="margin-top:5px;color:var(--green)">Best guess from sender / subject: <b>${esc(guess.short)}</b></div>`:`<div style="margin-top:5px;color:var(--amber)">Couldn't infer the NGO — please pick below.</div>`}
+    </div>
+    <div class="field">
+      <label>NGO this debit note belongs to</label>
+      <select id="acceptNgo">${opts}</select>
+    </div>
+    <div class="hint" style="margin-top:8px">On <b>Continue</b>, the regular debit-note form opens with the Drive link, date and number pre-filled where possible. You finish filling the amount &amp; scroll lines and save — this row auto-dismisses.</div>`;
+  const footer = `
+    <button class="btn" onclick="closeModal()">Cancel</button>
+    <button class="btn primary" onclick="acceptFlaggedGo('${id}')">Continue → debit-note form</button>`;
+  showModal(modalShell("Accept flagged email", "Accept as Debit Note", body, footer));
+}
+
+function acceptFlaggedGo(flagId){
+  const f = DB.flagged && DB.flagged[flagId];
+  const sel = el("acceptNgo");
+  const ngoId = sel ? sel.value : "";
+  if(!f || !ngoId){ toast("Pick an NGO first"); return; }
+  window._acceptingFlaggedId = flagId;
+  closeModal();
+  openDebitForm(ngoId, null);
+  /* the modal renders synchronously inside openDebitForm but the input
+     elements are only addressable on the next tick — fill the Drive URL
+     then trigger the link parser so the DN# and month auto-fill */
+  setTimeout(()=>{
+    const u = el("dfUrl");
+    if(u && f.url){ u.value = f.url; try{ debitParseLink(); }catch(e){} }
+    const dn = el("dfNote");
+    if(dn && !dn.value && f.subject) dn.value = "Accepted from flagged email: \""+(f.subject||"").slice(0,160)+"\"";
+  }, 60);
+}
+
+/* best-guess NGO from the flagged email's sender / subject / filename.
+   Matches NGO name or short code as a contiguous substring (case-folded,
+   non-alphanum stripped). Longest match wins. */
+function guessNgoFromFlagged(f){
+  const hay = String((f.sender||"")+" "+(f.subject||"")+" "+(f.fileName||""))
+                .toLowerCase().replace(/[^a-z0-9]/g,"");
+  let best=null, bestLen=0;
+  (DB.ngos||[]).forEach(n=>{
+    [n.name, n.short].forEach(label=>{
+      const key = String(label||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+      if(key.length>=3 && hay.indexOf(key)>=0 && key.length>bestLen){
+        best = n; bestLen = key.length;
+      }
+    });
+  });
+  return best;
 }
 
 /* ---- email-capture review queue: okay / reject ---- */
