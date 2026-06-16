@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V39</title>
+<title>KRSF · NGO Partnership Program · V40</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V39</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V40</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V39</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V40</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -6630,7 +6630,22 @@ function acceptFlaggedGo(flagId){
      then trigger the link parser so the DN# and month auto-fill */
   setTimeout(()=>{
     const u = el("dfUrl");
-    if(u && f.url){ u.value = f.url; try{ debitParseLink(); }catch(e){} }
+    if(u && f.url){
+      u.value = f.url;
+      try{ debitParseLink(); }catch(e){}
+    } else if(u && !f.url){
+      /* no Drive link captured — usually because the source file was too
+         large for Apps Script to copy. Tell the user exactly what to do. */
+      const wrap = u.closest('.field');
+      if(wrap && !wrap.querySelector('.accept-nourl-banner')){
+        const banner = document.createElement('div');
+        banner.className = 'accept-nourl-banner';
+        banner.style.cssText = "background:#fff5e0;border:1px solid var(--amber);border-radius:8px;padding:11px 13px;margin:0 0 9px;font-size:12px;color:var(--ink-2);line-height:1.6";
+        banner.innerHTML = `⚠ <b>No Drive link yet.</b> The original file was too large for auto-capture.${f.emailId?` <a href="https://mail.google.com/mail/u/0/#all/${esc(f.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600">Open the Gmail thread →</a>`:''} Download the attachment, upload it to your Drive (set "Anyone with the link" → View), then paste the Drive link below.`;
+        wrap.insertBefore(banner, wrap.firstChild);
+        u.focus();
+      }
+    }
     const dn = el("dfNote");
     if(dn && !dn.value && f.subject) dn.value = "Accepted from flagged email: \""+(f.subject||"").slice(0,160)+"\"";
   }, 60);
