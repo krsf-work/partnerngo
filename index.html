@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V42</title>
+<title>KRSF · NGO Partnership Program · V43</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V42</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V43</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V42</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V43</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1164,7 +1164,12 @@ function fmtDMY(d){
 function pct(a,b){ if(!b)return 0; return Math.round(a/b*100); }
 let _idSeq = 0;
 function genId(p){ return p+"_"+Date.now().toString(36)+"_"+(_idSeq++).toString(36)+Math.random().toString(36).slice(2,7); }
-function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+/* V43: esc() now also escapes single quotes. Without this, ~50 onclick
+   sites in the form `onclick="fn('${esc(value)}')"` were XSS-able the
+   moment a string contained an apostrophe (NGO name "St Joseph's",
+   debit note "Aakar's Sept Salary", etc) — the apostrophe broke out of
+   the JS string literal and let arbitrary code run. */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function statusColor(p){ if(p>=90)return"green"; if(p>=65)return"amber"; return"red"; }
 function el(id){ return document.getElementById(id); }
 function toast(msg){
@@ -2127,8 +2132,9 @@ function loginRecovery(){
         : `<b style="color:var(--red)">No Program Manager account exists.</b> The database needs to be reset.`}
       <br><br>
       <b>Reset</b> wipes all data in Firebase and recreates a clean database with
-      the default login <b>admin / krsf@2026</b>. Use this only if you are locked
-      out and have no real data to lose.
+      a single default Program Manager login. Use this only if you are locked
+      out and have no real data to lose — the credentials will be shown to you
+      once after the reset.
      </div>`;
   showModal(modalShell("Sign-in help", "Account Recovery", msg,
     `<button class="btn" onclick="closeModal()">Close</button>
@@ -2137,8 +2143,9 @@ function loginRecovery(){
 function confirmResetDatabase(){
   confirmAction("Reset the entire database?",
     `This permanently erases <b>all data</b> in Firebase — every NGO, milestone, debit
-     note, task and login — and recreates a clean database with the single
-     default login <b>admin / krsf@2026</b>. This cannot be undone.`,
+     note, task and login — and recreates a clean database with a single
+     default Program Manager login (the credentials will be shown once after
+     the reset). This cannot be undone.`,
     async ()=>{
       try{
         if(fb && fb.ready){
@@ -6973,7 +6980,10 @@ function pageAdmin(){
           <tr>
             <td><b>${esc(pm?pm.name:'—')}</b></td>
             <td class="mono">${esc(pm?pm.username:'—')}</td>
-            <td class="mono">${esc(pm?pm.password:'—')}</td>
+            <td class="mono">
+              <span class="pw-mask" data-pw="${esc(pm?pm.password:'—')}">••••••••</span>
+              <button class="btn ghost sm" style="margin-left:6px;padding:2px 8px;font-size:10.5px" onclick="togglePw(this)">show</button>
+            </td>
             <td class="num"><button class="btn ghost sm" onclick="openPmForm()">Edit</button></td>
           </tr>
         </tbody>
@@ -6997,7 +7007,10 @@ function pageAdmin(){
           return `<tr>
             <td><b>${esc(u.name)}</b></td>
             <td class="mono">${esc(u.username)}</td>
-            <td class="mono">${esc(u.password)}</td>
+            <td class="mono">
+              <span class="pw-mask" data-pw="${esc(u.password)}">••••••••</span>
+              <button class="btn ghost sm" style="margin-left:6px;padding:2px 8px;font-size:10.5px" onclick="togglePw(this)">show</button>
+            </td>
             <td style="font-size:11.5px"><span class="badge ${u.role==='APL'?'blue':u.role==='Accounts'?'violet':u.role==='Finance'?'green':u.role==='Programme'?'amber':'gray'}">${({APL:'Partner NGO',Accounts:'Vadali Accounts',Finance:'Ahmedabad Finance',Programme:'Programme',Viewer:'Viewer'}[u.role])||u.role}</span></td>
             <td style="font-size:12px">${u.role!=='APL' ? '<span style="color:var(--ink-3)">—</span>' : (assigned.length ? assigned.map(n=>esc(n.short)).join(", ") : '<span style="color:var(--ink-3)">none yet</span>')}</td>
             <td class="num" style="white-space:nowrap">
@@ -7027,6 +7040,25 @@ function pageAdmin(){
       </label>
     </div>
   </div>`;
+}
+
+/* V43: per-row password show/hide for the Admin table. Default is masked
+   "••••••••" — a single click reveals the value, click again to re-hide.
+   Stops the entire credential set from leaking via screenshot / screen-share
+   of the Admin page (a real risk now that ~5 logins live in this list). */
+function togglePw(btn){
+  const span = btn.previousElementSibling;
+  if(!span || !span.classList.contains("pw-mask")) return;
+  const shown = span.dataset.shown==="1";
+  if(shown){
+    span.textContent = "••••••••";
+    span.dataset.shown = "";
+    btn.textContent = "show";
+  } else {
+    span.textContent = span.dataset.pw || "—";
+    span.dataset.shown = "1";
+    btn.textContent = "hide";
+  }
 }
 
 /* ---- APL add / edit ---- */
