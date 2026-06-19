@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V41</title>
+<title>KRSF · NGO Partnership Program · V42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1007,7 +1007,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V41</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V42</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1032,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V41</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V42</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2908,6 +2908,10 @@ function closeModal(){
   el("modalBg").classList.remove("show");
   el("modal").innerHTML = "";
   if(_lastFocus && _lastFocus.focus){ try{_lastFocus.focus();}catch(e){} }
+  /* V42: cancelling/closing a modal must clear any in-flight Accept-flagged
+     state — otherwise the next unrelated debit-note save auto-dismisses the
+     wrong flagged row and queues a bogus pendingMove. */
+  if(window._acceptingFlaggedId) delete window._acceptingFlaggedId;
 }
 /* Escape closes any open modal or popover */
 document.addEventListener("keydown",e=>{
@@ -5622,7 +5626,12 @@ function svgRadar(dims){
 
 /* ---------- debit note form ---------- */
 function openDebitForm(ngoId, editId){
-  if(blockIfCantEditNgo(ngoId)) return;
+  if(blockIfCantEditNgo(ngoId)){
+    /* V42: if Accept-flagged routed us here but the user can't edit this NGO,
+       clear the in-flight flag so it doesn't fire on their next save. */
+    if(window._acceptingFlaggedId) delete window._acceptingFlaggedId;
+    return;
+  }
   window._dfNgoId = ngoId;
   const d = editId? DB.debits.find(x=>x.id===editId) : null;
   const n = ngoById(ngoId);
@@ -6086,6 +6095,15 @@ async function saveDebit(ngoId, editId){
 async function commitDebit(ngoId, editId, obj){
   if(editId){
     const d=DB.debits.find(x=>x.id===editId);
+    /* V42: if a concurrent user (or a live-listener delete) removed this
+       debit note between modal open and save, `d` is undefined and
+       Object.assign threw silently, freezing the modal with no audit trail
+       and losing the user's edit. Bail cleanly instead. */
+    if(!d){
+      closeModal();
+      toast("This debit note was just deleted by someone else — your changes weren't saved");
+      return;
+    }
     Object.assign(d,obj);
   } else {
     DB.debits.push({ id:genId("dn"), ngoId, ...obj });
