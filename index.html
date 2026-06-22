@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V43</title>
+<title>KRSF · NGO Partnership Program · V44</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -272,6 +272,62 @@ window.FIREBASE_CONFIG = {
   .band.red{background:var(--red-soft)}
   .band.red .bn,.band.red .bl{color:var(--red)}
   .kpi.split .lab{margin-bottom:7px}
+  /* V44: stacked delivery bar (Milestones tile) — visually distinct from
+     the scorecard dot-grid so the two tiles aren't confused */
+  .sbar{display:flex;height:15px;border-radius:20px;overflow:hidden;background:var(--paper-2);margin-top:3px}
+  .sbar i{display:block;height:100%;transition:width .5s cubic-bezier(.3,.8,.3,1)}
+  .sbar i.green{background:var(--green)} .sbar i.amber{background:var(--amber)} .sbar i.red{background:var(--red)}
+  .sbar-leg{display:flex;gap:13px;margin-top:10px;flex-wrap:wrap}
+  .sbar-leg span{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ink-2)}
+  .sbar-leg b{font-family:var(--mono);font-weight:800}
+  .sbar-leg i{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+  .sbar-leg i.green{background:var(--green)} .sbar-leg i.amber{background:var(--amber)} .sbar-leg i.red{background:var(--red)}
+  /* V44: 8-dot criteria grid (Scorecard tile) */
+  .dotgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px;margin-top:4px}
+  .dotg{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .dotg .dot{width:19px;height:19px;border-radius:50%}
+  .dotg .dl{font-size:9px;font-weight:700;letter-spacing:.02em;color:var(--ink-3)}
+  .dotg .dot.s-hi{background:var(--green)} .dotg .dot.s-mid{background:var(--amber)}
+  .dotg .dot.s-lo{background:var(--red)} .dotg .dot.s-na{background:var(--paper-2);border:1.5px solid var(--rule-2)}
+  /* V44: "Needs you" strip — actionable counters at the top of the dashboard */
+  .needs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .need{flex:1;min-width:158px;display:flex;align-items:center;gap:11px;padding:12px 14px;
+        border-radius:12px;border:1px solid var(--rule);background:var(--paper);
+        cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}
+  .need:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06)}
+  .need.zero{cursor:default;opacity:.5}
+  .need.zero:hover{border-color:var(--rule);transform:none;box-shadow:none}
+  .need .nico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;background:var(--paper-2)}
+  .need.amber:not(.zero) .nico{background:var(--amber-soft)}
+  .need.red:not(.zero) .nico{background:var(--red-soft)}
+  .need.blue:not(.zero) .nico{background:var(--blue-soft,#e7eefc)}
+  .need .nn{font-family:var(--mono);font-weight:800;font-size:22px;line-height:1;color:var(--ink-3)}
+  .need.amber:not(.zero) .nn{color:var(--amber)}
+  .need.red:not(.zero) .nn{color:var(--red)}
+  .need.blue:not(.zero) .nn{color:var(--blue)}
+  .need .nl{font-size:11px;color:var(--ink-2);font-weight:600;margin-top:2px;line-height:1.25}
+  .needs-ok{margin-bottom:16px;display:flex;align-items:center;gap:10px;padding:12px 15px;
+            border-radius:12px;border:1px solid var(--green);background:var(--green-soft);
+            font-size:13px;font-weight:600;color:var(--green)}
+  /* V44: one-line NGO health narrative below the hero */
+  .ngo-health{margin:-2px 0 14px;padding:11px 15px;border-radius:11px;background:var(--paper);
+              border:1px solid var(--rule);font-size:13px;line-height:1.65;color:var(--ink-2);
+              display:flex;gap:9px;align-items:flex-start}
+  .ngo-health .hi{font-size:15px;flex:none;line-height:1.4}
+  .ngo-health b{color:var(--ink);font-weight:700}
+  .ngo-health .ok{color:var(--green);font-weight:700}
+  .ngo-health .warn{color:var(--amber);font-weight:700}
+  .ngo-health .bad{color:var(--red);font-weight:700}
+  /* V44: debit-form recap card (above the Save button) */
+  .df-recap{margin-top:6px;padding:12px 14px;border-radius:11px;border:1px dashed var(--rule-2);
+            background:var(--paper-2);transition:border-color .2s,background .2s}
+  .df-recap.ready{border-style:solid;border-color:var(--accent);background:var(--accent-soft,#eef4ff)}
+  .df-recap .dr-h{font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:800;color:var(--ink-3);margin-bottom:5px}
+  .df-recap.ready .dr-h{color:var(--accent)}
+  .df-recap .dr-line{font-size:14px;color:var(--ink);line-height:1.5}
+  .df-recap .dr-meta{font-size:12px;color:var(--ink-2);margin-top:4px}
+  .df-recap .dr-dim{color:var(--ink-3);font-weight:500}
+  .df-recap .dr-miss{color:var(--amber);font-weight:600;font-style:italic}
 
   /* ===== expandable NGO portfolio table ===== */
   .ngo-tbl td{padding:9px 12px}
@@ -1007,7 +1063,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V43</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V44</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1032,7 +1088,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V43</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V44</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1175,6 +1231,19 @@ function el(id){ return document.getElementById(id); }
 function toast(msg){
   const t=el("toast"); t.textContent=msg; t.classList.add("show");
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2400);
+}
+/* V44: named-record toast — confirms WHAT was saved, not just "Saved".
+   e.g. "DB-07 · VNCS · ₹18.00 L · Apr 26 logged". Falls back to a plain
+   message when the named parts aren't available. */
+function debitToast(d, verb){
+  const n = ngoById(d.ngoId);
+  const parts = [
+    d.dnNo || "Debit note",
+    n ? n.short : null,
+    d.amount!=null ? fmtRs(d.amount) : null,
+    d.month ? monthLabel(d.month) : null
+  ].filter(Boolean);
+  return parts.join(" · ") + " " + (verb||"saved");
 }
 
 /* ---------- session state ---------- */
@@ -2403,6 +2472,42 @@ function closeScorePop(){
   _scorePopAnchor = null;
 }
 
+/* V44: "Needs you" strip — surfaces the four things that actually need the
+   user to act, so the dashboard answers "what do I do next?" not just "here's
+   everything". Each counter routes to the page where the work lives. */
+function needsYouStrip(ngos){
+  const ids = new Set(ngos.map(n=>n.id));
+  const flagged = Object.values(DB.flagged||{}).filter(f=>f && !f.dismissed).length;
+  const pendRev = DB.debits.filter(d=>ids.has(d.ngoId) && d.pendingReview).length;
+  const overdue = (DB.tasks||[]).filter(t=>{
+    if(t.status!=="Open" || !t.due || t.due>=TODAY_ISO) return false;
+    if(ME.role==="APL")       return t.aplId===ME.id;
+    if(ME.role==="Programme") return ids.has(t.ngoId);
+    return true;
+  }).length;
+  const finance = DB.debits.filter(d=>ids.has(d.ngoId)
+    && (d.status||"")==="Under review with Finance Team").length;
+
+  const cards = [
+    {n:flagged, ic:"🚩", cls:"amber", go:"go('debits')",
+     lab:flagged===1?"flagged email to review":"flagged emails to review"},
+    {n:pendRev, ic:"📄", cls:"amber", go:"go('debits')",
+     lab:pendRev===1?"captured note to approve":"captured notes to approve"},
+    {n:overdue, ic:"⏰", cls:"red", go:"go('tasks')",
+     lab:overdue===1?"overdue task":"overdue tasks"},
+    {n:finance, ic:"₹", cls:"blue", go:"go('debits')",
+     lab:finance===1?"debit note with Finance":"debit notes with Finance"}
+  ];
+  if(cards.every(c=>c.n===0)){
+    return `<div class="needs-ok">✓ You're all caught up — nothing needs your attention right now.</div>`;
+  }
+  return `<div class="needs">${cards.map(c=>`
+    <div class="need ${c.cls} ${c.n===0?'zero':''}" ${c.n?`onclick="${c.go}"`:''}>
+      <div class="nico">${c.ic}</div>
+      <div><div class="nn">${c.n}</div><div class="nl">${c.lab}</div></div>
+    </div>`).join("")}</div>`;
+}
+
 function pageDash(){
   const ngos = visibleNgos();
   const bets = visibleBets();
@@ -2426,17 +2531,26 @@ function pageDash(){
   const betAmber = betProgs.filter(p=>p>=40 && p<70).length;
   const betRed   = betProgs.filter(p=>p<40).length;
 
-  /* ---- box 4: partner scorecard by status ---- */
-  const scores = ngos.map(n=>ngoScore(n.id));
-  const scRed   = scores.filter(s=>s.status==="red").length;
-  const scAmber = scores.filter(s=>s.status==="amber").length;
-  const scGreen = scores.filter(s=>s.status==="green").length;
+  /* ---- box 3b: milestone delivery as a single stacked bar ---- */
+  const betTot = bets.length;
+  const seg = c => betTot ? Math.round(c/betTot*100) : 0;
+
+  /* ---- box 4: partner scorecard — per-criterion portfolio average,
+     shown as an 8-dot grid (one dot per scoring criterion) ---- */
+  const critAvg = SCORE_CRITERIA.map(c=>{
+    const vals = ngos.map(n=>((DB.scorecards[n.id]||{})[CUR_MONTH]||{})[c.key])
+                     .filter(v=>typeof v==="number");
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  });
+  const critScored = critAvg.filter(v=>v!=null).length;
 
   return `
   <div class="phead slim">
     <div class="eyebrow">${DB.meta.fyLabel} · ${monthLong(CUR_MONTH)}</div>
     <h1 class="serif">Dashboard</h1>
   </div>
+
+  ${needsYouStrip(ngos)}
 
   <div class="kpi-grid">
     <div class="kpi">
@@ -2465,11 +2579,17 @@ function pageDash(){
         <div class="ktile accent">🎯</div>
         <div class="lab">Milestones — Delivery</div>
       </div>
-      <div class="band-row">
-        <div class="band green"><div class="bn">${betGreen}</div><div class="bl">70% achieved</div></div>
-        <div class="band amber"><div class="bn">${betAmber}</div><div class="bl">40% to &lt;70% achieved</div></div>
-        <div class="band red"><div class="bn">${betRed}</div><div class="bl">Less than 40% achieved</div></div>
+      ${betTot?`
+      <div class="sbar" title="${betGreen} on track · ${betAmber} mid · ${betRed} behind">
+        <i class="green" style="width:${seg(betGreen)}%"></i>
+        <i class="amber" style="width:${seg(betAmber)}%"></i>
+        <i class="red"   style="width:${seg(betRed)}%"></i>
       </div>
+      <div class="sbar-leg">
+        <span><i class="green"></i><b>${betGreen}</b> on track</span>
+        <span><i class="amber"></i><b>${betAmber}</b> 40–70%</span>
+        <span><i class="red"></i><b>${betRed}</b> behind</span>
+      </div>`:`<div class="sub" style="margin-top:6px">No milestones set yet.</div>`}
     </div>
 
     <div class="kpi split">
@@ -2477,11 +2597,13 @@ function pageDash(){
         <div class="ktile violet">📊</div>
         <div class="lab">Partner Scorecard</div>
       </div>
-      <div class="band-row">
-        <div class="band green"><div class="bn">${scGreen}</div><div class="bl">Green</div></div>
-        <div class="band amber"><div class="bn">${scAmber}</div><div class="bl">Yellow</div></div>
-        <div class="band red"><div class="bn">${scRed}</div><div class="bl">Red</div></div>
+      <div class="dotgrid">
+        ${SCORE_CRITERIA.map((c,i)=>`<div class="dotg" title="${esc(c.label)} — ${critAvg[i]!=null?'portfolio avg '+fmtScore(critAvg[i])+'/5':'not scored yet'}">
+          <div class="dot ${scoreClass(critAvg[i])}"></div>
+          <div class="dl">${esc(c.key)}</div>
+        </div>`).join("")}
       </div>
+      <div class="sub" style="margin-top:8px">${critScored?`${critScored}/8 criteria scored · ${monthLabel(CUR_MONTH)}`:'Not scored yet — click any cell below'}</div>
     </div>
   </div>
 
@@ -3369,6 +3491,48 @@ function deleteNgo(id){
    ================================================================= */
 let NGO_TAB = "overview";   // overview | mbo | budget | debits | docs | scorecard
 
+/* V44: a single live sentence summarising this partner's health — spend pace,
+   milestone delivery, scorecard and anything awaiting review — so the page
+   leads with "here's the state of things" instead of raw tables. */
+function ngoHealthLine(ngoId){
+  const n = ngoById(ngoId); if(!n) return "";
+  const bits = [];
+  // spend vs pace
+  const b = DB.budgets[ngoId];
+  if(b && b.totalAnnual){
+    const spent = ngoSpendUpto(ngoId, CUR_MONTH);
+    const up = pct(spent, b.totalAnnual);
+    const expected = Math.round(monthsElapsed(CUR_MONTH)/12*100);
+    const cls = up>=100?"bad":up>=85?"warn":"ok";
+    let pace = "on pace";
+    if(up > expected+12) pace = "running ahead of pace";
+    else if(up < expected-12) pace = "under-spending vs pace";
+    bits.push(`has utilised <b>${fmtRsFull(spent)}</b> of ${fmtRsFull(b.totalAnnual)} (<span class="${cls}">${up}%</span>) this year — ${pace}`);
+  } else {
+    bits.push(`has no approved budget on record yet`);
+  }
+  // milestone delivery
+  const bets = betsForNgo(ngoId);
+  if(bets.length){
+    const onTrack = bets.filter(x=>betHealth(x).status==="green").length;
+    const behind  = bets.filter(x=>betHealth(x).status==="red").length;
+    const dcls = behind?"bad":onTrack<bets.length?"warn":"ok";
+    bits.push(`<span class="${dcls}">${onTrack} of ${bets.length}</span> milestones on track`);
+  }
+  // scorecard
+  const sc = ngoScore(ngoId);
+  if(sc.scored){
+    bits.push(`scorecard <span class="${sc.status==='green'?'ok':sc.status==='amber'?'warn':'bad'}">${scoreStatusLabel(sc.total)}</span> (${fmtScore(sc.total)}/${SCORE_MAX})`);
+  } else {
+    bits.push(`not yet scored this month`);
+  }
+  // anything awaiting review
+  const pend = DB.debits.filter(d=>d.ngoId===ngoId && d.pendingReview).length;
+  let tail = "";
+  if(pend) tail = ` <b class="warn">${pend} debit note${pend>1?'s':''} awaiting your review.</b>`;
+  return `<div class="ngo-health"><span class="hi">🩺</span><div><b>${esc(n.short)}</b> ${bits.join(" · ")}.${tail}</div></div>`;
+}
+
 function pageNgoDetail(ngoId){
   const n = ngoById(ngoId);
   if(!n) return `<div class="empty"><p>NGO not found.</p></div>`;
@@ -3427,6 +3591,8 @@ function pageNgoDetail(ngoId){
       <div><div class="l">Org Contact</div><div class="v">${esc(n.lead)}</div></div>
     </div>
   </div>
+
+  ${ngoHealthLine(ngoId)}
 
   <div class="ngo-tabs">
     ${tabs.map(t=>`<div class="tb ${NGO_TAB===t.id?'active':''}" onclick="NGO_TAB='${t.id}';render()">
@@ -5668,11 +5834,11 @@ function openDebitForm(ngoId, editId){
     <div class="frow">
       <div class="field">
         <label>Debit note number</label>
-        <input type="text" id="dfNo" value="${d?esc(d.dnNo):''}" placeholder="e.g. DB-01">
+        <input type="text" id="dfNo" value="${d?esc(d.dnNo):''}" placeholder="e.g. DB-01" oninput="updateDebitRecap()">
       </div>
       <div class="field">
         <label>Reporting month <span style="text-transform:none;font-weight:400">— auto-derived from the date above</span></label>
-        <select id="dfMonth">
+        <select id="dfMonth" onchange="updateDebitRecap()">
           ${FY_MONTHS.map(m=>`<option value="${m}" ${(d?d.month:CUR_MONTH)===m?'selected':''}>${monthLong(m)}</option>`).join("")}
         </select>
       </div>
@@ -5685,7 +5851,7 @@ function openDebitForm(ngoId, editId){
       </div>
       <div class="field">
         <label>Category <span style="text-transform:none;font-weight:400">— auto-detected</span></label>
-        <select id="dfCat">
+        <select id="dfCat" onchange="updateDebitRecap()">
           ${BUDGET_CATS.map(c=>`<option ${d&&d.category===c?'selected':''}>${c}</option>`).join("")}
         </select>
       </div>
@@ -5711,7 +5877,7 @@ function openDebitForm(ngoId, editId){
         ${DN_STATUS.map(s=>{
           const on = (d?d.status:DN_STATUS_DEFAULT)===s;
           return `<label class="radio-opt">
-            <input type="radio" name="dfStatus" value="${esc(s)}" ${on?'checked':''}>
+            <input type="radio" name="dfStatus" value="${esc(s)}" ${on?'checked':''} onchange="updateDebitRecap()">
             <span>${esc(s)}</span>
           </label>`;
         }).join("")}
@@ -5727,14 +5893,43 @@ function openDebitForm(ngoId, editId){
           <span class="dn-hmeta">${esc(h.at)} · ${esc(h.by)}</span>
         </div>`).join("")}
       </div>
-    </div>`:''}`;
+    </div>`:''}
+
+    <!-- V44: live "you're about to save" recap, just above the Save button -->
+    <div id="dfRecap" class="df-recap"></div>`;
   const footer = `
     ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteDebit('${editId}')">Delete</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
     <button class="btn primary" onclick="saveDebit('${ngoId}','${editId||''}')">${editId?'Save changes':'Log debit note'}</button>`;
+  window._dfEditId = editId || null;
   showModal(modalShell(editId?"Edit debit note":"New debit note",
     editId?"Edit Debit Note":"Log a Debit Note", body, footer));
   recalcScrollTotal();
+  updateDebitRecap();
+}
+
+/* V44: render the recap card from the form's current values */
+function updateDebitRecap(){
+  const box = el("dfRecap"); if(!box) return;
+  const ngo   = ngoById(window._dfNgoId);
+  const dnNo  = (el("dfNo")&&el("dfNo").value.trim()) || "";
+  const month = el("dfMonth") && el("dfMonth").value;
+  const cat   = el("dfCat") && el("dfCat").value;
+  const amt   = readScrollLines().filter(l=>l.scrollId||l.amount).reduce((s,l)=>s+l.amount,0);
+  const nLines= readScrollLines().filter(l=>l.scrollId||l.amount).length;
+  const status= (document.querySelector('input[name="dfStatus"]:checked')||{}).value || DN_STATUS_DEFAULT;
+  const editing = !!window._dfEditId;
+  const ready = dnNo && amt>0;
+  const verb = editing ? "Saving changes to" : "About to log";
+  box.className = "df-recap" + (ready?" ready":"");
+  box.innerHTML = `
+    <div class="dr-h">${ready?"📝":"✎"} ${verb}</div>
+    <div class="dr-line">
+      <b>${dnNo?esc(dnNo):'<span class="dr-miss">debit note number —</span>'}</b>
+      ${ngo?`for <b>${esc(ngo.short)}</b>`:''}
+      ${amt>0?`— <b>${fmtRsFull(amt)}</b><span class="dr-dim"> across ${nLines} scroll line${nLines>1?'s':''}</span>`:'<span class="dr-miss">— add a scroll line with an amount</span>'}
+    </div>
+    <div class="dr-meta">${month?esc(monthLong(month)):'—'} · ${cat?esc(cat):'—'} · <span class="dr-dim">${esc(status)}</span></div>`;
 }
 
 /* one editable scroll-line row */
@@ -5770,15 +5965,17 @@ function recalcScrollTotal(){
   const total = readScrollLines().reduce((s,l)=>s+l.amount,0);
   const el2 = el("dfTotal");
   if(el2) el2.textContent = fmtRsFull(total);
+  updateDebitRecap();
 }
 
 /* sync the Reporting Month dropdown whenever the note date changes */
 function syncDebitMonth(){
   const raw = (el("dfDate")||{}).value || "";
-  if(raw.length < 7) return;
+  if(raw.length < 7){ updateDebitRecap(); return; }
   const ym = raw.slice(0, 7);
   const sel = el("dfMonth");
   if(sel && FY_MONTHS.includes(ym)) sel.value = ym;
+  updateDebitRecap();
 }
 
 /* read the Drive-link filename and pre-fill debit number + month */
@@ -5813,6 +6010,7 @@ function debitParseLink(){
       msg.textContent = "Link saved. Fill in the number and month below.";
     }
   }
+  updateDebitRecap();
 }
 
 /* infer the budget category from free text on the debit note */
@@ -6150,18 +6348,20 @@ async function commitDebit(ngoId, editId, obj){
     }
   }
   render();
-  toast(editId?"Debit note updated":"Debit note logged · budget actuals refreshed"+acceptMsg);
+  const rec = { ngoId, dnNo:obj.dnNo, amount:obj.amount, month:obj.month };
+  toast(debitToast(rec, editId?"updated":"logged · actuals refreshed")+acceptMsg);
 }
 function deleteDebit(id){
   const d = DB.debits.find(x=>x.id===id);
   confirmAction("Delete this debit note?",
     `Debit note <b>${esc(d?d.dnNo:'')}</b> (${d?fmtRsFull(d.amount):''}) will be removed and the budget actuals will refresh.`,
     async ()=>{
+      const _rec = d ? {ngoId:d.ngoId, dnNo:d.dnNo, amount:d.amount, month:d.month} : null;
       DB.debits = DB.debits.filter(d=>d.id!==id);
       await saveDB();
       closeModal();
       render();
-      toast("Debit note deleted");
+      toast(_rec ? debitToast(_rec,"deleted") : "Debit note deleted");
     }, "Delete debit note", true);
 }
 
