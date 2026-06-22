@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V44</title>
+<title>KRSF · NGO Partnership Program · V45</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -282,13 +282,6 @@ window.FIREBASE_CONFIG = {
   .sbar-leg b{font-family:var(--mono);font-weight:800}
   .sbar-leg i{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
   .sbar-leg i.green{background:var(--green)} .sbar-leg i.amber{background:var(--amber)} .sbar-leg i.red{background:var(--red)}
-  /* V44: 8-dot criteria grid (Scorecard tile) */
-  .dotgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px;margin-top:4px}
-  .dotg{display:flex;flex-direction:column;align-items:center;gap:4px}
-  .dotg .dot{width:19px;height:19px;border-radius:50%}
-  .dotg .dl{font-size:9px;font-weight:700;letter-spacing:.02em;color:var(--ink-3)}
-  .dotg .dot.s-hi{background:var(--green)} .dotg .dot.s-mid{background:var(--amber)}
-  .dotg .dot.s-lo{background:var(--red)} .dotg .dot.s-na{background:var(--paper-2);border:1.5px solid var(--rule-2)}
   /* V44: "Needs you" strip — actionable counters at the top of the dashboard */
   .needs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
   .need{flex:1;min-width:158px;display:flex;align-items:center;gap:11px;padding:12px 14px;
@@ -544,6 +537,7 @@ window.FIREBASE_CONFIG = {
     backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:30px;
   }
   .modal-bg.show{display:flex}
+  #confirmBg{z-index:160}   /* V45: confirm layer sits above the main modal */
   .modal{
     background:var(--card);border:1px solid var(--rule);box-shadow:var(--shadow-lg);
     width:520px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;
@@ -1063,7 +1057,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V44</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V45</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1088,7 +1082,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V44</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V45</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1119,6 +1113,10 @@ window.FIREBASE_CONFIG = {
 <!-- modal mount -->
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal"></div>
+</div>
+<!-- V45: confirmations render on their own layer so they never destroy the modal beneath -->
+<div class="modal-bg" id="confirmBg" onclick="if(event.target===this)cancelConfirm()">
+  <div class="modal" id="confirmModal"></div>
 </div>
 <div class="side-scrim" id="sideScrim" onclick="toggleSide(false)"></div>
 <div class="toast" id="toast"></div>
@@ -2300,8 +2298,10 @@ async function init(){
     if(hint){
       if(CLOUD_OK){
         const pm = (DB.users||[]).find(x=>x.role==="PM");
+        /* V45: do NOT print the admin username here — it was visible to anyone
+           who opened the page. Just confirm the connection. */
         hint.innerHTML = pm
-          ? "Connected. Program Manager username: <b>"+esc(pm.username||"admin")+"</b>"
+          ? "Connected to the live database. Sign in with your username and password."
           : "Connected, but no admin account was found — use “Can't sign in?”.";
       } else {
         hint.textContent = "Not connected to Firebase — see “Can't sign in?”.";
@@ -2535,14 +2535,11 @@ function pageDash(){
   const betTot = bets.length;
   const seg = c => betTot ? Math.round(c/betTot*100) : 0;
 
-  /* ---- box 4: partner scorecard — per-criterion portfolio average,
-     shown as an 8-dot grid (one dot per scoring criterion) ---- */
-  const critAvg = SCORE_CRITERIA.map(c=>{
-    const vals = ngos.map(n=>((DB.scorecards[n.id]||{})[CUR_MONTH]||{})[c.key])
-                     .filter(v=>typeof v==="number");
-    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
-  });
-  const critScored = critAvg.filter(v=>v!=null).length;
+  /* ---- box 4: partner scorecard by status (Green / Yellow / Red counts) ---- */
+  const scores = ngos.map(n=>ngoScore(n.id));
+  const scRed   = scores.filter(s=>s.status==="red").length;
+  const scAmber = scores.filter(s=>s.status==="amber").length;
+  const scGreen = scores.filter(s=>s.status==="green").length;
 
   return `
   <div class="phead slim">
@@ -2597,13 +2594,11 @@ function pageDash(){
         <div class="ktile violet">📊</div>
         <div class="lab">Partner Scorecard</div>
       </div>
-      <div class="dotgrid">
-        ${SCORE_CRITERIA.map((c,i)=>`<div class="dotg" title="${esc(c.label)} — ${critAvg[i]!=null?'portfolio avg '+fmtScore(critAvg[i])+'/5':'not scored yet'}">
-          <div class="dot ${scoreClass(critAvg[i])}"></div>
-          <div class="dl">${esc(c.key)}</div>
-        </div>`).join("")}
+      <div class="band-row">
+        <div class="band green"><div class="bn">${scGreen}</div><div class="bl">Green</div></div>
+        <div class="band amber"><div class="bn">${scAmber}</div><div class="bl">Yellow</div></div>
+        <div class="band red"><div class="bn">${scRed}</div><div class="bl">Red</div></div>
       </div>
-      <div class="sub" style="margin-top:8px">${critScored?`${critScored}/8 criteria scored · ${monthLabel(CUR_MONTH)}`:'Not scored yet — click any cell below'}</div>
     </div>
   </div>
 
@@ -3045,6 +3040,8 @@ function closeModal(){
 /* Escape closes any open modal or popover */
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape"){
+    /* V45: a confirm dialog on top takes Escape first, leaving the parent modal open */
+    if(el("confirmBg") && el("confirmBg").classList.contains("show")){ cancelConfirm(); return; }
     if(el("modalBg") && el("modalBg").classList.contains("show")) closeModal();
     closeScorePop();
   }
@@ -3062,18 +3059,39 @@ function modalShell(eyebrow, title, body, footer){
     <div class="modal-f">${footer}</div>`;
 }
 
-/* a styled confirmation dialog — replaces native confirm() everywhere */
+/* a styled confirmation dialog — replaces native confirm() everywhere.
+   V45: renders on its OWN layer (#confirmBg) so it never overwrites the
+   modal beneath it. Cancelling returns you to the parent form with every
+   field intact, instead of destroying it (the old broken modal-stacking). */
 let _confirmCb = null;
 function confirmAction(title, message, onYes, yesLabel, danger){
   _confirmCb = onYes;
-  showModal(modalShell("Please confirm", title,
-    `<div style="font-size:13px;color:var(--ink-2);line-height:1.6">${message}</div>`,
-    `<button class="btn" onclick="closeModal()">Cancel</button>
-     <button class="btn ${danger?'danger':'primary'}" onclick="runConfirm()">${esc(yesLabel||'Confirm')}</button>`));
+  const c = el("confirmModal");
+  c.className = "modal";
+  c.innerHTML = `
+    <div class="modal-h">
+      <div><div class="eyebrow">Please confirm</div><h2 class="serif">${title}</h2></div>
+      <button class="x" onclick="cancelConfirm()" aria-label="Close" title="Close (Esc)">×</button>
+    </div>
+    <div class="modal-b"><div style="font-size:13px;color:var(--ink-2);line-height:1.6">${message}</div></div>
+    <div class="modal-f">
+      <button class="btn" onclick="cancelConfirm()">Cancel</button>
+      <button class="btn ${danger?'danger':'primary'}" onclick="runConfirm()">${esc(yesLabel||'Confirm')}</button>
+    </div>`;
+  el("confirmBg").classList.add("show");
+  setTimeout(()=>{ const f=c.querySelector("button.danger,button.primary"); if(f) f.focus(); },30);
+}
+function closeConfirmLayer(){
+  el("confirmBg").classList.remove("show");
+  el("confirmModal").innerHTML = "";
+}
+function cancelConfirm(){
+  _confirmCb = null;
+  closeConfirmLayer();          // leaves any parent modal exactly as it was
 }
 function runConfirm(){
   const cb = _confirmCb; _confirmCb = null;
-  closeModal();
+  closeConfirmLayer();
   if(typeof cb==="function") cb();
 }
 
