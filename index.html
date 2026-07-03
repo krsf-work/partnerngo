@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V45</title>
+<title>KRSF · NGO Partnership Program · V46</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1057,7 +1057,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V45</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V46</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1082,7 +1082,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V45</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V46</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1313,7 +1313,8 @@ function skeletonData(){
     tasks: [],
     scorecards: {},
     mbo: [],
-    refFiles: []
+    refFiles: [],
+    dailyLogs: []
   };
 }
 
@@ -1578,7 +1579,7 @@ function seedData(){
   });
 
   return { users, ngos, bigBets, budgets, debits, documents, tasks, scorecards, mbo,
-           refFiles:[],
+           refFiles:[], dailyLogs:[],
            meta:{ fyLabel:"FY 2025-26", created:Date.now() } };
 }
 
@@ -1597,7 +1598,8 @@ function seedData(){
 const STORE_KEY   = "npp_tracker_cache_v3";   // local offline cache
 const SESSION_KEY = "npp_tracker_session_v3";
 const DB_PARTS = ["meta","users","ngos","bigBets","budgets","debits",
-                  "documents","tasks","scorecards","mbo","refFiles","flagged"];
+                  "documents","tasks","scorecards","mbo","refFiles","flagged",
+                  "dailyLogs"];
 
 let fb = { app:null, db:null, storage:null, ready:false };
 let CLOUD_OK = false;            // is the live connection healthy?
@@ -1666,7 +1668,7 @@ function cloudListen(){
       if(!DB){ return; }   // DB not assigned yet — ignore until loadDB() finishes
       let incoming = snap.val();
       // Coerce array collections that Firebase may return as keyed objects
-      if(["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles"].includes(part)){
+      if(["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs"].includes(part)){
         incoming = toArr(incoming);
       }
       // coerce arrays nested inside records too
@@ -1680,6 +1682,12 @@ function cloudListen(){
         incoming.forEach(d=>{
           if(d.scrolls!==undefined) d.scrolls = toArr(d.scrolls);
           if(d.history!==undefined) d.history = toArr(d.history);
+        });
+      }
+      if(part==="dailyLogs"){
+        incoming.forEach(r=>{
+          if(r){ if(r.comments!==undefined) r.comments = toArr(r.comments);
+                 if(!r.hours || typeof r.hours!=="object" || Array.isArray(r.hours)) r.hours = {}; }
         });
       }
       if(part==="bigBets"){
@@ -1728,7 +1736,7 @@ async function loadDB(){
       }catch(e){
         // migrateDB failed — apply toArr manually and retry rather than dropping data
         console.error("migrateDB failed, retrying with coercion", e);
-        ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles"]
+        ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs"]
           .forEach(p=>{ if(data[p] && !Array.isArray(data[p])) data[p] = Object.values(data[p]); });
         merged = migrateDB(data);
       }
@@ -1866,7 +1874,7 @@ function migrateDB(db){
   if(!db || typeof db!=="object") db = skeletonData();
   DB_PARTS.forEach(p=>{ if(db[p]===undefined) db[p] = skeletonData()[p]; });
   // Coerce every array collection — Firebase may return them as objects
-  ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles"]
+  ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs"]
     .forEach(p=>{ db[p] = toArr(db[p]); });
   if(!db.scorecards || typeof db.scorecards!=="object" || Array.isArray(db.scorecards)) db.scorecards = {};
   if(!db.budgets   || typeof db.budgets  !=="object" || Array.isArray(db.budgets))   db.budgets   = {};
@@ -1901,6 +1909,12 @@ function migrateDB(db){
     // an old note saved before the workflow change → default it
     if(!d.status || !DN_STATUS.includes(d.status)) d.status = DN_STATUS_DEFAULT;
     if(d.category==="Admin-Other") d.category="Other";
+  });
+  // daily sheets — nested comments array + hours object must survive an RTDB round-trip
+  db.dailyLogs.forEach(r=>{
+    if(!r || typeof r!=="object") return;
+    if(r.comments!==undefined) r.comments = toArr(r.comments);
+    if(!r.hours || typeof r.hours!=="object" || Array.isArray(r.hours)) r.hours = {};
   });
   /* legacy budget category "Admin-Other" → "Other" */
   Object.keys(db.budgets||{}).forEach(k=>{
@@ -2331,6 +2345,7 @@ function navItems(){
         if(ME.role==="APL"&&t.aplId!==ME.id) return false;
         return t.status==="Open";
       }).length || null },
+    { id:"daily",   label:"Daily Sheet",   ic:"🗓", sec:"Work" },
     { id:"okrupload", label:"Team OKR", ic:"↑", sec:"Work" },
     { id:"docs",    label:"Documents",     ic:"▣", sec:"Work" }
   ];
@@ -2343,6 +2358,10 @@ function navItems(){
   }
   if(ME.role==="PM"){
     items.push({ id:"admin", label:"Admin", ic:"⚙", sec:"Work" });
+  }
+  // Daily Sheet is for the Program Manager and Partnership Leads only (v1)
+  if(!(ME.role==="PM" || ME.role==="APL")){
+    return items.filter(it=>it.id!=="daily");
   }
   return items;
 }
@@ -2390,6 +2409,7 @@ function render(){
     case "debits": c.innerHTML = pageDebits(); break;
     case "fdnms":  c.innerHTML = pageFDNMS(); break;
     case "tasks":  c.innerHTML = pageTasks(); break;
+    case "daily":  c.innerHTML = pageDaily(); break;
     case "okrupload": c.innerHTML = pageOkrUpload(); break;
     case "docs":   c.innerHTML = pageDocs(); break;
     case "admin":  c.innerHTML = (ME.role==="PM") ? pageAdmin() : pageDash(); break;
@@ -6945,6 +6965,253 @@ function rejectPendingDebit(id){
       await saveDB(); closeModal(); render();
       toast("Captured note rejected");
     }, "Reject & delete", true);
+}
+
+/* =================================================================
+   PAGE · DAILY SHEET  (V46)
+   Team members (APLs) log daily work as an hourly diary; the PM sees a
+   roll-up and can comment. Data: DB.dailyLogs — one record per person-day
+   { id, aplId, date, hours:{ "7":{for,detail}, … "21":{…} }, comments:[], … }
+   ================================================================= */
+let DAILY_OPEN = null;      // "<aplId>|<date>" of the currently-expanded day
+let DAILY_WHO  = null;      // person filter (aplId, or "all" for PM)
+let DAILY_RANGE = "week";   // week | lastweek | month
+const DAILY_HOURS = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];   // 7 AM → 9 PM
+
+function hourLabel(h){ const ap=h<12?"AM":"PM"; let hh=h%12; if(hh===0)hh=12; return hh+":00 "+ap; }
+function dailyIso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dailyDateLabel(date){
+  const [y,mo,da]=date.split("-").map(Number);
+  const wd=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date(y,mo-1,da).getDay()];
+  return wd+" "+da+" "+MONTH_NAMES[mo]+" "+y;
+}
+function dailyRecentDates(n){
+  const [Y,M,D]=TODAY_ISO.split("-").map(Number);
+  const base=new Date(Y,M-1,D); const out=[];
+  for(let i=0;i<n;i++){ const d=new Date(base); d.setDate(base.getDate()-i); out.push(dailyIso(d)); }
+  return out;
+}
+function dailyRangeDates(range){
+  const [Y,M,D]=TODAY_ISO.split("-").map(Number); const today=new Date(Y,M-1,D);
+  if(range==="month") return { from:dailyIso(new Date(Y,M-1,1)), to:TODAY_ISO, label:"This month", days:32 };
+  const dow=(today.getDay()+6)%7;                       // 0 = Monday
+  const monday=new Date(today); monday.setDate(today.getDate()-dow);
+  if(range==="lastweek"){
+    const lm=new Date(monday); lm.setDate(monday.getDate()-7);
+    const ls=new Date(lm); ls.setDate(lm.getDate()+6);
+    return { from:dailyIso(lm), to:dailyIso(ls), label:"Last week", days:14 };
+  }
+  return { from:dailyIso(monday), to:TODAY_ISO, label:"This week", days:8 };
+}
+function dailyRec(aplId,date){ return (DB.dailyLogs||[]).find(r=>r&&r.aplId===aplId&&r.date===date); }
+function dailyFilled(rec){ return rec?Object.keys(rec.hours||{}).length:0; }
+function dailyToggle(key){ DAILY_OPEN = DAILY_OPEN===key ? null : key; render(); }
+
+/* suggestions for the open "For" field — this APL's NGOs + values they've used before */
+function dailyForSuggestions(aplId){
+  const s=new Set();
+  const u=userById(aplId);
+  (u&&Array.isArray(u.ngoIds)?u.ngoIds:[]).forEach(id=>{ const n=ngoById(id); if(n)s.add(n.short); });
+  s.add("General / internal");
+  (DB.dailyLogs||[]).filter(r=>r&&r.aplId===aplId).forEach(r=>{
+    Object.values(r.hours||{}).forEach(c=>{ if(c&&c.for) s.add(c.for); });
+  });
+  return [...s];
+}
+
+function pageDaily(){
+  return ME.role==="PM" ? dailyPmPage() : dailyAplPage();
+}
+
+/* ---------- APL view: own editable sheet (+ read-only peek at teammates) ---------- */
+function dailyAplPage(){
+  const apls=(DB.users||[]).filter(u=>u.role==="APL");
+  const whoId=(DAILY_WHO && DAILY_WHO!=="all") ? DAILY_WHO : ME.id;
+  const editable = whoId===ME.id;
+  const who=userById(whoId)||ME;
+  const dates=dailyRecentDates(14);
+  return `
+    <div class="phead slim">
+      <div class="eyebrow">${editable?'Your daily work log':esc(who.name)+' · read-only'}</div>
+      <h1 class="serif">Daily Sheet</h1>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <label style="font-size:12px;color:var(--ink-3)">Whose sheet</label>
+      <select class="sel-inp" style="max-width:240px" onchange="DAILY_WHO=this.value;DAILY_OPEN=null;render()">
+        <option value="${ME.id}" ${editable?'selected':''}>My sheet</option>
+        ${apls.filter(a=>a.id!==ME.id).map(a=>`<option value="${a.id}" ${whoId===a.id?'selected':''}>${esc(a.name)}</option>`).join("")}
+      </select>
+      ${editable?`<button class="btn accent sm" style="margin-left:auto" onclick="dailyToggle('${ME.id}|${TODAY_ISO}')">＋ Fill today</button>`:''}
+    </div>
+    <div class="panel">
+      <div class="panel-h">
+        <h3>${editable?'My days':esc(who.name)+"’s days"}</h3>
+        <span class="note">${editable?'click a date to fill its hours':'read-only'}</span>
+      </div>
+      ${dates.map(d=>dailyDateRow(whoId,d,editable)).join("")}
+    </div>`;
+}
+
+/* one collapsible date row (used by both views) */
+function dailyDateRow(aplId,date,editable){
+  const key=aplId+"|"+date;
+  const rec=dailyRec(aplId,date);
+  const filled=dailyFilled(rec);
+  const isOpen=DAILY_OPEN===key;
+  const isToday=date===TODAY_ISO;
+  const badge=filled
+    ? `<span class="badge blue">${filled} hour${filled>1?'s':''} filled</span>`
+    : `<span class="badge" style="background:var(--paper-2);color:var(--ink-3)">not filled</span>`;
+  const head=`<div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--rule);cursor:pointer${isOpen?';background:var(--paper-2)':''}" onclick="dailyToggle('${key}')">
+      <span style="color:var(${isOpen?'--accent':'--ink-3'})">${isOpen?'▾':'▸'}</span>
+      <b style="flex:1${isOpen?';color:var(--accent)':''}">${isToday?'Today — ':''}${dailyDateLabel(date)}</b>
+      ${badge}
+    </div>`;
+  if(!isOpen) return head;
+  return head + `<div style="padding:0 16px 16px;background:var(--paper-2);border-bottom:1px solid var(--rule)">
+      ${dailyGrid(aplId,date,editable)}
+      ${dailyComments(aplId,date)}
+    </div>`;
+}
+
+/* the hourly grid — editable (inputs) or read-only */
+function dailyGrid(aplId,date,editable){
+  const rec=dailyRec(aplId,date);
+  const hours=(rec&&rec.hours)||{};
+  const list=editable
+    ? `<datalist id="dailyForList">${dailyForSuggestions(aplId).map(s=>`<option value="${esc(s)}"></option>`).join("")}</datalist>`
+    : '';
+  const rows=DAILY_HOURS.map(h=>{
+    const c=hours[String(h)]||{};
+    if(editable){
+      return `<tr>
+        <td style="white-space:nowrap"><b>${hourLabel(h)}</b></td>
+        <td><input id="dfor_${h}" list="dailyForList" value="${esc(c.for||'')}" placeholder="NGO / activity…" style="width:100%"></td>
+        <td><input id="ddet_${h}" value="${esc(c.detail||'')}" placeholder="what you did this hour…" style="width:100%"></td>
+      </tr>`;
+    }
+    const blank='<span style="color:var(--ink-3)">—</span>';
+    return `<tr>
+      <td style="white-space:nowrap"><b>${hourLabel(h)}</b></td>
+      <td>${c.for?esc(c.for):blank}</td>
+      <td>${c.detail?esc(c.detail):blank}</td>
+    </tr>`;
+  }).join("");
+  return `${list}
+    <div class="tbl-wrap" style="background:var(--card);border:1px solid var(--rule);border-radius:10px;margin-top:2px">
+      <table>
+        <thead><tr><th style="width:16%">Time</th><th style="width:30%">For</th><th style="width:54%">What you did — details</th></tr></thead>
+        <tbody style="font-size:13px">${rows}</tbody>
+      </table>
+    </div>
+    ${editable?`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--ink-3)">Fill only the hours you want — blanks are fine.</span>
+      <button class="btn primary sm" onclick="dailySaveDay('${aplId}','${date}')">Save day</button>
+    </div>`:''}`;
+}
+
+/* comments block — everyone sees them; only the PM can add */
+function dailyComments(aplId,date){
+  const rec=dailyRec(aplId,date);
+  const cmts=(rec&&Array.isArray(rec.comments))?rec.comments:[];
+  const canComment = ME.role==="PM";
+  if(!cmts.length && !canComment) return '';
+  return `<div style="margin-top:11px;padding:11px 13px;background:var(--card);border:1px solid var(--rule);border-radius:9px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);margin-bottom:7px">Comments</div>
+    ${cmts.length?cmts.map(c=>`<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:7px">
+        <span style="font-size:12px;font-weight:700;color:var(--accent);flex:none">${esc(c.byName||'PM')}:</span>
+        <span style="font-size:12.5px;color:var(--ink);line-height:1.5">${esc(c.text)} <span style="color:var(--ink-3);font-size:11px">· ${esc(c.at||'')}</span></span>
+      </div>`).join(""):'<div style="font-size:12px;color:var(--ink-3);margin-bottom:7px">No comments yet.</div>'}
+    ${canComment?`<div style="display:flex;gap:8px;margin-top:6px">
+        <input id="dcmt_${aplId}_${date}" placeholder="Add a comment…" style="flex:1">
+        <button class="btn primary sm" onclick="dailyAddComment('${aplId}','${date}')">Comment</button>
+      </div>`:''}
+  </div>`;
+}
+
+/* ---------- PM view: team roll-up ---------- */
+function dailyKpi(cls,ic,lab,val,sub){
+  return `<div class="kpi"><div class="ktop"><div class="ktile ${cls}">${ic}</div><div class="lab">${lab}</div></div><div class="val">${val}</div><div class="sub">${sub}</div></div>`;
+}
+function dailyPmPage(){
+  const apls=(DB.users||[]).filter(u=>u.role==="APL");
+  const range=dailyRangeDates(DAILY_RANGE);
+  const who=DAILY_WHO||"all";
+  const people = who==="all" ? apls : apls.filter(a=>a.id===who);
+  const aplIds=new Set(apls.map(a=>a.id));
+  const inRange=(DB.dailyLogs||[]).filter(r=>r&&aplIds.has(r.aplId)&&r.date>=range.from&&r.date<=range.to);
+  const daysLogged=inRange.filter(r=>dailyFilled(r)).length;
+  let totalHours=0; const byFor={};
+  inRange.forEach(r=>Object.values(r.hours||{}).forEach(c=>{ totalHours++; if(c&&c.for) byFor[c.for]=(byFor[c.for]||0)+1; }));
+  const topFor=Object.entries(byFor).sort((a,b)=>b[1]-a[1])[0];
+  const reportedToday=apls.filter(a=>{ const r=dailyRec(a.id,TODAY_ISO); return dailyFilled(r); }).length;
+  return `
+    <div class="phead slim">
+      <div class="eyebrow">${DB.meta.fyLabel} · ${range.label}</div>
+      <h1 class="serif">Team Daily Sheets</h1>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+      <div class="seg-toggle">
+        ${[["week","This week"],["lastweek","Last week"],["month","This month"]].map(([k,l])=>`<button class="${DAILY_RANGE===k?'on':''}" onclick="DAILY_RANGE='${k}';DAILY_OPEN=null;render()">${l}</button>`).join("")}
+      </div>
+      <select class="sel-inp" style="max-width:220px" onchange="DAILY_WHO=this.value;DAILY_OPEN=null;render()">
+        <option value="all" ${who==='all'?'selected':''}>All team members</option>
+        ${apls.map(a=>`<option value="${a.id}" ${who===a.id?'selected':''}>${esc(a.name)}</option>`).join("")}
+      </select>
+      <span style="font-size:12px;color:var(--ink-3);margin-left:auto">${reportedToday} of ${apls.length} reported today</span>
+    </div>
+    <div class="kpi-grid" style="margin-bottom:16px">
+      ${dailyKpi("blue","🗓","Days logged",daysLogged,range.label)}
+      ${dailyKpi("amber","⏱️","Hours filled",totalHours,"across the team")}
+      ${dailyKpi("accent","🎯","Top by effort",topFor?esc(topFor[0]):"—",topFor?topFor[1]+" hours":"no data yet")}
+      ${dailyKpi("violet","👥","Reporting today",reportedToday+" / "+apls.length,reportedToday<apls.length?"some haven’t filled":"everyone in")}
+    </div>
+    ${people.length?people.map(a=>dailyPmPerson(a,range)).join("")
+      : `<div class="panel"><div class="empty"><div class="mk">🗓</div><p>No Partnership Leads to show yet — add APL logins in Admin.</p></div></div>`}`;
+}
+function dailyPmPerson(a,range){
+  const dates=(DB.dailyLogs||[])
+    .filter(r=>r&&r.aplId===a.id&&r.date>=range.from&&r.date<=range.to&&dailyFilled(r))
+    .map(r=>r.date).sort().reverse();
+  return `<div class="panel" style="margin-bottom:14px">
+    <div class="panel-h">
+      <h3>${esc(a.name)}</h3>
+      <span class="note">${dates.length?dates.length+' day'+(dates.length>1?'s':'')+' logged · click to expand':'nothing logged this period'}</span>
+    </div>
+    ${dates.length?dates.map(d=>dailyDateRow(a.id,d,false)).join("")
+      : `<div style="padding:13px 16px;color:var(--ink-3);font-size:12.5px">No entries between ${dailyDateLabel(range.from)} and ${dailyDateLabel(range.to)}.</div>`}
+  </div>`;
+}
+
+/* ---------- writes ---------- */
+function dailySaveDay(aplId,date){
+  if(aplId!==ME.id){ toast("You can only edit your own daily sheet"); return; }
+  const hours={};
+  DAILY_HOURS.forEach(h=>{
+    const f=(el("dfor_"+h)&&el("dfor_"+h).value.trim())||"";
+    const d=(el("ddet_"+h)&&el("ddet_"+h).value.trim())||"";
+    if(f||d) hours[String(h)]={ for:f, detail:d };
+  });
+  let rec=dailyRec(aplId,date);
+  if(rec){ rec.hours=hours; rec.editedBy=ME.name; rec.editedAt=TODAY_ISO; }
+  else if(Object.keys(hours).length){
+    DB.dailyLogs.push({ id:genId("dl"), aplId, date, hours, comments:[], editedBy:ME.name, editedAt:TODAY_ISO });
+  }
+  saveDB(); render();
+  const n=Object.keys(hours).length;
+  toast(n?("Saved "+dailyDateLabel(date)+" · "+n+" hour"+(n>1?'s':'')):("Cleared "+dailyDateLabel(date)));
+}
+async function dailyAddComment(aplId,date){
+  if(ME.role!=="PM"){ toast("Only the Program Manager can comment"); return; }
+  const inp=el("dcmt_"+aplId+"_"+date);
+  const text=inp?inp.value.trim():"";
+  if(!text){ toast("Write a comment first"); return; }
+  let rec=dailyRec(aplId,date);
+  if(!rec){ rec={ id:genId("dl"), aplId, date, hours:{}, comments:[], editedBy:ME.name, editedAt:TODAY_ISO }; DB.dailyLogs.push(rec); }
+  if(!Array.isArray(rec.comments)) rec.comments=[];
+  rec.comments.push({ by:ME.id, byName:ME.name, at:stamp(), text });
+  await saveDB(); render();
+  toast("Comment added");
 }
 
 /* =================================================================
