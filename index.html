@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V46</title>
+<title>KRSF · NGO Partnership Program · V47</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1057,7 +1057,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V46</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V47</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1082,7 +1082,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V46</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V47</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2327,6 +2327,9 @@ async function init(){
 /* =================================================================
    NAVIGATION + ROUTER
    ================================================================= */
+/* V47: Fund Disbursement (FDNMS) is a demo-only module — hidden from the
+   whole app. Its code is kept intact; flip this to true to bring it back. */
+const SHOW_FDNMS = false;
 function navItems(){
   if(!ME) return [];
   const items = [
@@ -2349,11 +2352,13 @@ function navItems(){
     { id:"okrupload", label:"Team OKR", ic:"↑", sec:"Work" },
     { id:"docs",    label:"Documents",     ic:"▣", sec:"Work" }
   ];
+  // V47: drop the Fund Disbursement entry while the module is hidden
+  if(!SHOW_FDNMS){ const _i=items.findIndex(x=>x.id==="fdnms"); if(_i>=0) items.splice(_i,1); }
   // FDNMS: KRSF finance-side staff only see Finance + Debit Notes.
   // Partnership Leads (APL) and Programme see the full app, scoped to their assigned NGOs.
   const FD_RESTRICTED = ["Accounts","Finance"];
   if(FD_RESTRICTED.includes(ME.role)){
-    const allow = new Set(["budget","fdnms"]);
+    const allow = new Set(SHOW_FDNMS ? ["budget","fdnms"] : ["budget","debits"]);
     return items.filter(it=>allow.has(it.id));
   }
   if(ME.role==="PM"){
@@ -2407,7 +2412,7 @@ function render(){
                    break;
     case "budget": c.innerHTML = pageBudget(); break;
     case "debits": c.innerHTML = pageDebits(); break;
-    case "fdnms":  c.innerHTML = pageFDNMS(); break;
+    case "fdnms":  c.innerHTML = SHOW_FDNMS ? pageFDNMS() : pageDash(); break;
     case "tasks":  c.innerHTML = pageTasks(); break;
     case "daily":  c.innerHTML = pageDaily(); break;
     case "okrupload": c.innerHTML = pageOkrUpload(); break;
