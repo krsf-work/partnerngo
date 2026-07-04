@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V47</title>
+<title>KRSF · NGO Partnership Program · V48</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1057,7 +1057,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V47</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V48</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1082,7 +1082,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V47</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V48</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -7465,15 +7465,11 @@ function pageAdmin(){
     <div class="panel-h"><h3>Program Manager</h3><span class="note">full access · cannot be removed</span></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Name</th><th>Username</th><th>Password</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Username</th><th></th></tr></thead>
         <tbody>
           <tr>
             <td><b>${esc(pm?pm.name:'—')}</b></td>
             <td class="mono">${esc(pm?pm.username:'—')}</td>
-            <td class="mono">
-              <span class="pw-mask" data-pw="${esc(pm?pm.password:'—')}">••••••••</span>
-              <button class="btn ghost sm" style="margin-left:6px;padding:2px 8px;font-size:10.5px" onclick="togglePw(this)">show</button>
-            </td>
             <td class="num"><button class="btn ghost sm" onclick="openPmForm()">Edit</button></td>
           </tr>
         </tbody>
@@ -7484,23 +7480,20 @@ function pageAdmin(){
   <div class="panel" style="margin-bottom:16px">
     <div class="panel-h">
       <h3>User Logins</h3>
-      <span class="note">${apls.length} login${apls.length!==1?'s':''} · each edits only their assigned NGOs</span>
+      <span class="note">${apls.length} login${apls.length!==1?'s':''} · sign in with phone number (password = last 4 digits)</span>
     </div>
     ${apls.length? `<div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>Name</th><th>Username</th><th>Password</th><th>Role</th><th>Assigned NGOs</th><th></th>
+          <th>Name</th><th>Login (phone)</th><th>Role</th><th>Assigned NGOs</th><th></th>
         </tr></thead>
         <tbody>
         ${apls.map(u=>{
           const assigned = ngos.filter(n=>(u.ngoIds||[]).includes(n.id));
+          const onPhone = /^\d{10,}$/.test(u.username||"");
           return `<tr>
             <td><b>${esc(u.name)}</b></td>
-            <td class="mono">${esc(u.username)}</td>
-            <td class="mono">
-              <span class="pw-mask" data-pw="${esc(u.password)}">••••••••</span>
-              <button class="btn ghost sm" style="margin-left:6px;padding:2px 8px;font-size:10.5px" onclick="togglePw(this)">show</button>
-            </td>
+            <td class="mono">${esc(u.username||'—')}${onPhone?'':' <span class="badge amber" style="font-size:9.5px" title="Edit this user to set their phone number">set phone</span>'}</td>
             <td style="font-size:11.5px"><span class="badge ${u.role==='APL'?'blue':u.role==='Accounts'?'violet':u.role==='Finance'?'green':u.role==='Programme'?'amber':'gray'}">${({APL:'Partner NGO',Accounts:'Vadali Accounts',Finance:'Ahmedabad Finance',Programme:'Programme',Viewer:'Viewer'}[u.role])||u.role}</span></td>
             <td style="font-size:12px">${u.role!=='APL' ? '<span style="color:var(--ink-3)">—</span>' : (assigned.length ? assigned.map(n=>esc(n.short)).join(", ") : '<span style="color:var(--ink-3)">none yet</span>')}</td>
             <td class="num" style="white-space:nowrap">
@@ -7551,11 +7544,23 @@ function togglePw(btn){
   }
 }
 
+/* live hint under the phone field — shows the derived login as they type */
+function aplPhoneHint(){
+  const p = ((el('apPhone')&&el('apPhone').value)||"").replace(/\D/g,"");
+  const h = el('apPhoneHint'); if(!h) return;
+  h.innerHTML = p.length>=4
+    ? 'Login: <b>'+p+'</b> &nbsp;·&nbsp; Password: <b>'+p.slice(-4)+'</b>'
+    : 'Username = the phone number · Password = its last 4 digits.';
+}
 /* ---- APL add / edit ---- */
 function openAplForm(editId){
   if(ME.role!=="PM") return;
   const u = editId ? (DB.users||[]).find(x=>x.id===editId) : null;
   const ngos = DB.ngos || [];
+  const initPhone = u ? (u.phone || (/^\d{10,}$/.test(u.username||"") ? u.username : "")) : "";
+  const initHint = initPhone
+    ? 'Login: <b>'+esc(initPhone)+'</b> &nbsp;·&nbsp; Password: <b>'+esc(String(initPhone).replace(/\D/g,'').slice(-4))+'</b>'
+    : 'Username = the phone number · Password = its last 4 digits.';
   const body = `
     <div class="frow">
       <div class="field">
@@ -7567,15 +7572,10 @@ function openAplForm(editId){
         <input type="text" id="apTitle" value="${u?esc(u.title||''):''}" placeholder="Associate Partnership Lead">
       </div>
     </div>
-    <div class="frow">
-      <div class="field">
-        <label>Username</label>
-        <input type="text" id="apUser" value="${u?esc(u.username||''):''}" placeholder="lowercase, no spaces">
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="text" id="apPass" value="${u?esc(u.password||''):''}" placeholder="give them a simple one to start">
-      </div>
+    <div class="field">
+      <label>Phone number <span style="text-transform:none;font-weight:400">— becomes their login</span></label>
+      <input type="text" id="apPhone" inputmode="numeric" value="${esc(initPhone)}" placeholder="e.g. 9979187853" oninput="aplPhoneHint()">
+      <div class="hint" id="apPhoneHint">${initHint}</div>
     </div>
     <div class="field">
       <label>Role</label>
@@ -7604,24 +7604,26 @@ function openAplForm(editId){
 }
 async function saveApl(editId){
   const name = el("apName").value.trim();
-  const username = el("apUser").value.trim().toLowerCase();
-  const password = el("apPass").value;
+  const phone = ((el("apPhone")&&el("apPhone").value)||"").replace(/\D/g,"");
   const role = el("apRole") ? el("apRole").value : "APL";
-  if(!name || !username || !password){ toast("Name, username and password are all required"); return; }
-  // username must be unique
+  if(!name){ toast("Enter the person's name"); return; }
+  if(phone.length < 10){ toast("Enter a valid phone number (at least 10 digits)"); return; }
+  // login is derived from the phone: username = phone, password = last 4 digits
+  const username = phone;
+  const password = phone.slice(-4);
   const clash = (DB.users||[]).find(x=>x.id!==editId &&
     (x.username||"").trim().toLowerCase()===username);
-  if(clash){ toast("That username is already taken"); return; }
+  if(clash){ toast("That phone number is already used by another login"); return; }
   const ngoIds = Array.from(document.querySelectorAll(".apNgo"))
     .filter(c=>c.checked).map(c=>c.value);
   const initials = name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
   if(editId){
     const u = (DB.users||[]).find(x=>x.id===editId);
-    Object.assign(u, { name, username, password, role, ngoIds,
+    Object.assign(u, { name, phone, username, password, role, ngoIds,
       title: el("apTitle").value.trim()||"Associate Partnership Lead", avatar:initials });
     stampEdit(u);
   } else {
-    const rec = { id:genId("u"), role, name, username, password, ngoIds,
+    const rec = { id:genId("u"), role, name, phone, username, password, ngoIds,
       title: el("apTitle").value.trim()||"Associate Partnership Lead", avatar:initials };
     stampEdit(rec);
     if(!DB.users) DB.users=[];
@@ -7629,7 +7631,7 @@ async function saveApl(editId){
   }
   await saveDB();
   closeModal(); render();
-  toast(editId?"APL updated":"APL added — share the username & password with them");
+  toast(editId?"Login updated":"User added — they sign in with their phone number");
 }
 function deleteApl(id){
   const u = (DB.users||[]).find(x=>x.id===id);
