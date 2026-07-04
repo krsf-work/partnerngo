@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KRSF · NGO Partnership Program · V48</title>
+<title>KRSF · NGO Partnership Program · V49</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1057,7 +1057,7 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="login-mark">KRSF</div>
     <h1 class="serif">NGO Partnership Program</h1>
-    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V48</b></div>
+    <div class="sub">Milestones, budgets &amp; monthly delivery — one place. <b style="color:var(--ink-2)">Version V49</b></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1082,7 +1082,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i>K</i>KRSF</div>
-        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V48</span></div>
+        <div class="tg">NGO Partnership Program <span style="opacity:.6">· V49</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2274,6 +2274,7 @@ function bootApp(){
   buildNav();
   CUR_PAGE="dash"; PAGE_ARG=null;
   render();
+  maybeWeeklyBackup();   // V49: silent weekly backup for the PM
 }
 function onMonthChange(){
   CUR_MONTH = el("globalMonth").value;
@@ -7509,12 +7510,14 @@ function pageAdmin(){
   </div>
 
   <div class="panel">
-    <div class="panel-h"><h3>Data backup</h3><span class="note">download a full copy as a safety net</span></div>
+    <div class="panel-h"><h3>Data backup</h3><span class="note">auto-downloads once a week · or grab one anytime</span></div>
     <div class="panel-b">
       <div style="font-size:12.5px;color:var(--ink-2);line-height:1.65;margin-bottom:12px">
-        Your live data is stored in Firebase. As a weekly safety net, download a
-        full backup file and keep it in a shared Drive folder. If anything ever
-        goes wrong it can be re-imported.
+        Your live data is stored in Firebase. This browser <b>automatically downloads a full backup once a week</b> when you open the app — keep those files in your Drive/Seagate folder so nothing is ever lost. You can also grab one anytime.
+        ${(()=>{ const iso=lastBackupISO(); const d=daysSinceBackup();
+          return iso
+            ? `<div style="margin-top:8px;color:var(--ink-3)">Last backup: <b>${d===0?'today':d===1?'yesterday':d+' days ago'}</b> · ${esc(iso)}.</div>`
+            : `<div style="margin-top:8px;color:var(--amber)">No backup yet — one downloads automatically when you next open the app.</div>`; })()}
       </div>
       <button class="btn accent" onclick="exportBackup()">↓ Download backup (.json)</button>
       <label class="btn" style="margin-left:8px;cursor:pointer">
@@ -7689,7 +7692,7 @@ async function savePm(){
 }
 
 /* ---- backup / restore ---- */
-function exportBackup(){
+function exportBackup(silent){
   const blob = new Blob([JSON.stringify(DB,null,2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -7697,7 +7700,28 @@ function exportBackup(){
   a.download = "NGO_Partnership_Program_backup_"+TODAY_ISO+".json";
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
-  toast("Backup downloaded");
+  try{ localStorage.setItem(LAST_BACKUP_KEY, TODAY_ISO); }catch(e){}
+  if(!silent) toast("Backup downloaded");
+}
+/* ---- V49: weekly auto-backup. The PM's browser downloads a full backup at
+   most once every 7 days, when they open the app. No server needed; the file
+   lands in Downloads (which the user's Drive/Seagate already back up). ---- */
+const LAST_BACKUP_KEY = "npp_last_backup_v1";
+function lastBackupISO(){ try{ return localStorage.getItem(LAST_BACKUP_KEY)||""; }catch(e){ return ""; } }
+function daysSinceBackup(){
+  const iso=lastBackupISO(); if(!iso) return Infinity;
+  return Math.round((new Date(TODAY_ISO+"T00:00:00") - new Date(iso+"T00:00:00"))/864e5);
+}
+function maybeWeeklyBackup(){
+  if(!ME || ME.role!=="PM") return;   // only the PM auto-backs-up
+  if(!CLOUD_OK) return;               // only back up real, connected data
+  if(daysSinceBackup() < 7) return;   // at most once a week
+  setTimeout(()=>{                     // let the login gesture + first paint settle
+    try{
+      exportBackup(true);
+      toast("📦 Weekly backup saved to your Downloads — keep a copy in Drive.");
+    }catch(e){ console.warn("weekly auto-backup failed", e); }
+  }, 1500);
 }
 function importBackup(input){
   if(ME.role!=="PM") return;
