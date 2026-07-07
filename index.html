@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V55</title>
+<title>Sahkar · KRSF Partnership Program · V56</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1092,7 +1092,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V55</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V56</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1117,7 +1117,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar</div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V55</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V56</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -7053,6 +7053,7 @@ function rejectPendingDebit(id){
 let DAILY_OPEN = null;      // "<aplId>|<date>" of the currently-expanded day
 let DAILY_WHO  = null;      // person filter (aplId, or "all" for PM)
 let DAILY_RANGE = "week";   // week | lastweek | month
+let DAILY_PM_TAB = "team";  // PM only: "team" roll-up, or "mine" (PM's own fillable sheet)
 const DAILY_HOURS = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];   // 7 AM → 9 PM
 
 function hourLabel(h){ const ap=h<12?"AM":"PM"; let hh=h%12; if(hh===0)hh=12; return hh+":00 "+ap; }
@@ -7097,7 +7098,13 @@ function dailyForSuggestions(aplId){
 }
 
 function pageDaily(){
-  return ME.role==="PM" ? dailyPmPage() : dailyAplPage();
+  if(ME.role!=="PM") return dailyAplPage();
+  // PM gets a tab to switch between the team roll-up and their own fillable sheet
+  const tabs = `<div class="seg-toggle" style="margin-bottom:14px">
+    <button class="${DAILY_PM_TAB!=="mine"?'on':''}" onclick="DAILY_PM_TAB='team';DAILY_WHO=null;DAILY_OPEN=null;render()">Team overview</button>
+    <button class="${DAILY_PM_TAB==="mine"?'on':''}" onclick="DAILY_PM_TAB='mine';DAILY_WHO=null;DAILY_OPEN=null;render()">My daily sheet</button>
+  </div>`;
+  return tabs + (DAILY_PM_TAB==="mine" ? dailyAplPage() : dailyPmPage());
 }
 
 /* ---------- APL view: own editable sheet (+ read-only peek at teammates) ---------- */
@@ -7187,11 +7194,11 @@ function dailyGrid(aplId,date,editable){
     </div>`:''}`;
 }
 
-/* comments block — everyone sees them; only the PM can add */
+/* comments block — everyone sees them; only the PM can add (not on their own sheet) */
 function dailyComments(aplId,date){
   const rec=dailyRec(aplId,date);
   const cmts=(rec&&Array.isArray(rec.comments))?rec.comments:[];
-  const canComment = ME.role==="PM";
+  const canComment = ME.role==="PM" && aplId!==ME.id;
   if(!cmts.length && !canComment) return '';
   return `<div style="margin-top:11px;padding:11px 13px;background:var(--card);border:1px solid var(--rule);border-radius:9px">
     <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);margin-bottom:7px">Comments</div>
