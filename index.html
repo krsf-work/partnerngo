@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V56</title>
+<title>Sahkar · KRSF Partnership Program · V57</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1092,7 +1092,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V56</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V57</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1117,7 +1117,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar</div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V56</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V57</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -4501,6 +4501,13 @@ function downloadBudgetTemplate(ngoId){
 /* budget plan upload — APL sets the annual + monthly plan once */
 function openBudgetUpload(ngoId){
   if(!canEditNgo(ngoId)){ toast("You don't have access to edit this NGO's budget"); return; }
+  /* the Salary/Other grid below is pre-filled with the NGO's EXISTING monthly
+     figures whenever a budget already exists — so "the grid has values" can't
+     be used to detect intent. Track whether the user actually typed into it
+     this time; only then does saveBudgetPlan() prefer the grid over the plain
+     Annual field (otherwise editing just the Annual box was being silently
+     ignored — the grid's untouched old values would override it on save). */
+  window._bgGridDirty = false;
   const n = ngoById(ngoId);
   const b = DB.budgets[ngoId];
   const body = `
@@ -4705,9 +4712,11 @@ async function saveBudgetPlan(ngoId){
   }
   const existing = DB.budgets[ngoId];
 
-  // the Salary/Other monthly grid, if filled, defines the plan next
+  // the Salary/Other monthly grid, if the user actually edited it, defines the plan next.
+  // (window._bgGridDirty — NOT just "grid has positive values", since it's pre-filled
+  // with the existing plan and would otherwise silently override a plain Annual edit.)
   let salaryPlan=null, otherPlan=null;
-  if(!monthlyPlan && el("bbS0")){
+  if(!monthlyPlan && el("bbS0") && window._bgGridDirty){
     const gs = FY_MONTHS.map((m,i)=>parseFloat(el("bbS"+i).value)||0);
     const go = FY_MONTHS.map((m,i)=>parseFloat(el("bbO"+i).value)||0);
     if(gs.some(v=>v>0) || go.some(v=>v>0)){
@@ -4754,6 +4763,7 @@ async function saveBudgetPlan(ngoId){
 
 /* live totals under the Salary/Other grid in the budget modal */
 function bbGridTotals(){
+  window._bgGridDirty = true;   // only real oninput calls reach here, never initial render
   let s=0,o=0;
   FY_MONTHS.forEach((m,i)=>{
     s += parseFloat(el("bbS"+i)&&el("bbS"+i).value)||0;
