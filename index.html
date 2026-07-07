@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V57</title>
+<title>Sahkar · KRSF Partnership Program · V58</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1092,7 +1092,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V57</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V58</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1117,7 +1117,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar</div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V57</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V58</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -4540,8 +4540,8 @@ function openBudgetUpload(ngoId){
           </tr>
           ${FY_MONTHS.map((m,i)=>`<tr>
             <td style="padding:3px 10px;color:var(--ink-2);white-space:nowrap">${monthLabel(m)}</td>
-            <td style="padding:3px 6px"><input id="bbS${i}" type="number" min="0" style="width:110px" value="${b&&b.salaryPlan&&b.salaryPlan[i]?b.salaryPlan[i]:''}" oninput="bbGridTotals()"></td>
-            <td style="padding:3px 6px"><input id="bbO${i}" type="number" min="0" style="width:110px" value="${b&&b.otherPlan&&b.otherPlan[i]?b.otherPlan[i]:''}" oninput="bbGridTotals()"></td>
+            <td style="padding:3px 6px"><input id="bbS${i}" type="number" min="0" style="width:110px" value="${b&&b.salaryPlan&&b.salaryPlan[i]?b.salaryPlan[i]:''}" oninput="bbGridEdited()"></td>
+            <td style="padding:3px 6px"><input id="bbO${i}" type="number" min="0" style="width:110px" value="${b&&b.otherPlan&&b.otherPlan[i]?b.otherPlan[i]:''}" oninput="bbGridEdited()"></td>
           </tr>`).join("")}
           <tr style="border-top:1px solid var(--line);font-weight:700">
             <td style="padding:6px 10px">Total <span id="bbGt" style="float:right;color:var(--ink-2)"></span></td>
@@ -4762,8 +4762,12 @@ async function saveBudgetPlan(ngoId){
 }
 
 /* live totals under the Salary/Other grid in the budget modal */
+/* called by a REAL keystroke in the Salary/Other grid — and ONLY there. bbGridTotals()
+   itself is also called once by openBudgetUpload() just to paint the initial totals
+   footer, so the dirty flag must NOT live inside bbGridTotals() (that made every modal
+   open look "edited" and silently broke plain Annual-field saves — the V57 bug). */
+function bbGridEdited(){ window._bgGridDirty = true; bbGridTotals(); }
 function bbGridTotals(){
-  window._bgGridDirty = true;   // only real oninput calls reach here, never initial render
   let s=0,o=0;
   FY_MONTHS.forEach((m,i)=>{
     s += parseFloat(el("bbS"+i)&&el("bbS"+i).value)||0;
