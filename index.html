@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V54</title>
+<title>Sahkar · KRSF Partnership Program · V55</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1092,7 +1092,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V54</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V55</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1117,7 +1117,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar</div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V54</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V55</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1183,9 +1183,12 @@ const FY_MONTHS = ["2026-04","2026-05","2026-06","2026-07","2026-08","2026-09",
 const FY_END = FY_MONTHS[FY_MONTHS.length-1];   // last month of the financial year
 const MONTH_NAMES = {1:"Jan",2:"Feb",3:"Mar",4:"Apr",5:"May",6:"Jun",
                      7:"Jul",8:"Aug",9:"Sep",10:"Oct",11:"Nov",12:"Dec"};
-/* real "today", computed once at boot — no hardcoded dates anywhere else */
+/* real "today", computed once at boot — no hardcoded dates anywhere else.
+   Built from LOCAL date parts (not toISOString, which is UTC) — otherwise
+   early-morning IST hours (roughly midnight-5:30am, before UTC catches up)
+   would report yesterday's date as "today" everywhere in the app. */
 const TODAY = new Date();
-const TODAY_ISO = TODAY.toISOString().slice(0,10);          // e.g. 2026-05-17
+const TODAY_ISO = TODAY.getFullYear()+"-"+String(TODAY.getMonth()+1).padStart(2,"0")+"-"+String(TODAY.getDate()).padStart(2,"0");  // e.g. 2026-05-17
 const TODAY_MONTH = TODAY_ISO.slice(0,7);                   // e.g. 2026-05
 /* the live reporting month = current calendar month if inside the FY,
    otherwise clamped to the nearest FY month */
@@ -2433,8 +2436,8 @@ function navItems(){
   if(ME.role==="PM"){
     items.push({ id:"admin", label:"Admin", ic:"⚙", sec:"Work" });
   }
-  // Daily Sheet is for the Program Manager and Partnership Leads only (v1)
-  if(!(ME.role==="PM" || ME.role==="APL")){
+  // Daily Sheet is for the Program Manager and field team (Partnership Lead / Programme) logins
+  if(!(ME.role==="PM" || ME.role==="APL" || ME.role==="Programme")){
     return items.filter(it=>it.id!=="daily");
   }
   return items;
@@ -7099,7 +7102,7 @@ function pageDaily(){
 
 /* ---------- APL view: own editable sheet (+ read-only peek at teammates) ---------- */
 function dailyAplPage(){
-  const apls=(DB.users||[]).filter(u=>u.role==="APL");
+  const apls=(DB.users||[]).filter(u=>u.role==="APL"||u.role==="Programme");
   const whoId=(DAILY_WHO && DAILY_WHO!=="all") ? DAILY_WHO : ME.id;
   const editable = whoId===ME.id;
   const who=userById(whoId)||ME;
@@ -7208,7 +7211,7 @@ function dailyKpi(cls,ic,lab,val,sub){
   return `<div class="kpi"><div class="ktop"><div class="ktile ${cls}">${ic}</div><div class="lab">${lab}</div></div><div class="val">${val}</div><div class="sub">${sub}</div></div>`;
 }
 function dailyPmPage(){
-  const apls=(DB.users||[]).filter(u=>u.role==="APL");
+  const apls=(DB.users||[]).filter(u=>u.role==="APL"||u.role==="Programme");
   const range=dailyRangeDates(DAILY_RANGE);
   const who=DAILY_WHO||"all";
   const people = who==="all" ? apls : apls.filter(a=>a.id===who);
@@ -7241,7 +7244,7 @@ function dailyPmPage(){
       ${dailyKpi("violet","👥","Reporting today",reportedToday+" / "+apls.length,reportedToday<apls.length?"some haven’t filled":"everyone in")}
     </div>
     ${people.length?people.map(a=>dailyPmPerson(a,range)).join("")
-      : `<div class="panel"><div class="empty"><div class="mk">🗓</div><p>No Partnership Leads to show yet — add APL logins in Admin.</p></div></div>`}`;
+      : `<div class="panel"><div class="empty"><div class="mk">🗓</div><p>No team logins to show yet — add Partnership Lead or Programme logins in Admin.</p></div></div>`}`;
 }
 function dailyPmPerson(a,range){
   const dates=(DB.dailyLogs||[])
