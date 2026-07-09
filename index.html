@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V58</title>
+<title>Sahkar · KRSF Partnership Program · V59</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1092,7 +1092,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V58</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V59</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1117,7 +1117,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar</div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V58</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V59</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -7284,6 +7284,18 @@ function dailyPmPerson(a,range){
 /* ---------- writes ---------- */
 function dailySaveDay(aplId,date){
   if(aplId!==ME.id){ toast("You can only edit your own daily sheet"); return; }
+  /* The hourly-grid inputs (dfor_7..dfor_21 / ddet_7..ddet_21) are NOT
+     scoped by date — only one day's accordion is ever expanded at a time,
+     so they're reused across days. If the user navigates to a DIFFERENT
+     day before a delayed "Save day" tap actually fires (a real risk on a
+     slow connection), this would silently read the now-differently-open
+     day's (possibly blank) fields and overwrite THIS date's record with
+     the wrong data — the exact shape of a real reported bug where past
+     entries turned up empty. Refuse instead of risking data loss. */
+  if(DAILY_OPEN !== aplId+"|"+date){
+    toast("This day isn't open anymore — reopen it and save again");
+    return;
+  }
   const hours={};
   DAILY_HOURS.forEach(h=>{
     const f=(el("dfor_"+h)&&el("dfor_"+h).value.trim())||"";
