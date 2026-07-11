@@ -1,6 +1,6 @@
 /* Sahkar service worker — network-first so the app is always fresh when online,
    and still opens (from cache) when offline. Bump CACHE on each release. */
-const CACHE = 'sahkar-v59';
+const CACHE = 'sahkar-v60';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
