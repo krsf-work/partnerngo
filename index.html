@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V59</title>
+<title>Sahkar · KRSF Partnership Program · V60</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1092,7 +1092,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V59</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V60</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1117,7 +1117,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar</div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V59</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V60</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2575,7 +2575,7 @@ function closeScorePop(){
 function needsYouStrip(ngos){
   const ids = new Set(ngos.map(n=>n.id));
   const flagged = Object.values(DB.flagged||{}).filter(f=>f && !f.dismissed).length;
-  const pendRev = DB.debits.filter(d=>ids.has(d.ngoId) && d.pendingReview).length;
+  const pendRev = DB.debits.filter(d=>ids.has(d.ngoId) && (d.pendingReview || d.proposedAmount!=null)).length;
   const overdue = (DB.tasks||[]).filter(t=>{
     if(t.status!=="Open" || !t.due || t.due>=TODAY_ISO) return false;
     if(ME.role==="APL")       return t.aplId===ME.id;
@@ -3642,7 +3642,7 @@ function ngoHealthLine(ngoId){
     bits.push(`not yet scored this month`);
   }
   // anything awaiting review
-  const pend = DB.debits.filter(d=>d.ngoId===ngoId && d.pendingReview).length;
+  const pend = DB.debits.filter(d=>d.ngoId===ngoId && (d.pendingReview || d.proposedAmount!=null)).length;
   let tail = "";
   if(pend) tail = ` <b class="warn">${pend} debit note${pend>1?'s':''} awaiting your review.</b>`;
   return `<div class="ngo-health"><span class="hi">🩺</span><div><b>${esc(n.short)}</b> ${bits.join(" · ")}.${tail}</div></div>`;
@@ -6768,6 +6768,11 @@ function pageDebits(){
   /* email-captured PDF notes awaiting a human okay live in their own queue,
      not in the ledger (and don't count in actuals until approved) */
   const pending = DB.debits.filter(d=>ids.has(d.ngoId) && d.pendingReview);
+  /* re-sent emails that look like a corrected amount for an ALREADY-APPROVED
+     note never overwrite the live amount automatically any more — the old
+     figure keeps counting in budget with zero interruption. The proposed
+     new figure sits here until a human accepts or dismisses it. */
+  const corrections = DB.debits.filter(d=>ids.has(d.ngoId) && d.proposedAmount!=null);
   /* the rest of this page is scoped to the CURRENT MONTH so the status-count
      tabs and the table below show the same scope (the "All 49" vs "2 shown"
      mismatch was confusing — both now reflect this month) */
@@ -6834,6 +6839,46 @@ function pageDebits(){
             <td style="white-space:nowrap">${can?`
               <button class="btn accent sm" onclick="okayPendingDebit('${d.id}')">✓ Okay</button>
               <button class="btn ghost sm" style="color:var(--red)" onclick="rejectPendingDebit('${d.id}')">✕ Reject</button>`:''}</td>
+          </tr>`;
+        }).join("")}
+        </tbody>
+      </table>
+    </div>
+  </div>`:''}
+
+  ${corrections.length?`
+  <div class="panel" style="margin-bottom:20px;border:1px solid var(--amber);border-radius:12px">
+    <div style="padding:14px 16px 4px">
+      <div style="font-weight:700;font-size:14px">🔄 Amount correction from a re-sent email <span class="badge amber" style="margin-left:6px">${corrections.length}</span></div>
+      <div style="font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.5">
+        A re-sent email for an <b>already-approved</b> note came in with a different total. The note keeps
+        counting in the ledger at its current amount — nothing has dropped out of the budget. Review the
+        new figure against the document, then <b>Accept</b> to update it or <b>Keep current</b> to discard the proposal.
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>NGO</th><th>DN No.</th><th>Month</th>
+          <th class="num">Current (in budget)</th><th class="num">Proposed</th><th>From</th><th></th>
+        </tr></thead>
+        <tbody>
+        ${corrections.map(d=>{
+          const n=ngoById(d.ngoId)||{short:'?'};
+          const can=canEditNgo(d.ngoId);
+          return `<tr>
+            <td><b>${esc(n.short)}</b></td>
+            <td class="mono" style="font-size:11.5px">${esc(d.dnNo)}</td>
+            <td style="font-size:12px">${monthLabel(d.month)}</td>
+            <td class="num">${fmtRsFull(d.amount)}</td>
+            <td class="num"><b>${fmtRsFull(d.proposedAmount)}</b></td>
+            <td style="font-size:11.5px;color:var(--ink-3);max-width:260px">
+              ${esc(String(d.proposedFrom||"").slice(0,80))}
+              ${d.proposedUrl?`<div style="margin-top:4px"><a href="${esc(d.proposedUrl)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px">📄 Open re-sent note →</a></div>`:''}
+            </td>
+            <td style="white-space:nowrap">${can?`
+              <button class="btn accent sm" onclick="acceptProposedAmount('${d.id}')">✓ Accept</button>
+              <button class="btn ghost sm" onclick="dismissProposedCorrection('${d.id}')">Keep current</button>`:''}</td>
           </tr>`;
         }).join("")}
         </tbody>
@@ -7056,6 +7101,51 @@ function rejectPendingDebit(id){
       await saveDB(); closeModal(); render();
       toast("Captured note rejected");
     }, "Reject & delete", true);
+}
+
+/* ---- re-send amount-correction review: accept / keep current ----
+   A re-sent email for an already-approved note never overwrites the live
+   amount on its own — it only proposes a new figure (proposedAmount) and
+   leaves the existing amount/pendingReview untouched, so the note never
+   drops out of the ledger or budget actuals while it waits for a human
+   to look at it. These two actions resolve that proposal either way. */
+async function acceptProposedAmount(id){
+  const d = DB.debits.find(x=>x.id===id);
+  if(!d || d.proposedAmount==null){ toast("Nothing to accept"); return; }
+  if(!canEditNgo(d.ngoId)){ toast("You don't have access to approve this NGO's notes"); return; }
+  const oldAmt = Math.round(+d.amount||0), newAmt = Math.round(+d.proposedAmount||0);
+  d.amount = newAmt;
+  if(Array.isArray(d.proposedScrolls)) d.scrolls = d.proposedScrolls;
+  if(d.proposedUrl) d.url = d.proposedUrl;
+  d.history = Array.isArray(d.history) ? d.history : [];
+  d.history.push({ status:d.status, at:stamp(),
+    by:(ME?ME.name:"—")+" · accepted re-send correction",
+    note:"Correction accepted: ₹"+oldAmt.toLocaleString('en-IN')+" → ₹"+newAmt.toLocaleString('en-IN') });
+  delete d.proposedAmount; delete d.proposedScrolls; delete d.proposedUrl;
+  delete d.proposedAt; delete d.proposedFrom; delete d.proposedEmailId; delete d.proposedSrcMs;
+  d.note = "🔄 Correction accepted by "+(ME?ME.name:"—")+" on "+TODAY_ISO+
+           " (was ₹"+oldAmt.toLocaleString('en-IN')+", now ₹"+newAmt.toLocaleString('en-IN')+"). "+(d.note||"");
+  await saveDB(); render();
+  toast("Debit note "+d.dnNo+" updated to ₹"+newAmt.toLocaleString('en-IN'));
+}
+function dismissProposedCorrection(id){
+  const d = DB.debits.find(x=>x.id===id);
+  if(!d || d.proposedAmount==null) return;
+  if(!canEditNgo(d.ngoId)){ toast("You don't have access to this NGO's notes"); return; }
+  const oldAmt = Math.round(+d.amount||0), newAmt = Math.round(+d.proposedAmount||0);
+  confirmAction("Keep the current amount?",
+    `The proposed correction (<b>${fmtRsFull(newAmt)}</b>) will be discarded. <b>${esc(d.dnNo)}</b>
+     (${esc((ngoById(d.ngoId)||{}).short||'')}) stays at ${fmtRsFull(oldAmt)} in the ledger.`,
+    async ()=>{
+      d.history = Array.isArray(d.history) ? d.history : [];
+      d.history.push({ status:d.status, at:stamp(),
+        by:(ME?ME.name:"—")+" · dismissed re-send correction",
+        note:"Proposed correction to ₹"+newAmt.toLocaleString('en-IN')+" was reviewed and rejected — kept ₹"+oldAmt.toLocaleString('en-IN') });
+      delete d.proposedAmount; delete d.proposedScrolls; delete d.proposedUrl;
+      delete d.proposedAt; delete d.proposedFrom; delete d.proposedEmailId; delete d.proposedSrcMs;
+      await saveDB(); closeModal(); render();
+      toast("Kept current amount");
+    }, "Keep current amount", false);
 }
 
 /* =================================================================
