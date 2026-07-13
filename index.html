@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V60</title>
+<title>Sahkar · KRSF Partnership Program · V61</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -97,8 +97,8 @@ window.FIREBASE_CONFIG = {
     letter-spacing:.3em;text-transform:uppercase;color:var(--accent);
     margin-bottom:6px;
   }
-  .login-card h1{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1;letter-spacing:-.01em;margin-bottom:4px}
-  .login-card .sub{color:var(--ink-3);font-size:13px;margin-bottom:26px}
+  .login-card h1{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.1;letter-spacing:-.01em;margin-bottom:4px;text-align:center}
+  .login-card .sub{color:var(--ink-3);font-size:13px;margin-bottom:26px;text-align:center}
   .login-card label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px;font-weight:700}
   .login-pick{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
   .login-opt{
@@ -1091,8 +1091,8 @@ window.FIREBASE_CONFIG = {
   <div class="login-card">
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
-    <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V60</span></div>
+    <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V61</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1117,7 +1117,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar</div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V60</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V61</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1259,6 +1259,11 @@ function fmtRs(n){
   return "₹"+Math.round(n);
 }
 function fmtRsFull(n){ if(n==null||isNaN(n))return"—"; return "₹"+Math.round(n).toLocaleString("en-IN"); }
+/* the debit-note "Scrolls" column shows the actual scroll ID(s), not just a count */
+function scrollIdsLabel(d){
+  const ids = (Array.isArray(d.scrolls)?d.scrolls:[]).map(s=>s&&s.scrollId).filter(Boolean);
+  return ids.length ? esc(ids.join(", ")) : "—";
+}
 /* display dates as dd-mm-yyyy everywhere; leaves non-date text untouched */
 function fmtDMY(d){
   if(d==null||d==="") return "—";
@@ -5343,12 +5348,11 @@ function ngoDebitsTab(ngoId){
         <tbody>
         ${all.length? all.slice().sort((a,b)=>b.month.localeCompare(a.month)).map(d=>{
           const s = DN_STATUS_COLOR[d.status] || "amber";
-          const nScrolls = Array.isArray(d.scrolls)?d.scrolls.length:0;
           return `<tr>
             <td class="mono" style="font-size:11.5px">${esc(d.dnNo)}</td>
             <td>${monthLabel(d.month)}</td>
             <td>${esc(d.category)}</td>
-            <td style="font-size:12px;color:var(--ink-2)">${nScrolls?nScrolls+' scroll'+(nScrolls>1?'s':''):'—'}</td>
+            <td style="font-size:12px;color:var(--ink-2)">${scrollIdsLabel(d)}</td>
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
             <td><span class="badge ${s}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
             <td>${d.url
@@ -6908,13 +6912,12 @@ function pageDebits(){
           const n=ngoById(d.ngoId);
           if(!n) return '';
           const sc = DN_STATUS_COLOR[d.status] || "amber";
-          const nScrolls = Array.isArray(d.scrolls)?d.scrolls.length:0;
           return `<tr>
             <td><b>${esc(n.short)}</b></td>
             <td class="mono" style="font-size:11.5px">${esc(d.dnNo)}</td>
             <td style="font-size:12px;color:var(--ink-2);white-space:nowrap">${shortDate(_recv(d))}</td>
             <td>${esc(d.category)}</td>
-            <td style="font-size:12px;color:var(--ink-2)">${nScrolls?nScrolls+' scroll'+(nScrolls>1?'s':''):'—'}</td>
+            <td style="font-size:12px;color:var(--ink-2)">${scrollIdsLabel(d)}</td>
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
             <td><span class="badge ${sc}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
             <td>${d.url
