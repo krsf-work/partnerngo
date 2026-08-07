@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V61</title>
+<title>Sahkar · KRSF Partnership Program · V62</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -183,11 +183,10 @@ window.FIREBASE_CONFIG = {
     background:var(--card);display:flex;align-items:center;
     padding:0 22px;gap:16px;position:sticky;top:0;z-index:30;
   }
-  .crumb{font-size:12px;color:var(--ink-3)}
-  .crumb b{color:var(--ink);font-weight:600}
   .topbar .gap{flex:1}
-  .month-pick{display:flex;align-items:center;gap:8px}
-  .month-pick label{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .month-pick{padding:12px 16px;border-top:1px solid var(--rule)}
+  .month-pick label{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:6px}
+  .month-pick .sel-inp{width:100%}
   .sel-inp{
     padding:6px 10px;border:1px solid var(--rule-2);background:var(--card);
     font-size:12.5px;font-weight:500;border-radius:8px;color:var(--ink);
@@ -997,7 +996,6 @@ window.FIREBASE_CONFIG = {
     .hamburger{display:inline-flex}
     .content{padding:22px 16px 60px}
     .topbar{padding:0 14px;gap:10px}
-    .month-pick label{display:none}
   }
   @media(max-width:560px){
     .kpi-grid{grid-template-columns:1fr}
@@ -1092,7 +1090,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V61</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V62</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1117,9 +1115,13 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar</div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V61</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V62</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
+      <div class="month-pick">
+        <label>Reporting month</label>
+        <select class="sel-inp" id="globalMonth" onchange="onMonthChange()"></select>
+      </div>
       <div class="side-foot">
         <div class="av" id="meAv">G</div>
         <div>
@@ -1132,13 +1134,8 @@ window.FIREBASE_CONFIG = {
     <div class="main">
       <div class="topbar">
         <button class="hamburger" id="hamburger" onclick="toggleSide()" aria-label="Open menu" title="Menu">☰</button>
-        <div class="crumb" id="crumb">—</div>
         <div class="gap"></div>
         <span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span>
-        <div class="month-pick">
-          <label>Reporting month</label>
-          <select class="sel-inp" id="globalMonth" onchange="onMonthChange()"></select>
-        </div>
       </div>
       <div class="content" id="content"></div>
     </div>
@@ -1196,7 +1193,7 @@ function liveReportingMonth(){
   if(FY_MONTHS.includes(TODAY_MONTH)) return TODAY_MONTH;
   return TODAY_MONTH < FY_MONTHS[0] ? FY_MONTHS[0] : FY_END;
 }
-/* a document is "expiring soon" if it lapses within the next 90 days */
+/* a document is "expiring soon" if it lapses within the next 120 days */
 const SOON_CUTOFF_ISO = new Date(TODAY.getTime()+90*86400000).toISOString().slice(0,10);
 const VERTICALS = ["Livelihood","Advocacy","Education","Healthcare","Climate"];
 const BUDGET_CATS = ["Salary","Travel","Programme","Other"];
@@ -2033,6 +2030,21 @@ function visibleNgos(){
   }
   return DB.ngos.slice();
 }
+function docsNavCount(){
+  const n = docsExpiringCount(new Set(visibleNgos().map(x=>x.id)));
+  return n||null;
+}
+function dailyNavCount(){
+  if(ME.role==="PM"){
+    const apls=(DB.users||[]).filter(u=>u.role==="APL"||u.role==="Programme");
+    const n=apls.filter(a=>!dailyFilled(dailyRec(a.id,TODAY_ISO))).length;
+    return n||null;
+  }
+  if(ME.role==="APL"||ME.role==="Programme"){
+    return dailyFilled(dailyRec(ME.id,TODAY_ISO)) ? null : 1;
+  }
+  return null;
+}
 // can the current user edit at all?  (Viewer is read-only)
 function canEdit(){ return ME && (ME.role==="PM"||ME.role==="APL"||ME.role==="Programme"); }
 // can the current user edit THIS specific NGO?
@@ -2425,9 +2437,9 @@ function navItems(){
         if(ME.role==="APL"&&t.aplId!==ME.id) return false;
         return t.status==="Open";
       }).length || null },
-    { id:"daily",   label:"Daily Sheet",   ic:"🗓", sec:"Work" },
+    { id:"daily",   label:"Daily Sheet",   ic:"🗓", sec:"Work", count: dailyNavCount() },
     { id:"okrupload", label:"Team OKR", ic:"↑", sec:"Work" },
-    { id:"docs",    label:"Documents",     ic:"▣", sec:"Work" }
+    { id:"docs",    label:"Documents",     ic:"▣", sec:"Work", count: docsNavCount() }
   ];
   // V47: drop the Fund Disbursement entry while the module is hidden
   if(!SHOW_FDNMS){ const _i=items.findIndex(x=>x.id==="fdnms"); if(_i>=0) items.splice(_i,1); }
@@ -2479,14 +2491,11 @@ function render(){
   { const _al=navItems().map(i=>i.id); if(_al.length && !_al.includes(CUR_PAGE) && CUR_PAGE!=="ngo") CUR_PAGE=_al.includes("fdnms")?"fdnms":_al[0]; }
   buildNav();
   const c = el("content");
-  let crumb = "<b>"+ (navItems().find(i=>i.id===CUR_PAGE)?.label||"") +"</b>";
   switch(CUR_PAGE){
     case "dash":   c.innerHTML = pageDash(); break;
     case "bets":   c.innerHTML = pageBets(); break;
     case "ngos":   c.innerHTML = pageNgos(); break;
-    case "ngo":    c.innerHTML = pageNgoDetail(PAGE_ARG);
-                   crumb = `<span style="cursor:pointer" onclick="go('ngos')">Partner NGOs</span> &nbsp;›&nbsp; <b>${esc(ngoById(PAGE_ARG)?.short||'')}</b>`;
-                   break;
+    case "ngo":    c.innerHTML = pageNgoDetail(PAGE_ARG); break;
     case "budget": c.innerHTML = pageBudget(); break;
     case "debits": c.innerHTML = pageDebits(); break;
     case "fdnms":  c.innerHTML = SHOW_FDNMS ? pageFDNMS() : pageDash(); break;
@@ -2497,7 +2506,6 @@ function render(){
     case "admin":  c.innerHTML = (ME.role==="PM") ? pageAdmin() : pageDash(); break;
     default: c.innerHTML = pageDash();
   }
-  el("crumb").innerHTML = crumb;
 }
 
 /* =================================================================
@@ -2589,6 +2597,7 @@ function needsYouStrip(ngos){
   }).length;
   const finance = DB.debits.filter(d=>ids.has(d.ngoId)
     && (d.status||"")==="Under review with Finance Team").length;
+  const docsExpiring = docsExpiringCount(ids);
 
   const cards = [
     {n:flagged, ic:"🚩", cls:"amber", go:"go('debits')",
@@ -2598,8 +2607,20 @@ function needsYouStrip(ngos){
     {n:overdue, ic:"⏰", cls:"red", go:"go('tasks')",
      lab:overdue===1?"overdue task":"overdue tasks"},
     {n:finance, ic:"₹", cls:"blue", go:"go('debits')",
-     lab:finance===1?"debit note with Finance":"debit notes with Finance"}
+     lab:finance===1?"debit note with Finance":"debit notes with Finance"},
+    {n:docsExpiring, ic:"📋", cls:"amber", go:"go('docs')",
+     lab:docsExpiring===1?"document expiring or expired":"documents expiring or expired"}
   ];
+  if(ME.role==="PM"){
+    const apls=(DB.users||[]).filter(u=>u.role==="APL"||u.role==="Programme");
+    const notLogged=apls.filter(a=>!dailyFilled(dailyRec(a.id,TODAY_ISO))).length;
+    cards.push({n:notLogged, ic:"🗓", cls:"amber", go:"go('daily')",
+      lab:notLogged===1?"team member hasn't logged today":"team members haven't logged today"});
+  } else if(ME.role==="APL"||ME.role==="Programme"){
+    const loggedToday = dailyFilled(dailyRec(ME.id,TODAY_ISO)) > 0;
+    cards.push({n:loggedToday?0:1, ic:"🗓", cls:"amber", go:"go('daily')",
+      lab:"log today's hours"});
+  }
   if(cards.every(c=>c.n===0)){
     return `<div class="needs-ok">✓ You're all caught up — nothing needs your attention right now.</div>`;
   }
@@ -2608,6 +2629,58 @@ function needsYouStrip(ngos){
       <div class="nico">${c.ic}</div>
       <div><div class="nn">${c.n}</div><div class="nl">${c.lab}</div></div>
     </div>`).join("")}</div>`;
+}
+
+/* Dashboard quick-log — the fast path for logging *today* without
+   navigating to the Daily Sheet page at all. APL/Programme roles only.
+   Same two-field-per-hour grid as the full Daily Sheet page, in a
+   scrollable box so it doesn't take over the Dashboard. */
+function dailyHomeWidget(){
+  if(!(ME.role==="APL"||ME.role==="Programme")) return '';
+  const rec=dailyRec(ME.id,TODAY_ISO);
+  const hours=(rec&&rec.hours)||{};
+  const filled=dailyFilled(rec);
+  return `<div class="panel" style="margin-bottom:16px">
+    <div class="panel-h">
+      <h3>Today's log</h3>
+      <span class="note">${filled} hour${filled===1?'':'s'} filled</span>
+    </div>
+    <div style="padding:14px 16px">
+      <div style="max-height:230px;overflow-y:auto;border:1px solid var(--rule);border-radius:8px;padding:10px">
+        ${DAILY_HOURS.map(h=>{
+          const c=hours[String(h)]||{};
+          return `<div style="margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:var(--ink-3);margin-bottom:4px">${hourLabel(h)}</div>
+            <input id="dfor_${h}" value="${esc(c.for||'')}" placeholder="NGO / activity…" style="width:100%;margin-bottom:4px">
+            <input id="ddet_${h}" value="${esc(c.detail||'')}" placeholder="what you did this hour…" style="width:100%">
+          </div>`;
+        }).join("")}
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px">
+        <button class="btn primary sm" onclick="dailyHomeSaveToday()">Save today</button>
+      </div>
+    </div>
+  </div>`;
+}
+/* not DAILY_OPEN-guarded like dailySaveDay — this widget is the only place
+   on the Dashboard page rendering dfor_ and ddet_ ids, always for today,
+   so there's no "which day is this for" ambiguity to protect against. */
+function dailyHomeSaveToday(){
+  const aplId=ME.id, date=TODAY_ISO;
+  const hours={};
+  DAILY_HOURS.forEach(h=>{
+    const f=(el("dfor_"+h)&&el("dfor_"+h).value.trim())||"";
+    const d=(el("ddet_"+h)&&el("ddet_"+h).value.trim())||"";
+    if(f||d) hours[String(h)]={ for:f, detail:d };
+  });
+  let rec=dailyRec(aplId,date);
+  if(rec){ rec.hours=hours; rec.editedBy=ME.name; rec.editedAt=TODAY_ISO; }
+  else if(Object.keys(hours).length){
+    DB.dailyLogs.push({ id:genId("dl"), aplId, date, hours, comments:[], editedBy:ME.name, editedAt:TODAY_ISO });
+  }
+  saveDB(); render();
+  const n=Object.keys(hours).length;
+  toast(n?("Saved today · "+n+" hour"+(n>1?'s':'')):("Cleared today's log"));
 }
 
 function pageDash(){
@@ -2650,6 +2723,7 @@ function pageDash(){
   </div>
 
   ${needsYouStrip(ngos)}
+  ${dailyHomeWidget()}
 
   <div class="kpi-grid">
     <div class="kpi">
@@ -5384,7 +5458,7 @@ function ngoDocsTab(ngoId){
       if(d.expires){
         const days = Math.round((new Date(d.expires)-new Date(TODAY_ISO))/86400000);
         if(days<0) statusHtml=`<span class="pill red">Expired</span>`;
-        else if(days<90) statusHtml=`<span class="pill amber">Expires in ${days}d</span>`;
+        else if(days<120) statusHtml=`<span class="pill amber">Expires in ${days}d</span>`;
         else statusHtml=`<span class="pill green no-dot">Valid · ${fmtDMY(d.expires)}</span>`;
       }
       const ini = d.type.split(/\s+/)[0].slice(0,3).toUpperCase();
@@ -5410,6 +5484,14 @@ function ngoDocsTab(ngoId){
 /* document add / edit — records a compliance document and an optional Drive link */
 const DOC_TYPES = ["MoU","Annual Proposal","Approved Budget","12A Certificate",
                    "80G Certificate","FCRA Certificate","Audited Financials","Other"];
+
+/* shared with needsYouStrip() and navItems() so the "expiring soon" window
+   (120 days) is defined in exactly one place */
+function docExpiryDays(d){ return Math.round((new Date(d.expires)-new Date(TODAY_ISO))/86400000); }
+function isDocExpiringSoon(d){ return !!d.expires && docExpiryDays(d)<120; }
+function docsExpiringCount(ngoIds){
+  return (DB.documents||[]).filter(d=>ngoIds.has(d.ngoId) && isDocExpiringSoon(d)).length;
+}
 function openDocForm(ngoId, editId){
   if(blockIfCantEditNgo(ngoId)) return;
   const d = editId ? DB.documents.find(x=>x.id===editId) : null;
