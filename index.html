@@ -179,14 +179,10 @@ window.FIREBASE_CONFIG = {
 
   .main{flex:1;min-width:0;display:flex;flex-direction:column}
   .topbar{
-    height:50px;border-bottom:1px solid var(--rule);
-    background:var(--card);display:flex;align-items:center;
-    padding:0 22px;gap:16px;position:sticky;top:0;z-index:30;
+    display:none;height:50px;border-bottom:1px solid var(--rule);
+    background:var(--card);align-items:center;
+    padding:0 22px;position:sticky;top:0;z-index:30;
   }
-  .topbar .gap{flex:1}
-  .month-pick{padding:12px 16px;border-top:1px solid var(--rule)}
-  .month-pick label{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:6px}
-  .month-pick .sel-inp{width:100%}
   .sel-inp{
     padding:6px 10px;border:1px solid var(--rule-2);background:var(--card);
     font-size:12.5px;font-weight:500;border-radius:8px;color:var(--ink);
@@ -995,7 +991,7 @@ window.FIREBASE_CONFIG = {
     .side.open{transform:none;box-shadow:var(--shadow-lg)}
     .hamburger{display:inline-flex}
     .content{padding:22px 16px 60px}
-    .topbar{padding:0 14px;gap:10px}
+    .topbar{display:flex;padding:0 14px}
   }
   @media(max-width:560px){
     .kpi-grid{grid-template-columns:1fr}
@@ -1114,14 +1110,10 @@ window.FIREBASE_CONFIG = {
   <div class="shell">
     <aside class="side" id="side">
       <div class="brand">
-        <div class="mk"><i></i>Sahkar</div>
+        <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
         <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V62</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
-      <div class="month-pick">
-        <label>Reporting month</label>
-        <select class="sel-inp" id="globalMonth" onchange="onMonthChange()"></select>
-      </div>
       <div class="side-foot">
         <div class="av" id="meAv">G</div>
         <div>
@@ -1134,8 +1126,6 @@ window.FIREBASE_CONFIG = {
     <div class="main">
       <div class="topbar">
         <button class="hamburger" id="hamburger" onclick="toggleSide()" aria-label="Open menu" title="Menu">☰</button>
-        <div class="gap"></div>
-        <span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span>
       </div>
       <div class="content" id="content"></div>
     </div>
@@ -2338,17 +2328,10 @@ function bootApp(){
   el("meRole").textContent = ME.title;
   // reporting month defaults to the most recent month with real data
   CUR_MONTH = latestDataMonth();
-  // month dropdown
-  el("globalMonth").innerHTML = FY_MONTHS.map(m=>
-    `<option value="${m}" ${m===CUR_MONTH?'selected':''}>${monthLong(m)}${m===TODAY_MONTH?' · current':''}</option>`).join("");
   buildNav();
   CUR_PAGE="dash"; PAGE_ARG=null;
   render();
   maybeWeeklyBackup();   // V49: silent weekly backup for the PM
-}
-function onMonthChange(){
-  CUR_MONTH = el("globalMonth").value;
-  render();
 }
 
 /* V50: tiny UI smoke check — logs one line on boot; also callable as __uiSmoke() in the console.
