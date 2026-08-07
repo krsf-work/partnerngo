@@ -2,6 +2,8 @@
 
 Status: approved by Munjal 2026-08-07, ready for implementation plan.
 
+**Revision (2026-08-07, same day):** Feature 2 was originally approved as a 3-fixed-block redesign (Morning/Afternoon/Evening, one free-text field each) and partially implemented (data-shape functions, accordion editor, PM roll-up tile, Dashboard widget — all syntax-checked but never deployed). After seeing it live, Munjal reversed that call: the block UI itself "is bad," and the app should go back to hourly time-slot entry. This revision replaces the original Feature 2 section below with the hourly-grid design, and adds Feature 3 (top-bar declutter), raised in the same conversation. **None of the block-shaped code was ever deployed** — no live `dailyLogs` record has ever been saved in `blocks` shape, so this revision has no data-migration concerns; the block-related code added earlier today is simply removed.
+
 ## Why
 
 Two usability gaps surfaced from real incidents:
@@ -30,68 +32,61 @@ Both fixes follow the same shape already established in `needsYouStrip()`: surfa
 
 **Not in scope**: email/push notifications, a dedicated "compliance" page, or tracking any document types beyond what `DOC_TYPES` already lists. This is visibility-only — the existing Documents tab and edit form are unchanged.
 
-## Feature 2 — Daily Sheet: fixed blocks instead of hourly grid
+**Status: implemented and syntax-checked as of this revision. No further changes needed for Feature 1.**
 
-### Current state (for contrast, not being deleted)
+## Feature 2 — Daily Sheet: hourly grid stays, reachable from the Dashboard
+
+### What stays exactly as it was
+
+The 15-row hourly grid is the fill mechanism, full stop — no fixed blocks, no free-text-only blocks:
 
 - `DAILY_HOURS = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]` — 15 slots.
-- `DB.dailyLogs` record: `{id, aplId, date, hours:{ [hour]: {for, detail} }, comments:[], editedBy, editedAt}`.
-- `dailyFilled(rec)` = `Object.keys(rec.hours||{}).length`.
-- Reached only via the "Daily Sheet" nav item; APL/Programme fill their own hours row-by-row, PM sees a roll-up.
+- `DB.dailyLogs` record: `{id, aplId, date, hours:{ [hour]: {for, detail} }, comments:[], editedBy, editedAt}` — this is the *only* shape; there is no second/legacy shape to reconcile.
+- `dailyFilled(rec)` = `Object.keys(rec.hours||{}).length` — the original one-line version.
+- `dailyGrid()`, `dailySaveDay()`, `dailyPmPage()`'s hours-based stats (`totalHours`, `byFor`/`topFor`) — all unchanged from before this session's edits.
 
-### New block model
+Any block-shaped code added earlier today (`DAILY_BLOCKS`, `dailyBlocksSection`, `dailySaveDayBlocks`, `dailyFormat`, `dailyApproxHours`, `dailyBadgeLabel`, the block-completion PM KPI tile, the `dailyDateRow` format-branching) is removed. Since nothing in `blocks` shape was ever saved, this is a clean removal, not a migration.
 
-Three fixed, non-editable blocks, spanning the same 7 AM–9 PM window:
+### What's new: Dashboard home-screen widget
 
-```js
-const DAILY_BLOCKS = [
-  { key:"morning",   label:"Morning",   range:"7–12", hours:5 },
-  { key:"afternoon", label:"Afternoon", range:"12–5", hours:5 },
-  { key:"evening",   label:"Evening",   range:"5–9",  hours:4 }
-];
-```
+For APL/Programme roles only, a "Today's log" card at the top of the Dashboard (same location `needsYouStrip()` already occupies, directly below it) — the primary way to log without navigating to the Daily Sheet page. This did not exist before today's session; it's the one piece of the original low-friction goal that survives the reversal.
 
-New `dailyLogs` records store one free-text field per block instead of the hour grid:
+Shape: the same two-field-per-hour grid as the full Daily Sheet page, rendered inside a fixed-height scrollable box (~5 rows visible, scroll for the rest of the day) rather than the full un-scrolled 15 rows — approved mockup option "A: scrollable mini-grid". One "Save day" button at the bottom.
 
-```js
-{ id, aplId, date, blocks:{ morning:"", afternoon:"", evening:"" }, comments:[], editedBy, editedAt }
-```
+The widget does **not** call the existing `dailySaveDay(aplId,date)` directly — that function's `DAILY_OPEN !== aplId+"|"+date` guard exists to protect the Daily Sheet page's accordion (where the same `dfor_h`/`ddet_h` input ids are reused across whichever day happens to be expanded), and `DAILY_OPEN` is generally `null` while looking at the Dashboard. Calling it as-is would make the widget's save silently refuse most of the time. Since the app renders one page at a time (`CUR_PAGE` routing — the Dashboard and Daily Sheet page are never in the DOM simultaneously), there's no id-collision risk to guard against here; the widget is always unambiguously "today." So a new, small `dailyHomeSaveToday()` reads the same `dfor_h`/`ddet_h` ids and writes to today's record directly, no guard — mirroring the same split (guarded page-save vs. unguarded home-save) already used successfully for `dailySaveDayBlocks`/`dailyHomeSaveToday` earlier this session, just against the hourly shape instead of blocks.
 
-No time picker anywhere — the range in each block is a fixed label, never entered by the user. Filling today is: tap a block's text box, type one line, done. 2-3 taps for a full day.
+The Daily Sheet nav page itself is unchanged beyond what it already was pre-session: full hourly grid, same as always, still the place to browse/fill past days.
 
-**No data loss / no migration of old records.** Existing `dailyLogs` rows keep their `hours:{...}` shape untouched, forever — they are never rewritten. `dailyRec()` is unchanged (still finds by `aplId`+`date`). `dailyFilled(rec)` is updated to check whichever shape the record has:
+### "Needs your attention" nudges — binary, not a countdown
 
-```js
-function dailyFilled(rec){
-  if(!rec) return 0;
-  if(rec.blocks) return DAILY_BLOCKS.filter(b=>(rec.blocks[b.key]||"").trim()).length;
-  return Object.keys(rec.hours||{}).length;
-}
-```
+Hourly logging has no fixed daily target the way "3 blocks" did, so the enforcement nudges become binary (logged something today vs. nothing) rather than a remaining-count:
 
-Any history view that renders a past day must branch on `rec.blocks ? <block view> : <legacy hourly-grid view>` — old data keeps displaying exactly as it does today, new data displays as blocks. This is the only place old-format awareness is needed; everywhere else (counts, "is today done") goes through `dailyFilled()`.
+- **APL/Programme** — nav badge on "Daily Sheet" and a `needsYouStrip` card both appear only when *zero* hours are logged for today (`dailyFilled(dailyRec(ME.id, TODAY_ISO)) === 0`), and disappear the moment at least one hour is filled. Label: "Log today's hours" (card), a plain presence-indicator badge (count of `1`) on the nav item — not a number that means anything quantitative, just "there's something here."
+- **PM** — unchanged from the block-era design: count of team members (`DB.users.filter(u=>u.role==="APL"||u.role==="Programme")`) with zero hours logged today, on both the nav badge and the `needsYouStrip` card. This logic never depended on which shape a day's data was in, so it needs no changes.
 
-**Approximate hours** (derived, never entered): `sum of DAILY_BLOCKS[i].hours where blocks[key] is non-empty`. Purely computed from the fixed block lengths — no new input from anyone. Shown next to the completion count, e.g. "2 of 3 blocks · ~10h".
+### Explicitly out of scope (unchanged from original spec)
 
-### Where it lives
-
-- **Dashboard home-screen widget** (new): for APL/Programme roles only, a compact card at the top of the Dashboard showing *today's* three blocks with inline text boxes — the mockup already approved. This is the primary way people log, no navigation required.
-- **Daily Sheet nav page** (existing page, new fill UI): same three-block UI, but also lets APL/Programme browse past days. For PM, this page's roll-up view changes from hour-based stats to per-person "N of 3 blocks · ~Hh" per day, expandable to read the actual block text. Date-range filtering and the existing comment thread on each day's record are unchanged.
-- **Nav badge on "daily"**: for APL/Programme, blocks left to fill *today* (hidden once 0, i.e. all 3 done). For PM, count of team members who haven't completed today's log yet — "team" here is the same set `dailyPmPage()` already uses: `DB.users.filter(u=>u.role==="APL"||u.role==="Programme")`, no NGO-scoping (PM sees the whole team).
-- **Dashboard `needsYouStrip` card**: for APL/Programme, "N blocks left today" (routes to `go('daily')`). For PM, "N team members haven't logged today" (also routes to `go('daily')`), using the same team set as above. Same card-array pattern as Feature 1's new card — these are two more entries added to the existing `cards` array in `needsYouStrip()`, each conditional on `ME.role`.
-
-### Explicitly out of scope
-
-- No push/email notifications or end-of-day reminders — enforcement is visibility-only (home-screen placement + dashboard nudge + nav badge), consistent with Feature 1's posture.
+- No push/email notifications or end-of-day reminders — enforcement is visibility-only.
 - No hard blocking of other app actions when today's log is incomplete.
-- No per-NGO or per-activity structured tagging on blocks — each block is one free-text field, full stop. If per-NGO hour tracking is wanted later, that is a separate future decision, not part of this change.
-- No migration/backfill of historical `hours`-shaped records into `blocks` shape.
+- No per-NGO or per-activity structured tagging beyond the existing "For" field.
+
+## Feature 3 — Top bar declutter (new, raised in this revision)
+
+The app's global chrome (`index.html:1132-1142`, class `.topbar`) is shared across every page — it is not specific to Daily Sheet. Today it holds, left to right: a mobile hamburger menu button (☰, opens the sidebar nav on phones), a plain-text page-name "crumb" (e.g. "Daily Sheet", "Dashboard"), a connection-status dot, and a "Reporting month" label + dropdown.
+
+**What changes:**
+- The page-name crumb text is removed entirely. It's redundant — every page already renders its own title in-content (`phead slim` → `<h1 class="serif">Dashboard</h1>` etc., confirmed at index.html:2725-2726 and similar `phead` blocks throughout). Low-risk change, same reasoning applies on every page.
+- The hamburger menu button and connection-status dot **stay in place**, unchanged — explicitly confirmed as still needed (mobile nav trigger, online/offline signal).
+- The "Reporting month" control **moves out of the top bar into the sidebar**, near the user's name/sign-out at the bottom (approved mockup option "C"). The resulting top bar is nearly empty — just the hamburger and the dot — which is what "don't need a top bar" meant in practice: not a literal empty div, but no more full-width bar competing for attention.
+
+**Not in scope:** no change to what reporting-month selection *does* (`onMonthChange()`, `CUR_MONTH`, `FY_MONTHS` logic) — only where its control lives on screen. No change to the hamburger's behavior or the connection dot's logic — only their surrounding bar shrinks.
 
 ## Testing / verification plan
 
-- Confirm `dailyFilled()` correctly counts both a legacy `hours`-shaped record and a new `blocks`-shaped record.
-- Confirm a past day with the old hourly grid still renders correctly in history (nothing silently drops old data).
-- Confirm the Dashboard widget only appears for APL/Programme, not PM/Viewer/Accounts/Finance.
-- Confirm nav badges and `needsYouStrip` cards compute correctly for each role (APL scoped to self, PM scoped to team, Programme scoped to assigned NGOs for the docs card).
-- Confirm the 120-day threshold change is applied consistently (status pill + any other place `90` appears in expiry logic — grep before shipping to catch stragglers).
-- Manual pass at 375px width given the Dashboard widget is explicitly mobile-first.
+- Confirm the Daily Sheet page's hourly grid, save, and PM roll-up all work exactly as they did before this session (no lingering block-era code, no `dailyFormat`/`blocks` references left anywhere).
+- Confirm the new Dashboard "Today's log" widget only appears for APL/Programme, not PM/Viewer/Accounts/Finance, and that its scrollable mini-grid actually scrolls at 375px width.
+- Confirm the widget's "Save day" (`dailyHomeSaveToday()`) and the Daily Sheet page's "Save day" (`dailySaveDay()`) don't collide — both write to the same `dailyLogs` record for today; navigate Dashboard → save an hour → Daily Sheet page → open today's row and confirm the hour is there; then edit an hour on the page, save, return to Dashboard, and confirm the widget reflects it.
+- Confirm nav badges and `needsYouStrip` cards: APL/Programme see a binary "log today's hours" nudge that disappears after the first hour is saved; PM sees the team headcount nudge, unaffected by this revision.
+- Confirm the 120-day document-expiry threshold change is still applied consistently (already verified earlier this session; re-check nothing regressed).
+- Confirm the top bar: page-name crumb gone on every page, hamburger + connection dot still present and functional, reporting-month dropdown works from its new home in the sidebar and still drives `CUR_MONTH` correctly.
+- Manual pass at 375px width for the Dashboard widget, the Daily Sheet page, and the sidebar's relocated month picker.
