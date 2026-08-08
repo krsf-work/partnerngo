@@ -284,26 +284,6 @@ window.FIREBASE_CONFIG = {
   .sbar-leg b{font-family:var(--mono);font-weight:800}
   .sbar-leg i{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
   .sbar-leg i.green{background:var(--green)} .sbar-leg i.amber{background:var(--amber)} .sbar-leg i.red{background:var(--red)}
-  /* V44: "Needs you" strip — actionable counters at the top of the dashboard */
-  .needs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-  .need{flex:1;min-width:158px;display:flex;align-items:center;gap:11px;padding:12px 14px;
-        border-radius:12px;border:1px solid var(--rule);background:var(--paper);
-        cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}
-  .need:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06)}
-  .need.zero{cursor:default;opacity:.5}
-  .need.zero:hover{border-color:var(--rule);transform:none;box-shadow:none}
-  .need .nico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;background:var(--paper-2)}
-  .need.amber:not(.zero) .nico{background:var(--amber-soft)}
-  .need.red:not(.zero) .nico{background:var(--red-soft)}
-  .need.blue:not(.zero) .nico{background:var(--blue-soft,#e7eefc)}
-  .need .nn{font-family:var(--mono);font-weight:800;font-size:22px;line-height:1;color:var(--ink-3)}
-  .need.amber:not(.zero) .nn{color:var(--amber)}
-  .need.red:not(.zero) .nn{color:var(--red)}
-  .need.blue:not(.zero) .nn{color:var(--blue)}
-  .need .nl{font-size:11px;color:var(--ink-2);font-weight:600;margin-top:2px;line-height:1.25}
-  .needs-ok{margin-bottom:16px;display:flex;align-items:center;gap:10px;padding:12px 15px;
-            border-radius:12px;border:1px solid var(--green);background:var(--green-soft);
-            font-size:13px;font-weight:600;color:var(--green)}
   /* V44: one-line NGO health narrative below the hero */
   .ngo-health{margin:-2px 0 14px;padding:11px 15px;border-radius:11px;background:var(--paper);
               border:1px solid var(--rule);font-size:13px;line-height:1.65;color:var(--ink-2);
