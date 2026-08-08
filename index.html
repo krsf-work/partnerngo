@@ -2565,55 +2565,6 @@ function closeScorePop(){
   _scorePopAnchor = null;
 }
 
-/* V44: "Needs you" strip — surfaces the four things that actually need the
-   user to act, so the dashboard answers "what do I do next?" not just "here's
-   everything". Each counter routes to the page where the work lives. */
-function needsYouStrip(ngos){
-  const ids = new Set(ngos.map(n=>n.id));
-  const flagged = Object.values(DB.flagged||{}).filter(f=>f && !f.dismissed).length;
-  const pendRev = DB.debits.filter(d=>ids.has(d.ngoId) && (d.pendingReview || d.proposedAmount!=null)).length;
-  const overdue = (DB.tasks||[]).filter(t=>{
-    if(t.status!=="Open" || !t.due || t.due>=TODAY_ISO) return false;
-    if(ME.role==="APL")       return t.aplId===ME.id;
-    if(ME.role==="Programme") return ids.has(t.ngoId);
-    return true;
-  }).length;
-  const finance = DB.debits.filter(d=>ids.has(d.ngoId)
-    && (d.status||"")==="Under review with Finance Team").length;
-  const docsExpiring = docsExpiringCount(ids);
-
-  const cards = [
-    {n:flagged, ic:"🚩", cls:"amber", go:"go('debits')",
-     lab:flagged===1?"flagged email to review":"flagged emails to review"},
-    {n:pendRev, ic:"📄", cls:"amber", go:"go('debits')",
-     lab:pendRev===1?"captured note to approve":"captured notes to approve"},
-    {n:overdue, ic:"⏰", cls:"red", go:"go('tasks')",
-     lab:overdue===1?"overdue task":"overdue tasks"},
-    {n:finance, ic:"₹", cls:"blue", go:"go('debits')",
-     lab:finance===1?"debit note with Finance":"debit notes with Finance"},
-    {n:docsExpiring, ic:"📋", cls:"amber", go:"go('docs')",
-     lab:docsExpiring===1?"document expiring or expired":"documents expiring or expired"}
-  ];
-  if(ME.role==="PM"){
-    const apls=(DB.users||[]).filter(u=>u.role==="APL"||u.role==="Programme");
-    const notLogged=apls.filter(a=>!dailyFilled(dailyRec(a.id,TODAY_ISO))).length;
-    cards.push({n:notLogged, ic:"🗓", cls:"amber", go:"go('daily')",
-      lab:notLogged===1?"team member hasn't logged today":"team members haven't logged today"});
-  } else if(ME.role==="APL"||ME.role==="Programme"){
-    const loggedToday = dailyFilled(dailyRec(ME.id,TODAY_ISO)) > 0;
-    cards.push({n:loggedToday?0:1, ic:"🗓", cls:"amber", go:"go('daily')",
-      lab:"log today's hours"});
-  }
-  if(cards.every(c=>c.n===0)){
-    return `<div class="needs-ok">✓ You're all caught up — nothing needs your attention right now.</div>`;
-  }
-  return `<div class="needs">${cards.map(c=>`
-    <div class="need ${c.cls} ${c.n===0?'zero':''}" ${c.n?`onclick="${c.go}"`:''}>
-      <div class="nico">${c.ic}</div>
-      <div><div class="nn">${c.n}</div><div class="nl">${c.lab}</div></div>
-    </div>`).join("")}</div>`;
-}
-
 /* Dashboard quick-log — the fast path for logging *today* without
    navigating to the Daily Sheet page at all. APL/Programme roles only.
    Same two-field-per-hour grid as the full Daily Sheet page, in a
@@ -2705,7 +2656,6 @@ function pageDash(){
     <h1 class="serif">Dashboard</h1>
   </div>
 
-  ${needsYouStrip(ngos)}
   ${dailyHomeWidget()}
 
   <div class="kpi-grid">
@@ -5414,7 +5364,7 @@ function ngoDebitsTab(ngoId){
             <td><span class="badge ${s}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
             <td>${d.url
               ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the debit-note file (shared Drive)">📄 Open</a>`
-              :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
+              :(d.emailId&&ME.role==="PM"?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
             <td>${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
         }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes uploaded yet.</p></div></td></tr>`}
@@ -5468,8 +5418,8 @@ function ngoDocsTab(ngoId){
 const DOC_TYPES = ["MoU","Annual Proposal","Approved Budget","12A Certificate",
                    "80G Certificate","FCRA Certificate","Audited Financials","Other"];
 
-/* shared with needsYouStrip() and navItems() so the "expiring soon" window
-   (120 days) is defined in exactly one place */
+/* shared with docsNavCount() so the "expiring soon" window (120 days)
+   is defined in exactly one place */
 function docExpiryDays(d){ return Math.round((new Date(d.expires)-new Date(TODAY_ISO))/86400000); }
 function isDocExpiringSoon(d){ return !!d.expires && docExpiryDays(d)<120; }
 function docsExpiringCount(ngoIds){
@@ -6903,7 +6853,7 @@ function pageDebits(){
               ${esc(src.slice(0,90))}
               ${d.url
                 ?`<div style="margin-top:4px"><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the debit-note file (shared Drive)">📄 Open debit note →</a></div>`
-                :(d.emailId?`<div style="margin-top:4px"><a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the source email (Gmail — only the owner can view)">📧 Open email →</a></div>`:'')}
+                :(d.emailId&&ME.role==="PM"?`<div style="margin-top:4px"><a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the source email (Gmail — only the owner can view)">📧 Open email →</a></div>`:'')}
             </td>
             <td style="white-space:nowrap">${can?`
               <button class="btn accent sm" onclick="okayPendingDebit('${d.id}')">✓ Okay</button>
@@ -6987,7 +6937,7 @@ function pageDebits(){
             <td><span class="badge ${sc}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
             <td>${d.url
               ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the debit-note file (shared Drive)">📄 Open</a>`
-              :(d.emailId?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
+              :(d.emailId&&ME.role==="PM"?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
             <td>${canEditNgo(d.ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${d.ngoId}','${d.id}')">Edit</button>`:''}</td>
           </tr>`;
         }).join("") : `<tr><td colspan="9"><div class="empty"><div class="mk">▦</div><p>No debit notes for ${monthLong(CUR_MONTH)} match this filter.</p></div></td></tr>`}
@@ -7027,7 +6977,7 @@ function pageDebits(){
             <td>${f.url
               ?`<a href="${esc(f.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the flagged attachment (shared Drive)">📄 ${esc((f.fileName||"open").slice(0,40))}</a>`
               :esc(f.fileName||"—")}
-              ${f.emailId?`<div style="margin-top:3px"><a href="https://mail.google.com/mail/u/0/#all/${esc(f.emailId)}" target="_blank" rel="noopener" style="color:var(--ink-3);font-size:11px">📧 source email →</a></div>`:''}</td>
+              ${f.emailId&&ME.role==="PM"?`<div style="margin-top:3px"><a href="https://mail.google.com/mail/u/0/#all/${esc(f.emailId)}" target="_blank" rel="noopener" style="color:var(--ink-3);font-size:11px">📧 source email →</a></div>`:''}</td>
             <td style="font-size:11.5px;color:var(--ink-3);max-width:300px">${esc(f.reason||"")}</td>
             <td style="white-space:nowrap">
               <button class="btn primary sm" onclick="acceptFlagged('${f.id}')" style="margin-right:4px">Accept</button>
@@ -7108,7 +7058,7 @@ function acceptFlaggedGo(flagId){
         const banner = document.createElement('div');
         banner.className = 'accept-nourl-banner';
         banner.style.cssText = "background:#fff5e0;border:1px solid var(--amber);border-radius:8px;padding:11px 13px;margin:0 0 9px;font-size:12px;color:var(--ink-2);line-height:1.6";
-        banner.innerHTML = `⚠ <b>No Drive link yet.</b> The original file was too large for auto-capture.${f.emailId?` <a href="https://mail.google.com/mail/u/0/#all/${esc(f.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600">Open the Gmail thread →</a>`:''} Download the attachment, upload it to your Drive (set "Anyone with the link" → View), then paste the Drive link below.`;
+        banner.innerHTML = `⚠ <b>No Drive link yet.</b> The original file was too large for auto-capture.${f.emailId&&ME.role==="PM"?` <a href="https://mail.google.com/mail/u/0/#all/${esc(f.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:underline;font-weight:600">Open the Gmail thread →</a>`:''} Download the attachment, upload it to your Drive (set "Anyone with the link" → View), then paste the Drive link below.`;
         wrap.insertBefore(banner, wrap.firstChild);
         u.focus();
       }
