@@ -2009,14 +2009,14 @@ function emptyBudget(){
 /* =================================================================
    COMPUTATION HELPERS
    ================================================================= */
-// visible NGOs — everyone sees the whole portfolio (full network access)
+// visible NGOs — PM and Viewer (Auditor) see the whole portfolio; APL and
+// Programme logins are scoped strictly to their assigned NGOs, and see
+// NOTHING if unassigned (fail safe, not fail open — an unassigned login
+// must never default to full network access).
 function visibleNgos(){
-  if(ME && ME.role==="APL"){
+  if(ME && (ME.role==="APL" || ME.role==="Programme")){
     const assigned = Array.isArray(ME.ngoIds) ? ME.ngoIds : [];
     return DB.ngos.filter(n=>assigned.includes(n.id));
-  }
-  if(ME && ME.role==="Programme" && Array.isArray(ME.ngoIds) && ME.ngoIds.length){
-    return DB.ngos.filter(n=>ME.ngoIds.includes(n.id));
   }
   return DB.ngos.slice();
 }
@@ -2039,12 +2039,12 @@ function dailyNavCount(){
 function canEdit(){ return ME && (ME.role==="PM"||ME.role==="APL"||ME.role==="Programme"); }
 // can the current user edit THIS specific NGO?
 //  - PM edits everything
-//  - APL edits only the NGOs assigned to them in the Admin panel
+//  - APL and Programme edit only the NGOs assigned to them in the Admin
+//    panel — an unassigned login can edit nothing (fail safe)
 //  - Viewer edits nothing
 function canEditNgo(ngoId){
   if(!ME || ME.role==="Viewer") return false;
   if(ME.role==="PM") return true;
-  if(ME.role==="Programme") return !Array.isArray(ME.ngoIds) || !ME.ngoIds.length || ME.ngoIds.includes(ngoId);
   return Array.isArray(ME.ngoIds) && ME.ngoIds.includes(ngoId);
 }
 // only PM can add/remove partner NGOs or manage logins
