@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V62</title>
+<title>Sahkar · KRSF Partnership Program · V63</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -235,6 +235,20 @@ window.FIREBASE_CONFIG = {
   .kpi .sub{font-size:11.5px;color:var(--ink-2);margin-top:4px;font-weight:500}
   .kpi .spark{display:none}
   .kpi.accent,.kpi.green,.kpi.amber,.kpi.blue{border-left:1px solid var(--rule)}
+
+  /* V63: Dashboard Overview summary strip — lighter-weight than .kpi-grid,
+     used only on the Dashboard's Overview tab. Deliberately separate from
+     .kpi/.kpi-grid, which dailyPmPage() also uses — must not affect that page. */
+  .ov-summary{display:flex;flex-wrap:wrap;background:var(--card);border:1px solid var(--rule);
+              border-radius:13px;overflow:hidden;margin-bottom:14px}
+  .ov-stat{flex:1;min-width:150px;padding:12px 14px;border-right:1px solid var(--rule);
+           border-bottom:1px solid var(--rule)}
+  .ov-stat:last-child{border-right:none}
+  .ov-stat .otop{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+  .ov-stat .oico{font-size:14px}
+  .ov-stat .olab{font-size:10.5px;color:var(--ink-3);font-weight:600}
+  .ov-stat .oval{font-family:var(--mono);font-weight:800;font-size:18px;line-height:1.1}
+  .ov-stat .osub{font-size:10.5px;color:var(--ink-2);margin-top:2px}
 
   /* ===== BADGES ===== */
   .badge{
@@ -1066,7 +1080,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V62</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V63</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1091,7 +1105,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V62</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V63</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2044,6 +2058,25 @@ function visibleBets(){
   const ids = new Set(visibleNgos().map(n=>n.id));
   return DB.bigBets.filter(b=>ids.has(b.ngoId));
 }
+/* Beneficiaries reached — sums only milestones literally denominated in
+   "beneficiaries" (not households/women/students/farmers/etc — a known,
+   accepted undercount, not a bug). Reuses the same cumulative-achieved
+   logic the app already trusts for milestone progress. */
+function totalBeneficiaries(bets){
+  return bets
+    .filter(b=>b.unit==="beneficiaries")
+    .reduce((sum,b)=>{
+      const lm = lastReportedMonth(b);
+      return sum + (lm ? betCumulative(b, lm) : 0);
+    }, 0);
+}
+/* Total impact amount — a manual per-NGO figure (Admin > Edit partner),
+   NOT derived from milestones: only one existing milestone is a true
+   cumulative ₹ total, the other ₹-unit milestones are average-income
+   *levels* (a rate, not a sum) and can't be added together meaningfully. */
+function totalImpactAmount(ngos){
+  return ngos.reduce((sum,n)=>sum+(n.impactAmount||0), 0);
+}
 
 /* Is this an "income level" bet, where the achieved value is a running
    level (not additive)?  Detection is now EXPLICIT: a bet may carry
@@ -2597,6 +2630,7 @@ function dailyHomeSaveToday(){
   toast(n?("Saved today · "+n+" hour"+(n>1?'s':'')):("Cleared today's log"));
 }
 
+let DASH_TAB = "overview";   // overview | ngos | activity
 function pageDash(){
   const ngos = visibleNgos();
   const bets = visibleBets();
@@ -2630,67 +2664,55 @@ function pageDash(){
   const scAmber = scores.filter(s=>s.status==="amber").length;
   const scGreen = scores.filter(s=>s.status==="green").length;
 
-  return `
-  <div class="phead slim">
-    <div class="eyebrow">${DB.meta.fyLabel} · ${monthLong(CUR_MONTH)}</div>
-    <h1 class="serif">Dashboard</h1>
-  </div>
+  /* ---- box 5/6 (V63): beneficiaries reached + total impact amount ---- */
+  const beneficiaries = totalBeneficiaries(bets);
+  const impactAmount = totalImpactAmount(ngos);
 
+  const tabs = [
+    {id:"overview", label:"Overview"},
+    {id:"ngos",     label:"NGOs"},
+    {id:"activity", label:"Activity"}
+  ];
+  const tabBar = `<div class="ngo-tabs">
+    ${tabs.map(t=>`<div class="tb ${DASH_TAB===t.id?'active':''}" onclick="DASH_TAB='${t.id}';render()">${t.label}</div>`).join("")}
+  </div>`;
+
+  const overviewBody = `
   ${dailyHomeWidget()}
-
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="ktop">
-        <div class="ktile blue">🏛️</div>
-        <div class="lab">NGO Partnerships</div>
-      </div>
-      <div class="val">${ngos.length}</div>
-      <div class="sub"><b style="color:var(--green)">${active} Active</b> &nbsp;·&nbsp; ${passive} Passive</div>
+  <div class="ov-summary">
+    <div class="ov-stat">
+      <div class="otop"><span class="oico">🏛️</span><span class="olab">NGO Partnerships</span></div>
+      <div class="oval">${ngos.length}</div>
+      <div class="osub">${active} Active · ${passive} Passive</div>
     </div>
-
-    <div class="kpi">
-      <div class="ktop">
-        <div class="ktile amber">💰</div>
-        <div class="lab">Approved Budget</div>
-      </div>
-      <div class="val">${fmtRs(totalBudget)}</div>
-      <div class="sub">${fmtRs(totalSpent)} utilised &nbsp;·&nbsp; <b>${utilPct}%</b></div>
-      <div class="pbar" style="margin-top:7px">
-        <i class="${utilPct>=100?'red':utilPct>=85?'amber':'green'}" style="width:${Math.min(utilPct,100)}%"></i>
-      </div>
+    <div class="ov-stat">
+      <div class="otop"><span class="oico">💰</span><span class="olab">Approved Budget</span></div>
+      <div class="oval">${fmtRs(totalBudget)}</div>
+      <div class="osub">${fmtRs(totalSpent)} utilised · ${utilPct}%</div>
     </div>
-
-    <div class="kpi split">
-      <div class="ktop">
-        <div class="ktile accent">🎯</div>
-        <div class="lab">Milestones — Delivery</div>
-      </div>
-      ${betTot?`
-      <div class="sbar" title="${betGreen} on track · ${betAmber} mid · ${betRed} behind">
-        <i class="green" style="width:${seg(betGreen)}%"></i>
-        <i class="amber" style="width:${seg(betAmber)}%"></i>
-        <i class="red"   style="width:${seg(betRed)}%"></i>
-      </div>
-      <div class="sbar-leg">
-        <span><i class="green"></i><b>${betGreen}</b> on track</span>
-        <span><i class="amber"></i><b>${betAmber}</b> 40–70%</span>
-        <span><i class="red"></i><b>${betRed}</b> behind</span>
-      </div>`:`<div class="sub" style="margin-top:6px">No milestones set yet.</div>`}
+    <div class="ov-stat">
+      <div class="otop"><span class="oico">🎯</span><span class="olab">Milestones — Delivery</span></div>
+      <div class="oval">${betTot?betGreen+"/"+betTot:"—"}</div>
+      <div class="osub">${betTot?"on track":"no milestones set yet"}</div>
     </div>
-
-    <div class="kpi split">
-      <div class="ktop">
-        <div class="ktile violet">📊</div>
-        <div class="lab">Partner Scorecard</div>
-      </div>
-      <div class="band-row">
-        <div class="band green"><div class="bn">${scGreen}</div><div class="bl">Green</div></div>
-        <div class="band amber"><div class="bn">${scAmber}</div><div class="bl">Yellow</div></div>
-        <div class="band red"><div class="bn">${scRed}</div><div class="bl">Red</div></div>
-      </div>
+    <div class="ov-stat">
+      <div class="otop"><span class="oico">📊</span><span class="olab">Partner Scorecard</span></div>
+      <div class="oval">${scGreen}/${ngos.length||1}</div>
+      <div class="osub">green · ${scAmber} yellow · ${scRed} red</div>
     </div>
-  </div>
+    <div class="ov-stat">
+      <div class="otop"><span class="oico">🙌</span><span class="olab">Beneficiaries reached</span></div>
+      <div class="oval">${beneficiaries.toLocaleString('en-IN')}</div>
+      <div class="osub">cumulative, this FY</div>
+    </div>
+    <div class="ov-stat">
+      <div class="otop"><span class="oico">✨</span><span class="olab">Total impact amount</span></div>
+      <div class="oval">${fmtRs(impactAmount)}</div>
+      <div class="osub">manually recorded per NGO</div>
+    </div>
+  </div>`;
 
+  const ngosBody = `
   <div class="panel" style="margin-bottom:14px">
     <div class="panel-h">
       <h3>Partner NGOs</h3>
@@ -2717,10 +2739,10 @@ function pageDash(){
       </table>
     </div>
   </div>
+  ${scorecardPanel(ngos)}`;
 
-  ${scorecardPanel(ngos)}
-
-  <div class="panel" style="margin-top:14px">
+  const activityBody = `
+  <div class="panel">
     <div class="panel-h">
       <h3>Recent activity across partners</h3>
       <span class="note">latest debit notes, milestone updates &amp; documents</span>
@@ -2739,7 +2761,18 @@ function pageDash(){
           : `<div class="empty"><div class="mk">◷</div><p>No activity recorded yet.</p></div>`;
       })()}
     </div>
+  </div>`;
+
+  const body = DASH_TAB==="ngos" ? ngosBody : DASH_TAB==="activity" ? activityBody : overviewBody;
+
+  return `
+  <div class="phead slim">
+    <div class="eyebrow">${DB.meta.fyLabel} · ${monthLong(CUR_MONTH)}</div>
+    <h1 class="serif">Dashboard</h1>
   </div>
+
+  ${tabBar}
+  ${body}
   `;
 }
 
@@ -3534,6 +3567,13 @@ function openNgoForm(editId){
         </select>
       </div>
     </div>
+    <div class="frow">
+      <div class="field">
+        <label>Total impact amount (₹) <span style="text-transform:none;font-weight:400">— optional</span></label>
+        <input type="text" inputmode="numeric" id="nfImpact" value="${n&&n.impactAmount?(+n.impactAmount).toLocaleString('en-IN'):''}" oninput="fmtAmtInput(this)" placeholder="e.g. 5,00,000">
+        <div class="hint">A one-off figure representing this NGO's overall impact so far, entered manually — not derived from milestones.</div>
+      </div>
+    </div>
     ${n?`<div style="font-size:11px;color:var(--ink-3)">${editStampLine(n)||''}</div>`:''}`;
   const foot = `
     ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteNgo('${editId}')">Delete partner</button>`:''}
@@ -3551,7 +3591,8 @@ async function saveNgo(editId){
     state: el("nfState").value.trim()||"—",
     since: el("nfSince").value,
     lead: el("nfLead").value.trim()||"—",
-    partnership: el("nfStatus").value
+    partnership: el("nfStatus").value,
+    impactAmount: parseFloat(String(el("nfImpact").value||"").replace(/,/g,""))||0
   };
   if(editId){
     const n = ngoById(editId);
