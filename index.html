@@ -2630,7 +2630,6 @@ function dailyHomeSaveToday(){
   toast(n?("Saved today · "+n+" hour"+(n>1?'s':'')):("Cleared today's log"));
 }
 
-let DASH_TAB = "overview";   // overview | ngos | activity
 function pageDash(){
   const ngos = visibleNgos();
   const bets = visibleBets();
@@ -2664,55 +2663,67 @@ function pageDash(){
   const scAmber = scores.filter(s=>s.status==="amber").length;
   const scGreen = scores.filter(s=>s.status==="green").length;
 
-  /* ---- box 5/6 (V63): beneficiaries reached + total impact amount ---- */
-  const beneficiaries = totalBeneficiaries(bets);
-  const impactAmount = totalImpactAmount(ngos);
+  return `
+  <div class="phead slim">
+    <div class="eyebrow">${DB.meta.fyLabel} · ${monthLong(CUR_MONTH)}</div>
+    <h1 class="serif">Dashboard</h1>
+  </div>
 
-  const tabs = [
-    {id:"overview", label:"Overview"},
-    {id:"ngos",     label:"NGOs"},
-    {id:"activity", label:"Activity"}
-  ];
-  const tabBar = `<div class="ngo-tabs">
-    ${tabs.map(t=>`<div class="tb ${DASH_TAB===t.id?'active':''}" onclick="DASH_TAB='${t.id}';render()">${t.label}</div>`).join("")}
-  </div>`;
-
-  const overviewBody = `
   ${dailyHomeWidget()}
-  <div class="ov-summary">
-    <div class="ov-stat">
-      <div class="otop"><span class="oico">🏛️</span><span class="olab">NGO Partnerships</span></div>
-      <div class="oval">${ngos.length}</div>
-      <div class="osub">${active} Active · ${passive} Passive</div>
-    </div>
-    <div class="ov-stat">
-      <div class="otop"><span class="oico">💰</span><span class="olab">Approved Budget</span></div>
-      <div class="oval">${fmtRs(totalBudget)}</div>
-      <div class="osub">${fmtRs(totalSpent)} utilised · ${utilPct}%</div>
-    </div>
-    <div class="ov-stat">
-      <div class="otop"><span class="oico">🎯</span><span class="olab">Milestones — Delivery</span></div>
-      <div class="oval">${betTot?betGreen+"/"+betTot:"—"}</div>
-      <div class="osub">${betTot?"on track":"no milestones set yet"}</div>
-    </div>
-    <div class="ov-stat">
-      <div class="otop"><span class="oico">📊</span><span class="olab">Partner Scorecard</span></div>
-      <div class="oval">${scGreen}/${ngos.length||1}</div>
-      <div class="osub">green · ${scAmber} yellow · ${scRed} red</div>
-    </div>
-    <div class="ov-stat">
-      <div class="otop"><span class="oico">🙌</span><span class="olab">Beneficiaries reached</span></div>
-      <div class="oval">${beneficiaries.toLocaleString('en-IN')}</div>
-      <div class="osub">cumulative, this FY</div>
-    </div>
-    <div class="ov-stat">
-      <div class="otop"><span class="oico">✨</span><span class="olab">Total impact amount</span></div>
-      <div class="oval">${fmtRs(impactAmount)}</div>
-      <div class="osub">manually recorded per NGO</div>
-    </div>
-  </div>`;
 
-  const ngosBody = `
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="ktop">
+        <div class="ktile blue">🏛️</div>
+        <div class="lab">NGO Partnerships</div>
+      </div>
+      <div class="val">${ngos.length}</div>
+      <div class="sub"><b style="color:var(--green)">${active} Active</b> &nbsp;·&nbsp; ${passive} Passive</div>
+    </div>
+
+    <div class="kpi">
+      <div class="ktop">
+        <div class="ktile amber">💰</div>
+        <div class="lab">Approved Budget</div>
+      </div>
+      <div class="val">${fmtRs(totalBudget)}</div>
+      <div class="sub">${fmtRs(totalSpent)} utilised &nbsp;·&nbsp; <b>${utilPct}%</b></div>
+      <div class="pbar" style="margin-top:7px">
+        <i class="${utilPct>=100?'red':utilPct>=85?'amber':'green'}" style="width:${Math.min(utilPct,100)}%"></i>
+      </div>
+    </div>
+
+    <div class="kpi split">
+      <div class="ktop">
+        <div class="ktile accent">🎯</div>
+        <div class="lab">Milestones — Delivery</div>
+      </div>
+      ${betTot?`
+      <div class="sbar" title="${betGreen} on track · ${betAmber} mid · ${betRed} behind">
+        <i class="green" style="width:${seg(betGreen)}%"></i>
+        <i class="amber" style="width:${seg(betAmber)}%"></i>
+        <i class="red"   style="width:${seg(betRed)}%"></i>
+      </div>
+      <div class="sbar-leg">
+        <span><i class="green"></i><b>${betGreen}</b> on track</span>
+        <span><i class="amber"></i><b>${betAmber}</b> 40–70%</span>
+        <span><i class="red"></i><b>${betRed}</b> behind</span>
+      </div>`:`<div class="sub" style="margin-top:6px">No milestones set yet.</div>`}
+    </div>
+
+    <div class="kpi split">
+      <div class="ktop">
+        <div class="ktile violet">📊</div>
+        <div class="lab">Partner Scorecard</div>
+      </div>
+      <div class="band-row">
+        <div class="band green"><div class="bn">${scGreen}</div><div class="bl">Green</div></div>
+        <div class="band amber"><div class="bn">${scAmber}</div><div class="bl">Yellow</div></div>
+        <div class="band red"><div class="bn">${scRed}</div><div class="bl">Red</div></div>
+      </div>
+    </div>
+  </div>
+
   <div class="panel" style="margin-bottom:14px">
     <div class="panel-h">
       <h3>Partner NGOs</h3>
@@ -2739,10 +2750,10 @@ function pageDash(){
       </table>
     </div>
   </div>
-  ${scorecardPanel(ngos)}`;
 
-  const activityBody = `
-  <div class="panel">
+  ${scorecardPanel(ngos)}
+
+  <div class="panel" style="margin-top:14px">
     <div class="panel-h">
       <h3>Recent activity across partners</h3>
       <span class="note">latest debit notes, milestone updates &amp; documents</span>
@@ -2761,18 +2772,7 @@ function pageDash(){
           : `<div class="empty"><div class="mk">◷</div><p>No activity recorded yet.</p></div>`;
       })()}
     </div>
-  </div>`;
-
-  const body = DASH_TAB==="ngos" ? ngosBody : DASH_TAB==="activity" ? activityBody : overviewBody;
-
-  return `
-  <div class="phead slim">
-    <div class="eyebrow">${DB.meta.fyLabel} · ${monthLong(CUR_MONTH)}</div>
-    <h1 class="serif">Dashboard</h1>
   </div>
-
-  ${tabBar}
-  ${body}
   `;
 }
 
