@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V63</title>
+<title>Sahkar · KRSF Partnership Program · V64</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -634,6 +634,31 @@ window.FIREBASE_CONFIG = {
   .ngo-avatar.healthcare{background:var(--red-soft);color:var(--red)}
   .ngo-avatar.climate{background:var(--violet-soft);color:var(--violet)}
   .risk-dot{position:absolute;top:-3px;right:-3px;width:12px;height:12px;border-radius:50%;border:2px solid var(--card)}
+
+  /* V64: APL folders — Dashboard, PM only. Hover fans out up to 5 NGO
+     avatar chips behind the folder card; click opens the full set via
+     the existing modal system (see openAplFolder). */
+  .apl-folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:14px}
+  .apl-folder{position:relative;cursor:pointer;padding-top:26px}
+  .apl-folder-fan{position:absolute;top:0;left:50%;height:34px;pointer-events:none}
+  .apl-fan-chip{position:absolute;top:0;left:0;margin-left:-17px;opacity:0;transition:transform .18s ease,opacity .18s ease}
+  .apl-fan-chip .ngo-avatar{width:34px;height:34px;font-size:11px;border:2px solid var(--card);box-shadow:var(--shadow)}
+  .apl-folder:hover .apl-fan-chip{opacity:1}
+  .apl-folder:hover .apl-fan-chip:nth-child(1){transform:translate(-52px,-6px) rotate(-12deg)}
+  .apl-folder:hover .apl-fan-chip:nth-child(2){transform:translate(-26px,-10px) rotate(-6deg)}
+  .apl-folder:hover .apl-fan-chip:nth-child(3){transform:translate(0,-12px) rotate(0deg)}
+  .apl-folder:hover .apl-fan-chip:nth-child(4){transform:translate(26px,-10px) rotate(6deg)}
+  .apl-folder:hover .apl-fan-chip:nth-child(5){transform:translate(52px,-6px) rotate(12deg)}
+  .apl-folder-body{background:var(--card);border:1px solid var(--rule);border-radius:13px;padding:14px;
+                    box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
+  .apl-folder:hover .apl-folder-body{border-color:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.06)}
+  .apl-folder-ico{font-size:20px;margin-bottom:6px}
+  .apl-folder-name{font-weight:700;font-size:13.5px;color:var(--ink)}
+  .apl-folder-count{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+  .apl-modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:14px}
+  .apl-modal-card{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center}
+  .apl-modal-card .ngo-avatar{margin:0 auto}
+  .apl-modal-card .nm{font-size:12px;font-weight:600;color:var(--ink)}
   .risk-dot.green{background:var(--green)} .risk-dot.amber{background:var(--amber)}
   .risk-dot.red{background:var(--red)} .risk-dot.gray{background:var(--ink-3)}
   .ngo-card-name{font-weight:600;font-size:14px;line-height:1.3;color:var(--ink)}
@@ -1080,7 +1105,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V63</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V64</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1105,7 +1130,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V63</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V64</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2053,6 +2078,44 @@ function aplNamesFor(ngoId){
     .map(u=>u.name);
   return names.length ? names.join(", ") : "—";
 }
+/* V64: APL folders panel — Dashboard, PM only. One folder per APL user,
+   grouping their assigned NGOs (DB.ngos filtered by apl.ngoIds — the
+   same assignment field visibleNgos()/canEditNgo() already use). */
+function aplFoldersPanel(){
+  if(ME.role!=="PM") return '';
+  const apls = (DB.users||[]).filter(u=>u.role==="APL");
+  if(!apls.length) return '';
+  return `<div class="apl-folders">
+    ${apls.map(apl=>{
+      const ngos = DB.ngos.filter(n=>(apl.ngoIds||[]).includes(n.id));
+      const preview = ngos.slice(0,5);
+      return `<div class="apl-folder" onclick="openAplFolder('${apl.id}')">
+        <div class="apl-folder-fan">
+          ${preview.map(n=>`<div class="apl-fan-chip"><div class="ngo-avatar ${(n.vertical||'').toLowerCase()}">${esc(n.short.slice(0,2).toUpperCase())}</div></div>`).join("")}
+        </div>
+        <div class="apl-folder-body">
+          <div class="apl-folder-ico">📁</div>
+          <div class="apl-folder-name">${esc(apl.name)}</div>
+          <div class="apl-folder-count">${ngos.length} NGO${ngos.length===1?'':'s'}</div>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+function openAplFolder(aplId){
+  const apl = (DB.users||[]).find(u=>u.id===aplId);
+  if(!apl) return;
+  const ngos = DB.ngos.filter(n=>(apl.ngoIds||[]).includes(n.id));
+  const body = ngos.length
+    ? `<div class="apl-modal-grid">
+        ${ngos.map(n=>`<div class="apl-modal-card" onclick="closeModal();go('ngo','${n.id}')">
+          <div class="ngo-avatar ${(n.vertical||'').toLowerCase()}">${esc(n.short.slice(0,2).toUpperCase())}</div>
+          <div class="nm">${esc(n.short)}</div>
+        </div>`).join("")}
+      </div>`
+    : `<div class="empty"><div class="mk">📁</div><p>No NGOs assigned to ${esc(apl.name)} yet.</p></div>`;
+  showModal(modalShell("APL Folder", apl.name, body, ""));
+}
 function betsForNgo(id){ return DB.bigBets.filter(b=>b.ngoId===id); }
 function visibleBets(){
   const ids = new Set(visibleNgos().map(n=>n.id));
@@ -2723,6 +2786,8 @@ function pageDash(){
       </div>
     </div>
   </div>
+
+  ${aplFoldersPanel()}
 
   <div class="panel" style="margin-bottom:14px">
     <div class="panel-h">
