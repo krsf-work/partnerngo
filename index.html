@@ -292,7 +292,7 @@ window.FIREBASE_CONFIG = {
      the scorecard dot-grid so the two tiles aren't confused */
   .sbar{display:flex;height:15px;border-radius:20px;overflow:hidden;background:var(--paper-2);margin-top:3px}
   .sbar i{display:block;height:100%;transition:width .5s cubic-bezier(.3,.8,.3,1)}
-  .sbar i.green{background:var(--green)} .sbar i.amber{background:var(--amber)} .sbar i.red{background:var(--red)}
+  .sbar i.green{background:var(--green-soft)} .sbar i.amber{background:var(--amber-soft)} .sbar i.red{background:var(--red-soft)}
   .sbar-leg{display:flex;gap:13px;margin-top:10px;flex-wrap:wrap}
   .sbar-leg span{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ink-2)}
   .sbar-leg b{font-family:var(--mono);font-weight:800}
@@ -653,10 +653,25 @@ window.FIREBASE_CONFIG = {
                     padding:18px 14px 14px;text-align:center;
                     box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
   .apl-folder:hover .apl-folder-body{border-color:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.06)}
-  .apl-folder-tab{position:absolute;top:-8px;left:16px;width:40px;height:10px;background:var(--accent);border-radius:6px 6px 0 0}
+  .apl-folder-tab{position:absolute;top:-8px;left:16px;width:40px;height:10px;border-radius:6px 6px 0 0}
   .apl-folder-glyph{width:100%;height:52px;border-radius:9px;margin-bottom:8px;font-size:22px;
-                     display:flex;align-items:center;justify-content:center;
-                     background:linear-gradient(160deg,var(--accent),var(--violet))}
+                     display:flex;align-items:center;justify-content:center}
+  /* V64: each folder cycles through the app's existing semantic colours
+     (same set used for NGO verticals) so folders read as distinct people,
+     not one repeated purple block. Solid fills, not gradients blended
+     into the accent purple — a gradient toward a shared colour made
+     every folder look "basically purple" again even with different
+     starting hues, especially in a small box. */
+  .apl-folder-tab.c-green{background:var(--green)}
+  .apl-folder-glyph.c-green{background:var(--green)}
+  .apl-folder-tab.c-amber{background:var(--amber)}
+  .apl-folder-glyph.c-amber{background:var(--amber)}
+  .apl-folder-tab.c-blue{background:var(--blue)}
+  .apl-folder-glyph.c-blue{background:var(--blue)}
+  .apl-folder-tab.c-red{background:var(--red)}
+  .apl-folder-glyph.c-red{background:var(--red)}
+  .apl-folder-tab.c-violet{background:var(--violet)}
+  .apl-folder-glyph.c-violet{background:var(--violet)}
   .apl-folder-name{font-weight:700;font-size:13.5px;color:var(--ink)}
   .apl-folder-count{font-size:11.5px;color:var(--ink-3);margin-top:2px}
   .apl-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:14px}
@@ -2089,21 +2104,23 @@ function aplNamesFor(ngoId){
    the concept this feature is for). Groups their assigned NGOs
    (DB.ngos filtered by apl.ngoIds — the same assignment field
    visibleNgos()/canEditNgo() already use). */
+const APL_FOLDER_COLORS = ["c-green","c-amber","c-blue","c-red","c-violet"];
 function aplFoldersPanel(){
   if(ME.role!=="PM") return '';
   const apls = (DB.users||[]).filter(u=>u.role==="Programme");
   if(!apls.length) return '';
   return `<div class="apl-folders">
-    ${apls.map(apl=>{
+    ${apls.map((apl,i)=>{
       const ngos = DB.ngos.filter(n=>(apl.ngoIds||[]).includes(n.id));
       const preview = ngos.slice(0,5);
+      const cls = APL_FOLDER_COLORS[i % APL_FOLDER_COLORS.length];
       return `<div class="apl-folder" onclick="openAplFolder('${apl.id}')">
         <div class="apl-folder-fan">
           ${preview.map(n=>`<div class="apl-fan-chip"><div class="ngo-avatar ${(n.vertical||'').toLowerCase()}">${esc(n.short.slice(0,2).toUpperCase())}</div></div>`).join("")}
         </div>
         <div class="apl-folder-body">
-          <div class="apl-folder-tab"></div>
-          <div class="apl-folder-glyph">📁</div>
+          <div class="apl-folder-tab ${cls}"></div>
+          <div class="apl-folder-glyph ${cls}">📁</div>
           <div class="apl-folder-name">${esc(apl.name)}</div>
           <div class="apl-folder-count">${ngos.length} NGO${ngos.length===1?'':'s'}</div>
         </div>
