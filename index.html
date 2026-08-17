@@ -2078,12 +2078,16 @@ function aplNamesFor(ngoId){
     .map(u=>u.name);
   return names.length ? names.join(", ") : "—";
 }
-/* V64: APL folders panel — Dashboard, PM only. One folder per APL user,
-   grouping their assigned NGOs (DB.ngos filtered by apl.ngoIds — the
-   same assignment field visibleNgos()/canEditNgo() already use). */
+/* V64: Programme-team folders panel — Dashboard, PM only. One folder
+   per "Programme" role user (the role that actually carries a
+   multi-NGO portfolio in this app's live data — the "APL"-coded role
+   is labelled "Partner NGO (raises debit notes)" in Admin and isn't
+   the concept this feature is for). Groups their assigned NGOs
+   (DB.ngos filtered by apl.ngoIds — the same assignment field
+   visibleNgos()/canEditNgo() already use). */
 function aplFoldersPanel(){
   if(ME.role!=="PM") return '';
-  const apls = (DB.users||[]).filter(u=>u.role==="APL");
+  const apls = (DB.users||[]).filter(u=>u.role==="Programme");
   if(!apls.length) return '';
   return `<div class="apl-folders">
     ${apls.map(apl=>{
@@ -2114,7 +2118,7 @@ function openAplFolder(aplId){
         </div>`).join("")}
       </div>`
     : `<div class="empty"><div class="mk">📁</div><p>No NGOs assigned to ${esc(apl.name)} yet.</p></div>`;
-  showModal(modalShell("APL Folder", apl.name, body, ""));
+  showModal(modalShell("Programme Team Folder", apl.name, body, ""));
 }
 function betsForNgo(id){ return DB.bigBets.filter(b=>b.ngoId===id); }
 function visibleBets(){
