@@ -650,27 +650,32 @@ window.FIREBASE_CONFIG = {
   .apl-folder:hover .apl-fan-chip:nth-child(4){transform:translate(26px,-10px) rotate(6deg)}
   .apl-folder:hover .apl-fan-chip:nth-child(5){transform:translate(52px,-6px) rotate(12deg)}
   .apl-folder-body{position:relative;background:var(--card);border:1px solid var(--rule);border-radius:13px;
-                    padding:18px 14px 14px;text-align:center;
+                    padding:14px;text-align:center;
                     box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
   .apl-folder:hover .apl-folder-body{border-color:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.06)}
-  .apl-folder-tab{position:absolute;top:-8px;left:16px;width:40px;height:10px;border-radius:6px 6px 0 0}
-  .apl-folder-glyph{width:100%;height:52px;border-radius:9px;margin-bottom:8px;font-size:22px;
-                     display:flex;align-items:center;justify-content:center}
-  /* V64: each folder cycles through the app's existing semantic colours
-     (same set used for NGO verticals) so folders read as distinct people,
-     not one repeated purple block. Solid fills, not gradients blended
-     into the accent purple — a gradient toward a shared colour made
-     every folder look "basically purple" again even with different
-     starting hues, especially in a small box. */
-  .apl-folder-tab.c-green{background:var(--green)}
+  /* V64: "docket" look — two lighter sheets peek out behind the front
+     panel, like papers inside a folder, instead of a flat card. */
+  .apl-folder-stack{position:relative;height:60px;margin-bottom:8px}
+  .apl-folder-sheet{position:absolute;inset:6px 0 0 10px;border-radius:6px;border:1px solid var(--rule)}
+  .apl-folder-sheet-2{inset:1px 0 0 3px}
+  .apl-folder-sheet-1{inset:4px 0 0 7px}
+  .apl-folder-glyph{position:relative;width:100%;height:100%;border-radius:8px;font-size:22px;color:#fff;
+                     display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+  /* each folder cycles through the app's existing semantic colours (same
+     set used for NGO verticals) so folders read as distinct people, not
+     one repeated purple block. Solid fills, not gradients blended into
+     the accent purple — a gradient toward a shared colour made every
+     folder look "basically purple" again even with different starting
+     hues, especially in a small box. */
+  .apl-folder-sheet.c-green{background:var(--green-soft)}
   .apl-folder-glyph.c-green{background:var(--green)}
-  .apl-folder-tab.c-amber{background:var(--amber)}
+  .apl-folder-sheet.c-amber{background:var(--amber-soft)}
   .apl-folder-glyph.c-amber{background:var(--amber)}
-  .apl-folder-tab.c-blue{background:var(--blue)}
+  .apl-folder-sheet.c-blue{background:var(--blue-soft,#e7eefc)}
   .apl-folder-glyph.c-blue{background:var(--blue)}
-  .apl-folder-tab.c-red{background:var(--red)}
+  .apl-folder-sheet.c-red{background:var(--red-soft)}
   .apl-folder-glyph.c-red{background:var(--red)}
-  .apl-folder-tab.c-violet{background:var(--violet)}
+  .apl-folder-sheet.c-violet{background:var(--violet-soft)}
   .apl-folder-glyph.c-violet{background:var(--violet)}
   .apl-folder-name{font-weight:700;font-size:13.5px;color:var(--ink)}
   .apl-folder-count{font-size:11.5px;color:var(--ink-3);margin-top:2px}
@@ -2119,8 +2124,11 @@ function aplFoldersPanel(){
           ${preview.map(n=>`<div class="apl-fan-chip"><div class="ngo-avatar ${(n.vertical||'').toLowerCase()}">${esc(n.short.slice(0,2).toUpperCase())}</div></div>`).join("")}
         </div>
         <div class="apl-folder-body">
-          <div class="apl-folder-tab ${cls}"></div>
-          <div class="apl-folder-glyph ${cls}">📁</div>
+          <div class="apl-folder-stack">
+            <div class="apl-folder-sheet apl-folder-sheet-2 ${cls}"></div>
+            <div class="apl-folder-sheet apl-folder-sheet-1 ${cls}"></div>
+            <div class="apl-folder-glyph ${cls}">📁</div>
+          </div>
           <div class="apl-folder-name">${esc(apl.name)}</div>
           <div class="apl-folder-count">${ngos.length} NGO${ngos.length===1?'':'s'}</div>
         </div>
