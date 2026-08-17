@@ -684,6 +684,18 @@ window.FIREBASE_CONFIG = {
   .apl-modal-card{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center}
   .apl-modal-card .ngo-avatar{margin:0 auto}
   .apl-modal-card .nm{font-size:12px;font-weight:600;color:var(--ink);line-height:1.3}
+  /* V64: "Documents due soon" — sits as the last item in the same
+     .apl-folders grid row, filling the space left over after the
+     folder cards instead of leaving it blank. */
+  .apl-doc-widget{background:var(--card);border:1px solid var(--rule);border-radius:13px;
+                   padding:12px 14px;box-shadow:var(--shadow);text-align:left}
+  .apl-doc-h{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:8px}
+  .apl-doc-list{display:flex;flex-direction:column;gap:6px}
+  .apl-doc-row{display:flex;justify-content:space-between;gap:6px;font-size:11px;cursor:pointer}
+  .apl-doc-row:hover .apl-doc-name{color:var(--accent)}
+  .apl-doc-name{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .apl-doc-days{font-weight:700;flex:none}
+  .apl-doc-empty{font-size:11px;color:var(--ink-3)}
   .risk-dot.green{background:var(--green)} .risk-dot.amber{background:var(--amber)}
   .risk-dot.red{background:var(--red)} .risk-dot.gray{background:var(--ink-3)}
   .ngo-card-name{font-weight:600;font-size:14px;line-height:1.3;color:var(--ink)}
@@ -2111,6 +2123,23 @@ function aplNamesFor(ngoId){
    (DB.ngos filtered by apl.ngoIds — the same assignment field
    visibleNgos()/canEditNgo() already use). */
 const APL_FOLDER_COLORS = ["c-green","c-amber","c-blue","c-red","c-violet"];
+function docsExpiringWidget(){
+  const docs = docsExpiringList(new Set(visibleNgos().map(n=>n.id)), 5);
+  return `<div class="apl-doc-widget">
+    <div class="apl-doc-h">📋 Documents due soon</div>
+    <div class="apl-doc-list">
+      ${docs.length ? docs.map(d=>{
+        const n = ngoById(d.ngoId);
+        const label = d.days<0 ? "Expired" : d.days+"d";
+        const col = d.days<0 ? "var(--red)" : d.days<30 ? "var(--amber)" : "var(--ink-3)";
+        return `<div class="apl-doc-row" onclick="go('ngo','${d.ngoId}')">
+          <span class="apl-doc-name">${esc(n?n.short:'?')} · ${esc(d.type)}</span>
+          <span class="apl-doc-days" style="color:${col}">${label}</span>
+        </div>`;
+      }).join("") : `<div class="apl-doc-empty">Nothing expiring soon</div>`}
+    </div>
+  </div>`;
+}
 function aplFoldersPanel(){
   if(ME.role!=="PM") return '';
   const apls = (DB.users||[]).filter(u=>u.role==="Programme");
@@ -2135,6 +2164,7 @@ function aplFoldersPanel(){
         </div>
       </div>`;
     }).join("")}
+    ${docsExpiringWidget()}
   </div>`;
 }
 function openAplFolder(aplId){
@@ -5545,6 +5575,15 @@ function docExpiryDays(d){ return Math.round((new Date(d.expires)-new Date(TODAY
 function isDocExpiringSoon(d){ return !!d.expires && docExpiryDays(d)<120; }
 function docsExpiringCount(ngoIds){
   return (DB.documents||[]).filter(d=>ngoIds.has(d.ngoId) && isDocExpiringSoon(d)).length;
+}
+/* V64: the actual list behind docsExpiringCount(), soonest/already-expired
+   first, for the Dashboard "Documents due soon" widget. */
+function docsExpiringList(ngoIds, limit){
+  return (DB.documents||[])
+    .filter(d=>ngoIds.has(d.ngoId) && isDocExpiringSoon(d))
+    .map(d=>({...d, days:docExpiryDays(d)}))
+    .sort((a,b)=>a.days-b.days)
+    .slice(0,limit);
 }
 function openDocForm(ngoId, editId){
   if(blockIfCantEditNgo(ngoId)) return;
