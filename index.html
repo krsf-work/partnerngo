@@ -638,7 +638,7 @@ window.FIREBASE_CONFIG = {
   /* V64: APL folders — Dashboard, PM only. Hover fans out up to 5 NGO
      avatar chips behind the folder card; click opens the full set via
      the existing modal system (see openAplFolder). */
-  .apl-folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:14px}
+  .apl-folders{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:14px}
   .apl-folder{position:relative;cursor:pointer;padding-top:26px}
   .apl-folder-fan{position:absolute;top:0;left:50%;height:34px;pointer-events:none}
   .apl-fan-chip{position:absolute;top:0;left:0;margin-left:-17px;opacity:0;transition:transform .18s ease,opacity .18s ease}
@@ -649,16 +649,20 @@ window.FIREBASE_CONFIG = {
   .apl-folder:hover .apl-fan-chip:nth-child(3){transform:translate(0,-12px) rotate(0deg)}
   .apl-folder:hover .apl-fan-chip:nth-child(4){transform:translate(26px,-10px) rotate(6deg)}
   .apl-folder:hover .apl-fan-chip:nth-child(5){transform:translate(52px,-6px) rotate(12deg)}
-  .apl-folder-body{background:var(--card);border:1px solid var(--rule);border-radius:13px;padding:14px;
+  .apl-folder-body{position:relative;background:var(--card);border:1px solid var(--rule);border-radius:13px;
+                    padding:18px 14px 14px;text-align:center;
                     box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
   .apl-folder:hover .apl-folder-body{border-color:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.06)}
-  .apl-folder-ico{font-size:20px;margin-bottom:6px}
+  .apl-folder-tab{position:absolute;top:-8px;left:16px;width:40px;height:10px;background:var(--accent);border-radius:6px 6px 0 0}
+  .apl-folder-glyph{width:100%;height:52px;border-radius:9px;margin-bottom:8px;font-size:22px;
+                     display:flex;align-items:center;justify-content:center;
+                     background:linear-gradient(160deg,var(--accent),var(--violet))}
   .apl-folder-name{font-weight:700;font-size:13.5px;color:var(--ink)}
   .apl-folder-count{font-size:11.5px;color:var(--ink-3);margin-top:2px}
-  .apl-modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:14px}
+  .apl-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:14px}
   .apl-modal-card{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center}
   .apl-modal-card .ngo-avatar{margin:0 auto}
-  .apl-modal-card .nm{font-size:12px;font-weight:600;color:var(--ink)}
+  .apl-modal-card .nm{font-size:12px;font-weight:600;color:var(--ink);line-height:1.3}
   .risk-dot.green{background:var(--green)} .risk-dot.amber{background:var(--amber)}
   .risk-dot.red{background:var(--red)} .risk-dot.gray{background:var(--ink-3)}
   .ngo-card-name{font-weight:600;font-size:14px;line-height:1.3;color:var(--ink)}
@@ -2098,7 +2102,8 @@ function aplFoldersPanel(){
           ${preview.map(n=>`<div class="apl-fan-chip"><div class="ngo-avatar ${(n.vertical||'').toLowerCase()}">${esc(n.short.slice(0,2).toUpperCase())}</div></div>`).join("")}
         </div>
         <div class="apl-folder-body">
-          <div class="apl-folder-ico">📁</div>
+          <div class="apl-folder-tab"></div>
+          <div class="apl-folder-glyph">📁</div>
           <div class="apl-folder-name">${esc(apl.name)}</div>
           <div class="apl-folder-count">${ngos.length} NGO${ngos.length===1?'':'s'}</div>
         </div>
@@ -2114,7 +2119,7 @@ function openAplFolder(aplId){
     ? `<div class="apl-modal-grid">
         ${ngos.map(n=>`<div class="apl-modal-card" onclick="closeModal();go('ngo','${n.id}')">
           <div class="ngo-avatar ${(n.vertical||'').toLowerCase()}">${esc(n.short.slice(0,2).toUpperCase())}</div>
-          <div class="nm">${esc(n.short)}</div>
+          <div class="nm">${esc(n.name)}</div>
         </div>`).join("")}
       </div>`
     : `<div class="empty"><div class="mk">📁</div><p>No NGOs assigned to ${esc(apl.name)} yet.</p></div>`;
