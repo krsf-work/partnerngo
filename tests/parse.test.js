@@ -4,7 +4,7 @@ const { loadFns } = require('./harness');
 const F = loadFns(
   ['TM_MONTHS','TM_COLS',
    'tmNormStatus','tmSerialToIso','tmIsoOf','tmParseDate','tmRepairDate',
-   'tmColMap','tmMonthIndex','tmReadHeading','tmFindBlocks','tmRowCells','tmNonEmpty'],
+   'tmColMap','tmMonthIndex','tmReadHeading','tmIsHeaderRow','tmFindBlocks','tmRowCells','tmNonEmpty'],
   {}
 );
 assert.strictEqual(F.TM_MONTHS.length, 12, 'the month table came across, not just the functions');
@@ -184,6 +184,18 @@ assert.strictEqual(F.tmFindBlocks([
   ['Sr. No.','Objective','Key Result'],
   ['1','Obj','deliver the MBO by August 2026']
 ], 'kr').length, 1, 'a mention in a later cell is not a heading');
+
+// A key result whose own text contains the words "key result" must not be
+// mistaken for a header row — that aborts the block it belongs to.
+const selfReferential = F.tmFindBlocks([
+  ['MBO - August 2026'],
+  ['Sr. No.','Objective','Key Result','Deadline','Status'],
+  ['1','Obj','Write the first key result for the team','31/08/2026','Done'],
+  ['','','A second one','15/08/2026','Done']
+], 'kr');
+assert.strictEqual(selfReferential.length, 1);
+assert.strictEqual(selfReferential[0].lastRow, 3,
+  'a data row mentioning "key result" is not a header and must not end the block');
 
 // Action blocks: heading may be a bare month name, and rows may be indented.
 const actRows = [
