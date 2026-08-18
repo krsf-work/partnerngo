@@ -696,7 +696,11 @@ window.FIREBASE_CONFIG = {
      NGOs table instead of an absolutely positioned overlay. */
   .dash-split{display:flex;gap:14px;align-items:flex-start}
   .dash-main{flex:1;min-width:0}
-  .dash-rail{flex:0 0 288px;display:flex;flex-direction:column;gap:10px}
+  /* Wide enough that a key-result title fits without truncating — at 288px
+     seven of eleven were being cut off with an ellipsis, which defeats the
+     point of showing them here. Proportional so it stays sensible on a
+     laptop, with a floor and a ceiling. */
+  .dash-rail{flex:0 0 clamp(300px, 38%, 660px);display:flex;flex-direction:column;gap:10px}
   .tm-rl{background:var(--card);border:1px solid var(--rule);border-radius:13px;
          padding:11px 13px;box-shadow:var(--shadow)}
   .tm-rl-alert{background:var(--red-soft);border-color:var(--red)}
