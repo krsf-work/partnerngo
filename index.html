@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V64</title>
+<title>Sahkar · KRSF Partnership Program · V65</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -688,9 +688,10 @@ window.FIREBASE_CONFIG = {
   .apl-modal-card{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center}
   .apl-modal-card .ngo-avatar{margin:0 auto}
   .apl-modal-card .nm{font-size:12px;font-weight:600;color:var(--ink);line-height:1.3}
-  /* V64: "Documents due soon" — sits as the last item in the same
-     .apl-folders grid row, filling the space left over after the
-     folder cards instead of leaving it blank. */
+  /* The right-margin card. V64 introduced it for "Documents due soon";
+     V65 replaced its contents with overdue Team MBO items. It sits as the
+     last item in the .apl-row flex row on narrow screens, and floats into
+     the dead margin beyond .content on wide ones (media query below). */
   .apl-doc-widget{flex:0 0 230px;background:var(--card);border:1px solid var(--rule);border-radius:13px;
                    padding:12px 14px;box-shadow:var(--shadow);text-align:left}
   /* V64: on wide monitors, .content maxes out at 1320px and leaves a dead
@@ -709,6 +710,68 @@ window.FIREBASE_CONFIG = {
   .apl-doc-name{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .apl-doc-days{font-weight:700;flex:none}
   .apl-doc-empty{font-size:11px;color:var(--ink-3)}
+  /* V65: the right-margin card is now overdue Team MBO items, tinted so it
+     reads as an alert rather than as another list. */
+  .tm-alert{background:var(--red-soft);border-color:var(--red)}
+  .tm-alert .apl-doc-h{color:var(--red)}
+  .tm-alert .apl-doc-name{color:var(--ink-2)}
+  .tm-alert-week{font-weight:700;color:var(--red);border-top:1px solid var(--red);
+                 padding-top:5px;margin-top:2px}
+  /* ---- Team MBO page ---- */
+  .tm-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .tm-f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink-3)}
+  .tm-f select{font-size:12.5px;padding:6px 8px;border:1px solid var(--rule);
+               border-radius:8px;background:var(--card);color:var(--ink)}
+  .tm-panel{padding:0;overflow:hidden}
+  .tm-bk{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+         padding:11px 14px 7px;color:var(--ink-3)}
+  .tm-bk-over{color:var(--red)}
+  .tm-row{display:flex;gap:10px;align-items:flex-start;padding:9px 14px;
+          border-top:1px solid var(--rule);cursor:pointer}
+  .tm-row:hover{background:var(--bg)}
+  .tm-av{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent-soft);
+         color:var(--accent);font-size:10px;font-weight:800;
+         display:flex;align-items:center;justify-content:center}
+  .tm-tx{flex:1;min-width:0}
+  .tm-t1{font-size:13px;color:var(--ink);line-height:1.4}
+  .tm-t2{font-size:11px;color:var(--ink-3);margin-top:2px;
+         overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tm-tg{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;
+         flex:none;align-self:center;white-space:nowrap}
+  .tm-pri{background:var(--amber-soft);color:var(--amber)}
+  .tm-kr{background:var(--accent-soft);color:var(--accent)}
+  .tm-ai{background:var(--blue-soft,#e7eefc);color:var(--blue)}
+  .tm-dt{font-size:11.5px;font-weight:700;flex:none;align-self:center;
+         width:64px;text-align:right;color:var(--ink-3)}
+  .tm-late{color:var(--red)}
+  .tm-dobj{font-size:11.5px;color:var(--accent);font-weight:700;margin-bottom:6px}
+  .tm-dtitle{font-size:14.5px;color:var(--ink);font-weight:600;line-height:1.45;margin-bottom:14px}
+  .tm-dl{display:flex;gap:10px;font-size:12.5px;padding:6px 0;border-top:1px solid var(--rule)}
+  .tm-dl>span{flex:0 0 108px;color:var(--ink-3)}
+  .tm-dl>div{flex:1;color:var(--ink);min-width:0;word-break:break-word}
+  .tm-pv-sum{font-size:12.5px;color:var(--ink);line-height:1.6;margin-bottom:10px}
+  .tm-pv-empty{font-size:12.5px;color:var(--ink-2);line-height:1.6;
+               background:var(--amber-soft);border:1px solid var(--amber);
+               border-radius:9px;padding:11px 13px}
+  .tm-pv-m{font-size:11px;font-weight:800;color:var(--ink-3);margin:9px 0 4px;
+           text-transform:uppercase;letter-spacing:.05em}
+  .tm-pv-r{font-size:12px;color:var(--ink-2);padding:3px 0 3px 10px;
+           border-left:2px solid var(--rule)}
+  .tm-pv-more{font-size:11.5px;color:var(--ink-3);padding:3px 0 3px 12px}
+  .tm-pv-flags{margin-top:13px;background:var(--amber-soft);border:1px solid var(--amber);
+               border-radius:9px;padding:10px 12px}
+  .tm-pv-fh{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:6px}
+  .tm-pv-f{font-size:11.5px;color:var(--ink-2);line-height:1.55;padding:2px 0}
+  .tm-pv-note{font-size:11.5px;color:var(--ink-3);line-height:1.55;margin-top:11px}
+  @media(max-width:920px){
+    /* two filters per line, and a select tall enough to hit with a thumb */
+    .tm-filters{gap:8px}
+    .tm-f{flex:1 1 44%}
+    .tm-f select{width:100%;padding:10px 8px}
+    /* the label column in the detail view has nowhere to go at this width */
+    .tm-dl{flex-direction:column;gap:2px}
+    .tm-dl>span{flex:none}
+  }
   .risk-dot.green{background:var(--green)} .risk-dot.amber{background:var(--amber)}
   .risk-dot.red{background:var(--red)} .risk-dot.gray{background:var(--ink-3)}
   .ngo-card-name{font-weight:600;font-size:14px;line-height:1.3;color:var(--ink)}
@@ -1157,7 +1220,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V64</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V65</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1182,7 +1245,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V64</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V65</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1430,7 +1493,8 @@ function skeletonData(){
     scorecards: {},
     mbo: [],
     refFiles: [],
-    dailyLogs: []
+    dailyLogs: [],
+    teamMbo: []
   };
 }
 
@@ -1695,7 +1759,7 @@ function seedData(){
   });
 
   return { users, ngos, bigBets, budgets, debits, documents, tasks, scorecards, mbo,
-           refFiles:[], dailyLogs:[],
+           refFiles:[], dailyLogs:[], teamMbo:[],
            meta:{ fyLabel:"FY 2025-26", created:Date.now() } };
 }
 
@@ -1715,7 +1779,7 @@ const STORE_KEY   = "npp_tracker_cache_v3";   // local offline cache
 const SESSION_KEY = "npp_tracker_session_v3";
 const DB_PARTS = ["meta","users","ngos","bigBets","budgets","debits",
                   "documents","tasks","scorecards","mbo","refFiles","flagged",
-                  "dailyLogs"];
+                  "dailyLogs","teamMbo"];
 
 let fb = { app:null, db:null, storage:null, ready:false };
 let CLOUD_OK = false;            // is the live connection healthy?
@@ -1784,7 +1848,7 @@ function cloudListen(){
       if(!DB){ return; }   // DB not assigned yet — ignore until loadDB() finishes
       let incoming = snap.val();
       // Coerce array collections that Firebase may return as keyed objects
-      if(["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs"].includes(part)){
+      if(["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs","teamMbo"].includes(part)){
         incoming = toArr(incoming);
       }
       // coerce arrays nested inside records too
@@ -1852,7 +1916,7 @@ async function loadDB(){
       }catch(e){
         // migrateDB failed — apply toArr manually and retry rather than dropping data
         console.error("migrateDB failed, retrying with coercion", e);
-        ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs"]
+        ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs","teamMbo"]
           .forEach(p=>{ if(data[p] && !Array.isArray(data[p])) data[p] = Object.values(data[p]); });
         merged = migrateDB(data);
       }
@@ -1990,7 +2054,7 @@ function migrateDB(db){
   if(!db || typeof db!=="object") db = skeletonData();
   DB_PARTS.forEach(p=>{ if(db[p]===undefined) db[p] = skeletonData()[p]; });
   // Coerce every array collection — Firebase may return them as objects
-  ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs"]
+  ["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs","teamMbo"]
     .forEach(p=>{ db[p] = toArr(db[p]); });
   if(!db.scorecards || typeof db.scorecards!=="object" || Array.isArray(db.scorecards)) db.scorecards = {};
   if(!db.budgets   || typeof db.budgets  !=="object" || Array.isArray(db.budgets))   db.budgets   = {};
@@ -2091,6 +2155,14 @@ function visibleNgos(){
   }
   return DB.ngos.slice();
 }
+/* Team MBO rows the signed-in user may see. Fails CLOSED: an unrecognised
+   role or no session sees nothing. A lead sees only rows they own. */
+function visibleTeamMbo(){
+  const rows = (typeof DB!=="undefined" && DB && DB.teamMbo) || [];
+  if(!ME) return [];
+  if(ME.role === "PM") return rows;
+  return rows.filter(r => r && r.ownerId === ME.id);
+}
 function docsNavCount(){
   const n = docsExpiringCount(new Set(visibleNgos().map(x=>x.id)));
   return n||null;
@@ -2138,20 +2210,35 @@ function aplNamesFor(ngoId){
    (DB.ngos filtered by apl.ngoIds — the same assignment field
    visibleNgos()/canEditNgo() already use). */
 const APL_FOLDER_COLORS = ["c-green","c-amber","c-blue","c-red","c-violet"];
-function docsExpiringWidget(){
-  const docs = docsExpiringList(new Set(visibleNgos().map(n=>n.id)), 5);
-  return `<div class="apl-doc-widget">
-    <div class="apl-doc-h">📋 Documents due soon</div>
+/* V65: the Dashboard's right margin now carries overdue Team MBO items
+   instead of expiring documents. Document expiry is still surfaced by the
+   count badge on the Documents nav item (docsNavCount -> docsExpiringCount)
+   and in full on the Documents page. */
+function tmOverdueCount(){
+  return visibleTeamMbo().filter(r=>tmBucket(r, TODAY_ISO)==="overdue").length;
+}
+
+function tmOverdueWidget(){
+  const rows = visibleTeamMbo();
+  const over = rows.filter(r=>tmBucket(r, TODAY_ISO)==="overdue")
+                   .sort((a,b)=>tmDaysLate(b,TODAY_ISO)-tmDaysLate(a,TODAY_ISO));
+  const week = rows.filter(r=>tmBucket(r, TODAY_ISO)==="week").length;
+  /* nothing pressing — render nothing, so a quiet week looks like a quiet week */
+  if(!over.length && !week) return "";
+
+  return `<div class="apl-doc-widget tm-alert">
+    <div class="apl-doc-h">⚠ MBO overdue</div>
     <div class="apl-doc-list">
-      ${docs.length ? docs.map(d=>{
-        const n = ngoById(d.ngoId);
-        const label = d.days<0 ? "Expired" : d.days+"d";
-        const col = d.days<0 ? "var(--red)" : d.days<30 ? "var(--amber)" : "var(--ink-3)";
-        return `<div class="apl-doc-row" onclick="go('ngo','${d.ngoId}')">
-          <span class="apl-doc-name">${esc(n?n.short:'?')} · ${esc(d.type)}</span>
-          <span class="apl-doc-days" style="color:${col}">${label}</span>
-        </div>`;
-      }).join("") : `<div class="apl-doc-empty">Nothing expiring soon</div>`}
+      ${over.slice(0,4).map(r=>`
+        <div class="apl-doc-row" onclick="go('okrupload')">
+          <span class="apl-doc-name">${esc(tmInitials(r.ownerId))} · ${esc(r.title)}</span>
+          <span class="apl-doc-days tm-late">${tmDaysLate(r,TODAY_ISO)}d</span>
+        </div>`).join("")}
+      ${over.length>4?`<div class="apl-doc-row"><span class="apl-doc-name">+ ${over.length-4} more overdue</span><span></span></div>`:""}
+      ${week?`<div class="apl-doc-row tm-alert-week" onclick="go('okrupload')">
+          <span class="apl-doc-name">Due this week</span>
+          <span class="apl-doc-days">${week}</span>
+        </div>`:""}
     </div>
   </div>`;
 }
@@ -2181,7 +2268,7 @@ function aplFoldersPanel(){
       </div>`;
     }).join("")}
   </div>
-  ${docsExpiringWidget()}
+  ${tmOverdueWidget()}
   </div>`;
 }
 function openAplFolder(aplId){
@@ -2579,7 +2666,7 @@ function navItems(){
         return t.status==="Open";
       }).length || null },
     { id:"daily",   label:"Daily Sheet",   ic:"🗓", sec:"Work", count: dailyNavCount() },
-    { id:"okrupload", label:"Team OKR", ic:"↑", sec:"Work" },
+    { id:"okrupload", label:"Team MBO", ic:"↑", sec:"Work", count: tmOverdueCount() },
     { id:"docs",    label:"Documents",     ic:"▣", sec:"Work", count: docsNavCount() }
   ];
   // V47: drop the Fund Disbursement entry while the module is hidden
@@ -2642,7 +2729,7 @@ function render(){
     case "fdnms":  c.innerHTML = SHOW_FDNMS ? pageFDNMS() : pageDash(); break;
     case "tasks":  c.innerHTML = pageTasks(); break;
     case "daily":  c.innerHTML = pageDaily(); break;
-    case "okrupload": c.innerHTML = pageOkrUpload(); break;
+    case "okrupload": c.innerHTML = pageTeamMbo(); break;
     case "docs":   c.innerHTML = pageDocs(); break;
     case "admin":  c.innerHTML = (ME.role==="PM") ? pageAdmin() : pageDash(); break;
     default: c.innerHTML = pageDash();
@@ -4367,160 +4454,295 @@ async function importMboFile(ngoId){
     toast("Couldn't read that file — is it a valid spreadsheet?");
   }
 }
-
 /* =====================================================================
-   PAGE · TEAM OKR UPLOAD
-   A dedicated place for team members to upload their OKR / MBO outcomes
-   for a partner NGO — reuses the exact OKR/MBO template and the same
-   DB.mbo store that the per-NGO "OKR / MBO" tab uses.
+   PAGE · TEAM MBO
+   Every partnership lead's monthly commitments in one stream, grouped by
+   urgency. Fed by uploading each lead's existing Excel file — see
+   tmReadSheets(). A lead sees only their own rows; the PM sees all.
+
+   Replaces the old per-NGO "Team OKR upload" page. The per-NGO OKR/MBO tab
+   and its DB.mbo store are untouched — that holds a partner NGO's own
+   objectives, which is a different thing from a lead's personal MBO.
    ===================================================================== */
-function pageOkrUpload(){
-  const ngos = visibleNgos();
-  // Partnership Leads = APL users
-  const leads = (DB.users||[]).filter(u=>u.role==="APL");
 
-  // Determine selected lead (default to first)
-  if(!window.TEAM_OKR_LEAD && leads.length) window.TEAM_OKR_LEAD = leads[0].id;
-  const leadId = window.TEAM_OKR_LEAD || (leads[0]||{}).id || "";
-  const lead   = leads.find(u=>u.id===leadId);
+let TM_FILTER = { person:"", month:"", priority:"", status:"", type:"" };
 
-  // The NGOs assigned to this lead
-  const leadNgoIds = lead ? (lead.ngoIds||[]) : [];
-  const leadNgos   = ngos.filter(n=>leadNgoIds.includes(n.id));
-
-  // For the OKR view: use the lead's first assigned NGO
-  if(!window.TEAM_OKR_NGO || !leadNgoIds.includes(window.TEAM_OKR_NGO))
-    window.TEAM_OKR_NGO = leadNgos.length ? leadNgos[0].id : "";
-  const ngoId = window.TEAM_OKR_NGO;
-
-  const all = (DB.mbo||[]).filter(r=>r.ngoId===ngoId);
-  const months = [...new Set(all.map(r=>r.month))].sort().reverse();
-  const selMonth = MBO_MONTH[ngoId] || (months[0] || "");
-
-  const monthOpts = months.map(m=>
-    `<option value="${m}" ${m===selMonth?'selected':''}>${monthLong(m)}</option>`).join("");
-
-  // Partnership Lead selector
-  const leadSel = leads.length ? `
-    <select style="font-size:12px;padding:5px 8px;border:1px solid var(--rule-2);border-radius:7px;margin-right:6px"
-      onchange="window.TEAM_OKR_LEAD=this.value;window.TEAM_OKR_NGO=null;render()">
-      ${leads.map(u=>`<option value="${u.id}" ${u.id===leadId?'selected':''}>${esc(u.name)}</option>`).join("")}
-    </select>` : '';
-
-  // If the lead has multiple NGOs, show a sub-selector
-  const ngoSubSel = leadNgos.length > 1 ? `
-    <select style="font-size:12px;padding:5px 8px;border:1px solid var(--rule-2);border-radius:7px;margin-right:6px"
-      onchange="window.TEAM_OKR_NGO=this.value;render()">
-      ${leadNgos.map(n=>`<option value="${n.id}" ${n.id===ngoId?'selected':''}>${esc(n.short)}</option>`).join("")}
-    </select>` : '';
-
-  let html = `
-  <div class="phead slim">
-    <div class="eyebrow">Work</div>
-    <h1 class="serif">Team OKR</h1>
-  </div>
-
-  <div class="sec-head">
-    <h2>Monthly Outcomes</h2>
-    <div class="sh-act">
-      ${leadSel}
-      ${ngoSubSel}
-      ${months.length? `<select class="mbo-month" onchange="MBO_MONTH['${ngoId}']=this.value;render()">${monthOpts}</select>`:''}
-      ${ngoId&&selMonth?`<button class="btn ghost sm" style="color:var(--red)" onclick="deleteMboMonth('${ngoId}','${selMonth}')">Delete month</button>`:''}
-      ${ngoId? `<button class="btn ghost sm" onclick="openMboUpload('${ngoId}')">↑ Upload Excel</button>
-      <button class="btn accent sm" onclick="openMboModal('${ngoId}')">+ Key Result</button>`:''}
-    </div>
-  </div>`;
-
-  if(!leads.length){
-    html += `<div class="panel"><div class="empty"><div class="mk">▤</div><p>No Partnership Leads yet — add one in Admin first.</p></div></div>`;
-    return html;
-  }
-
-  if(!ngoId || !leadNgos.length){
-    html += `<div class="panel"><div class="empty"><div class="mk">▤</div><p>${esc(lead?lead.name:"This lead")} has no NGOs assigned yet.</p></div></div>`;
-    return html;
-  }
-
-  if(!selMonth){
-    html += `<div class="panel"><div class="empty"><div class="mk">◎</div>
-      <p>No outcomes recorded yet. Upload an Excel sheet or click <b>+ Key Result</b>.</p></div></div>`;
-    return html;
-  }
-
-  const rows = all.filter(r=>r.month===selMonth);
-  const allDerived = rows.length && rows.every(r=>r.derived);
-  if(allDerived){
-    html += `<div class="cum-readout" style="background:var(--amber-soft);border-left-color:var(--amber)">
-      <b>Placeholder outcomes.</b> These key results were auto-generated from this NGO's
-      Goal targets so the tab isn't empty. Replace them by uploading the partner's real
-      monthly outcomes sheet via <b>↑ Upload Excel</b>.
-    </div>`;
-  }
-  html += renderMboBlocks(rows, ngoId);
-  return html;
+function tmFilterRows(){
+  const f = TM_FILTER;
+  return visibleTeamMbo().filter(r=>{
+    if(!r) return false;
+    if(f.person && r.ownerId !== f.person) return false;
+    if(f.month  && r.month   !== f.month)  return false;
+    if(f.type   && r.type    !== f.type)   return false;
+    if(f.status === "Done" && r.status !== "Done") return false;
+    if(f.status === "open" && r.status === "Done") return false;
+    if(f.priority === "top"){
+      /* a rank of 0 is still a rank — test for null/undefined, not falsiness */
+      const ranked = r.rank !== null && r.rank !== undefined && r.rank <= 3;
+      if(!ranked && r.band !== "High") return false;
+    }
+    return true;
+  });
 }
 
-async function importOkrUpload(){
-  const ngoId = el("okNgo") ? el("okNgo").value : "";
-  if(!ngoId){ toast("Pick a partner NGO first"); return; }
-  if(blockIfCantEditNgo(ngoId)) return;
-  const inp = el("okFile");
-  const msg = el("okMsg");
-  if(!inp || !inp.files || !inp.files[0]){ toast("Choose an OKR file first"); return; }
-  if(typeof XLSX==="undefined"){
-    if(msg){ msg.style.color="var(--red)"; msg.textContent="Spreadsheet reader didn't load — check your connection."; }
+function tmLeads(){
+  return (DB.users||[]).filter(u=>u && (u.role==="APL" || u.role==="Programme"));
+}
+function tmOwnerName(id){
+  const u = (DB.users||[]).find(x=>x && x.id===id);
+  return u ? u.name : "Unknown";
+}
+function tmInitials(id){
+  const parts = tmOwnerName(id).split(/\s+/).filter(Boolean);
+  const s = parts.map(w=>w[0]||"").join("");
+  return (s || "?").slice(0,2).toUpperCase();
+}
+function tmPriLabel(r){
+  if(r.rank !== null && r.rank !== undefined) return "#" + r.rank;
+  return r.band || "";
+}
+function tmDateLabel(r){
+  if(!r.deadline) return r.deadlineRaw ? esc(r.deadlineRaw) : "—";
+  const late = tmDaysLate(r, TODAY_ISO);
+  if(late > 0) return late + "d late";
+  if(late === 0) return "today";
+  return new Date(r.deadline+"T00:00:00Z")
+           .toLocaleDateString("en-GB",{ day:"numeric", month:"short", timeZone:"UTC" });
+}
+
+function pageTeamMbo(){
+  const isPM = ME.role === "PM";
+  /* a lead only ever sees themselves, so the person filter is pinned */
+  if(!isPM) TM_FILTER.person = ME.id;
+
+  const all    = visibleTeamMbo();
+  const months = [...new Set(all.map(r=>r.month))].sort().reverse();
+  const rows   = tmFilterRows();
+
+  const grouped = {};
+  rows.forEach(r=>{ const b = tmBucket(r, TODAY_ISO); (grouped[b] = grouped[b] || []).push(r); });
+  Object.keys(grouped).forEach(k=>{
+    grouped[k].sort((a,b)=>{
+      if(!a.deadline && !b.deadline) return 0;
+      if(!a.deadline) return 1;
+      if(!b.deadline) return -1;
+      return a.deadline.localeCompare(b.deadline);
+    });
+  });
+
+  const sel = (id, label, value, opts) => `
+    <label class="tm-f">
+      <span>${label}</span>
+      <select id="tmf_${id}" onchange="tmSetFilter('${id}',this.value)">
+        ${opts.map(o=>`<option value="${esc(o.v)}" ${o.v===value?"selected":""}>${esc(o.t)}</option>`).join("")}
+      </select>
+    </label>`;
+
+  const filters = `
+    <div class="tm-filters">
+      ${isPM ? sel("person","Person",TM_FILTER.person,
+          [{v:"",t:"Everyone"}].concat(tmLeads().map(u=>({v:u.id,t:u.name})))) : ""}
+      ${sel("month","Month",TM_FILTER.month,
+          [{v:"",t:"All months"}].concat(months.map(m=>({v:m,t:monthLong(m)}))))}
+      ${sel("priority","Priority",TM_FILTER.priority,
+          [{v:"",t:"Any priority"},{v:"top",t:"Top priority only"}])}
+      ${sel("status","Status",TM_FILTER.status,
+          [{v:"",t:"Any status"},{v:"open",t:"Not finished"},{v:"Done",t:"Done"}])}
+      ${sel("type","Type",TM_FILTER.type,
+          [{v:"",t:"Key results + actions"},{v:"kr",t:"Key results"},{v:"action",t:"Action items"}])}
+    </div>`;
+
+  const body = TM_BUCKETS.map(b=>{
+    const list = grouped[b.key];
+    if(!list || !list.length) return "";
+    const cls = b.key==="overdue" ? " tm-bk-over" : "";
+    return `<div class="tm-bk${cls}">${b.label} — ${list.length}</div>` +
+      list.map(r=>{
+        const late = r.deadline && tmDaysLate(r, TODAY_ISO) > 0;
+        const pri  = tmPriLabel(r);
+        return `<div class="tm-row" onclick="tmOpenRow('${r.id}')">
+          <div class="tm-av" title="${esc(tmOwnerName(r.ownerId))}">${esc(tmInitials(r.ownerId))}</div>
+          <div class="tm-tx">
+            <div class="tm-t1">${esc(r.title)}</div>
+            <div class="tm-t2">${esc(tmOwnerName(r.ownerId))}${r.objective?" · "+esc(r.objective):""}</div>
+          </div>
+          ${pri?`<span class="tm-tg tm-pri">${esc(pri)}</span>`:""}
+          <span class="tm-tg ${r.type==="kr"?"tm-kr":"tm-ai"}">${r.type==="kr"?"Key result":"Action"}</span>
+          <div class="tm-dt${late?" tm-late":""}">${tmDateLabel(r)}</div>
+        </div>`;
+      }).join("");
+  }).join("");
+
+  const empty = `<div class="empty"><div class="mk">📋</div>
+    <p>${all.length ? "Nothing matches these filters." :
+        (isPM ? "No MBOs uploaded yet. Use <b>Upload MBO</b> to bring in a lead's spreadsheet."
+              : "Nothing here yet — your MBO hasn't been uploaded.")}</p></div>`;
+
+  return `
+    <div class="phead">
+      <div><h1>Team MBO</h1><p class="sub">Monthly objectives and action items, most urgent first</p></div>
+      ${isPM?`<button class="btn accent" onclick="tmOpenUpload()">↑ Upload MBO</button>`:""}
+    </div>
+    ${filters}
+    <div class="panel tm-panel">${body || empty}</div>`;
+}
+
+function tmSetFilter(key, value){
+  TM_FILTER[key] = value;
+  render();
+}
+
+function tmOpenRow(id){
+  const r = (DB.teamMbo||[]).find(x=>x && x.id===id);
+  if(!r) return;
+  const line = (label, value) => value
+    ? `<div class="tm-dl"><span>${label}</span><div>${esc(value)}</div></div>` : "";
+  const body = `
+    ${r.objective?`<div class="tm-dobj">${esc(r.objective)}</div>`:""}
+    <div class="tm-dtitle">${esc(r.title)}</div>
+    ${line("Owner", tmOwnerName(r.ownerId))}
+    ${line("Month", monthLong(r.month))}
+    ${line("Deadline", r.deadline
+        ? tmDateLabel(r) + (r.deadlineFixed?" (corrected from the sheet)":"")
+        : (r.deadlineRaw || "none given"))}
+    ${line("Status", r.status || "Not started")}
+    ${line("Priority", tmPriLabel(r))}
+    ${line("Time estimate", r.timeEst)}
+    ${line("Time spent", r.timeSpent)}
+    ${line("Comment", r.comment)}
+    ${line("Reference", r.ref)}`;
+  showModal(modalShell(r.type==="kr"?"Key result":"Action item", tmOwnerName(r.ownerId), body, ""));
+}
+
+/* ---------------------------------------------------------------------
+   Upload. Parsed but NOT saved until the user has seen the preview and
+   pressed Import.
+   --------------------------------------------------------------------- */
+let TM_PENDING = null;
+
+const TM_FLAG_LABELS = {
+  repaired:     "Deadline corrected",
+  baddate:      "Deadline unreadable",
+  wildyear:     "Year looks wrong",
+  noyear:       "Could not tell which year",
+  skippedsheet: "Sheet skipped"
+};
+
+function tmPreviewHtml(res){
+  const krs  = res.rows.filter(r=>r.type==="kr").length;
+  const acts = res.rows.filter(r=>r.type==="action").length;
+
+  if(!res.rows.length){
+    return `<div class="tm-pv-empty">
+      Couldn't find any month blocks in that file — nothing was read, and nothing has been saved.
+      Each month needs a heading naming the month and year, with a row beneath it containing
+      a <b>Key Result</b> or <b>Action Item</b> column.
+    </div>`;
+  }
+
+  const plural = (n, one) => n + " " + one + (n===1?"":"s");
+  const summary = `<div class="tm-pv-sum">
+      Read <b>${plural(krs,"key result")}</b> and <b>${plural(acts,"action item")}</b>
+      across <b>${plural(res.months.length,"month")}</b> for <b>${esc(res.ownerName)}</b>.
+    </div>`;
+
+  const byMonth = {};
+  res.rows.forEach(r=>{ (byMonth[r.month] = byMonth[r.month] || []).push(r); });
+  const table = Object.keys(byMonth).sort().reverse().map(m=>`
+      <div class="tm-pv-m">${esc(monthLong(m))} — ${byMonth[m].length}</div>
+      ${byMonth[m].slice(0,5).map(r=>`<div class="tm-pv-r">${esc(r.title)}</div>`).join("")}
+      ${byMonth[m].length>5?`<div class="tm-pv-more">+ ${byMonth[m].length-5} more</div>`:""}
+    `).join("");
+
+  const flags = res.flags.length ? `
+      <div class="tm-pv-flags">
+        <div class="tm-pv-fh">⚠ ${res.flags.length} thing${res.flags.length===1?"":"s"} that needs a look</div>
+        ${res.flags.map(f=>`<div class="tm-pv-f">
+            <b>${esc(TM_FLAG_LABELS[f.kind]||f.kind)}</b> —
+            ${esc(f.title)}${f.month?" ("+esc(f.month)+")":""}: ${esc(f.detail)}
+          </div>`).join("")}
+      </div>` : "";
+
+  const replacing = `<div class="tm-pv-note">
+      Importing replaces ${esc(res.ownerName)}'s existing rows for
+      ${res.months.length===1?"that month":"those months"}. Other months and other
+      people are left alone.
+    </div>`;
+
+  return summary + table + flags + replacing;
+}
+
+function tmOpenUpload(){
+  if(ME.role !== "PM"){ toast("Only the programme manager can upload MBOs"); return; }
+  const leads = tmLeads();
+  if(!leads.length){ toast("No partnership leads set up yet — add them in Admin first"); return; }
+  TM_PENDING = null;
+  const body = `
+    <div style="font-size:12.5px;color:var(--ink-3);line-height:1.6;margin-bottom:14px">
+      Upload a lead's MBO spreadsheet. Every month block in the file is read, including
+      the Action Items sheet. The file is read in your browser — nothing is sent anywhere,
+      and nothing is saved until you've checked the preview.
+    </div>
+    <div class="field">
+      <label>Whose MBO is this?</label>
+      <select id="tmOwner" onchange="tmReadFile()">
+        ${leads.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}
+      </select>
+      <div class="hint">The file itself isn't a reliable guide — some name the lead, some don't.</div>
+    </div>
+    <div class="field">
+      <label>MBO file (.xlsx, .xls or .csv)</label>
+      <input type="file" id="tmFile" accept=".xlsx,.xls,.csv" onchange="tmReadFile()">
+    </div>
+    <div id="tmPreview"></div>`;
+  const foot = `
+    <button class="btn ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn accent" id="tmImportBtn" disabled onclick="tmConfirmImport()">Import</button>`;
+  showModal(modalShell("Team MBO", "Upload a lead's MBO", body, foot), true);
+}
+
+async function tmReadFile(){
+  const inp = el("tmFile"), out = el("tmPreview"), btn = el("tmImportBtn");
+  if(btn) btn.disabled = true;
+  TM_PENDING = null;
+  if(!inp || !inp.files || !inp.files[0]){ if(out) out.innerHTML = ""; return; }
+  if(typeof XLSX === "undefined"){
+    out.innerHTML = `<div class="tm-pv-empty">The spreadsheet reader didn't load — check your connection and reopen this window.</div>`;
     return;
   }
-  const defMonth = el("okMonth").value;
+  const ownerId = el("tmOwner").value;
+  out.innerHTML = `<div class="tm-pv-sum">Reading…</div>`;
   try{
     const buf = await inp.files[0].arrayBuffer();
-    const wb = XLSX.read(buf,{type:"array"});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws,{defval:""});
-    if(!rows.length){
-      if(msg){ msg.style.color="var(--red)"; msg.textContent="No rows found in that file."; }
-      return;
-    }
-    let added = 0;
-    rows.forEach(r=>{
-      const objective = String(pickCol(r,["objective","goal"])).trim();
-      const kr = String(pickCol(r,["keyresult","kr","activity","result"])).trim();
-      if(!objective && !kr) return;
-      let status = String(pickCol(r,["status"])).trim();
-      const sl = status.toLowerCase();
-      status = sl.startsWith("done")||sl.startsWith("complete")?"Done"
-             : sl.startsWith("not")?"Not Done":"Pending";
-      let month = String(pickCol(r,["month"])).trim();
-      if(!/^\d{4}-\d{2}$/.test(month)) month = defMonth;
-      const rec = {
-        id: genId("mbo"), ngoId, month,
-        objNum: parseInt(pickCol(r,["objectiveno","objno","objnum","no"]))||1,
-        objective: objective||"(untitled objective)",
-        kr: kr||"(untitled key result)",
-        timeline: String(pickCol(r,["timeline","targetdate","duedate"])).trim(),
-        status,
-        comment: String(pickCol(r,["comment","remark","note"])).trim(),
-        ref: String(pickCol(r,["reference","ref","link"])).trim(),
-        isOther: String(pickCol(r,["type"])).toLowerCase().includes("other")
-      };
-      stampEdit(rec);
-      if(!DB.mbo) DB.mbo=[];
-      DB.mbo.push(rec);
-      added++;
-    });
-    if(!added){
-      if(msg){ msg.style.color="var(--red)"; msg.textContent="Couldn't find Objective / Key Result columns in that file."; }
-      return;
-    }
-    MBO_MONTH[ngoId] = defMonth;
-    await saveDB();
-    render();
-    toast(added+" OKR key result"+(added>1?"s":"")+" uploaded for "+(ngoById(ngoId)||{}).short);
+    const wb  = XLSX.read(buf, { type:"array" });
+    /* header:1 gives raw row arrays, which is what the block reader needs —
+       sheet_to_json's default object mode assumes ONE header row per sheet,
+       and these files carry one per month. */
+    const sheets = wb.SheetNames.map(name=>({
+      name: name,
+      cells: XLSX.utils.sheet_to_json(wb.Sheets[name], { header:1, defval:"", blankrows:true })
+    }));
+    const res = tmReadSheets(sheets, ownerId, genId("imp"), TODAY_ISO);
+    res.ownerName = tmOwnerName(ownerId);
+    res.ownerId   = ownerId;
+    TM_PENDING = res;
+    out.innerHTML = tmPreviewHtml(res);
+    if(btn) btn.disabled = !res.rows.length;
   }catch(e){
     console.error(e);
-    if(msg){ msg.style.color="var(--red)"; msg.textContent="Couldn't read that file — is it a valid spreadsheet?"; }
+    out.innerHTML = `<div class="tm-pv-empty">Couldn't read that file — is it a valid spreadsheet?</div>`;
   }
+}
+
+async function tmConfirmImport(){
+  if(!TM_PENDING || !TM_PENDING.rows.length){ toast("Nothing to import"); return; }
+  const res = TM_PENDING;
+  DB.teamMbo = tmReplaceMonths(DB.teamMbo||[], res.ownerId, res.months, res.rows);
+  TM_PENDING = null;
+  await saveDB();
+  closeModal();
+  render();
+  toast(res.rows.length + " row" + (res.rows.length===1?"":"s") + " imported for " + res.ownerName);
 }
 
 /* =====================================================================
@@ -5586,6 +5808,436 @@ function ngoDocsTab(ngoId){
 const DOC_TYPES = ["MoU","Annual Proposal","Approved Budget","12A Certificate",
                    "80G Certificate","FCRA Certificate","Audited Financials","Other"];
 
+/* =====================================================================
+   TEAM MBO · IMPORT PARSING
+   The leads' spreadsheets stack one month block per section, and the
+   column order changes between blocks in the same file. Everything here
+   is pure so it can be tested without a browser — see tests/parse.test.js.
+   ===================================================================== */
+
+const TM_MONTHS = ["january","february","march","april","may","june",
+                   "july","august","september","october","november","december"];
+
+function tmNormStatus(raw){
+  const s = String(raw==null?"":raw).toLowerCase().replace(/\s+/g,"");
+  if(!s) return "";
+  if(s.startsWith("done") || s.startsWith("complete")) return "Done";
+  if(s.includes("progress")) return "In Progress";
+  /* "note done" is a real typo for "not done" in a live file */
+  if(s.startsWith("not") || s.startsWith("note")) return "Not Done";
+  return "";
+}
+
+/* Excel day 1 is 1900-01-01, with the well-known 1900 leap-year fudge,
+   which makes day 0 equal 1899-12-30. */
+function tmSerialToIso(n){
+  const ms = Date.UTC(1899,11,30) + Math.round(n) * 86400000;
+  return new Date(ms).toISOString().slice(0,10);
+}
+
+function tmIsoOf(y,m,d){
+  if(m<1 || m>12 || d<1 || d>31) return "";
+  const dt = new Date(Date.UTC(y,m-1,d));
+  /* rejects 31 April and friends — the Date would roll into the next month */
+  if(dt.getUTCMonth() !== m-1 || dt.getUTCDate() !== d) return "";
+  return dt.toISOString().slice(0,10);
+}
+
+function tmParseDate(cell){
+  if(cell==null) return "";
+  if(typeof cell === "number" && cell > 20000 && cell < 80000) return tmSerialToIso(cell);
+  const s = String(cell).trim();
+  if(!s || s === "-") return "";
+
+  /* a serial that arrived as text, e.g. "45884.0" */
+  if(/^\d{4,5}(\.0+)?$/.test(s)){
+    const n = parseFloat(s);
+    if(n > 20000 && n < 80000) return tmSerialToIso(n);
+  }
+  /* d/m/yyyy or d-m-yyyy — day first */
+  let m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s);
+  if(m) return tmIsoOf(+m[3], +m[2], +m[1]);
+
+  /* "28th Feb 2026", "31th July 2026", "30 June 2026" */
+  m = /^(\d{1,2})\s*(?:st|nd|rd|th)?\s+([A-Za-z]+),?\s+(\d{4})$/.exec(s);
+  if(m){
+    const mi = TM_MONTHS.findIndex(x => x.startsWith(m[2].toLowerCase().slice(0,3)));
+    if(mi >= 0) return tmIsoOf(+m[3], mi+1, +m[1]);
+  }
+  /* "August 15 2026" */
+  m = /^([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})$/.exec(s);
+  if(m){
+    const mi = TM_MONTHS.findIndex(x => x.startsWith(m[1].toLowerCase().slice(0,3)));
+    if(mi >= 0) return tmIsoOf(+m[3], mi+1, +m[2]);
+  }
+  return "";
+}
+
+/* Some deadlines are already wrong in the source file: a lead typed
+   "10/3/2026" meaning 10 March and Excel stored 3 October. Swap back only
+   when the evidence is unambiguous — the day equals the block's month
+   number, and swapping lands the date inside the block's month. Validated
+   against every such date in two real files with no counter-examples. */
+function tmRepairDate(iso, blockMonth){
+  if(!iso || !blockMonth) return { iso: iso||"", fixed:false };
+  const y = +iso.slice(0,4), m = +iso.slice(5,7), d = +iso.slice(8,10);
+  if(m === blockMonth) return { iso, fixed:false };
+  if(d !== blockMonth)  return { iso, fixed:false };
+  const swapped = tmIsoOf(y, d, m);
+  if(!swapped) return { iso, fixed:false };
+  return { iso: swapped, fixed:true };
+}
+
+const TM_COLS = {
+  timeEst:   ["timeestimate"],
+  timeSpent: ["timespent"],
+  objective: ["objective","goal"],
+  title:     ["keyresult","actionitem"],
+  deadline:  ["deadline","timeline","when","targetdate","duedate"],
+  status:    ["status"],
+  priority:  ["priority"],
+  comment:   ["comment","notes","remark"],
+  /* "resourse" is a real misspelling in a live file */
+  ref:       ["reference","resource","resourse"],
+  owner:     ["whom","bywhom"],
+  objNum:    ["srno","srnumber","no"]
+};
+
+/* Two passes: exact header matches first, then substring matches for headers
+   carrying extra words ("July Action Item"). Without the exact-first pass,
+   a substring match on a differently ordered sheet can capture the wrong
+   column — which is the whole failure this per-block mapping exists to stop. */
+function tmColMap(cells){
+  const map = {};
+  const norm = raw => String(raw==null?"":raw).toLowerCase().replace(/[^a-z]/g,"");
+
+  (cells||[]).forEach((raw, i) => {
+    const n = norm(raw);
+    if(!n) return;
+    for(const field of Object.keys(TM_COLS)){
+      if(map[field] !== undefined) continue;
+      if(TM_COLS[field].some(x => n === x)){ map[field] = i; return; }
+    }
+  });
+  (cells||[]).forEach((raw, i) => {
+    const n = norm(raw);
+    if(!n) return;
+    if(Object.keys(map).some(f => map[f] === i)) return;
+    for(const field of Object.keys(TM_COLS)){
+      if(map[field] !== undefined) continue;
+      if(TM_COLS[field].some(x => n.includes(x))){ map[field] = i; return; }
+    }
+  });
+  return map;
+}
+
+function tmRowCells(row){ return Array.isArray(row) ? row : []; }
+function tmNonEmpty(row){
+  return tmRowCells(row).filter(c => c!=null && String(c).trim() !== "");
+}
+
+/* Find each month block: its heading, its own header row, and its row range.
+   kind is "kr" (key results) or "action" (action items). */
+/* Which month a heading names, or -1. Deliberately NOT \b: real headings are
+   written "MBO_Some Name_September 2026" and "..._November_ 2025", and \b
+   treats an underscore as a word character, so \bseptember\b never matches
+   after one. */
+function tmMonthIndex(text){
+  const s = String(text==null?"":text);
+  return TM_MONTHS.findIndex(mn =>
+    new RegExp("(^|[^a-z])" + mn + "($|[^a-z])", "i").test(s));
+}
+
+/* Read a heading row into {month, year} or null.
+   A heading is identified by its FIRST populated cell — that is what
+   separates a real heading from a data row whose Comment column happens to
+   read "...will send MBO by 5 January 2026". A real heading may still carry
+   a stray jotting off to the right, so a small number of extra cells is
+   tolerated; requiring exactly one silently swallowed a whole month. */
+function tmReadHeading(row, kind){
+  const cells = tmNonEmpty(row);
+  if(!cells.length || cells.length > 3) return null;
+  const first = cells[0];
+  const text = String(first).trim();
+
+  const mi = tmMonthIndex(text);
+  if(mi >= 0){
+    if(kind === "kr"){
+      /* Key-result headings always name the sheet, e.g. "MBO - August 2026"
+         or "MBO_Someone_August 2026". Same \b trap as tmMonthIndex — an
+         underscore is a word character, so \bMBO\b misses "MBO_Someone". */
+      if(!/(^|[^a-z])mbo($|[^a-z])/i.test(text)) return null;
+    }
+    const yearM = /(^|[^0-9])(20\d{2})($|[^0-9])/.exec(text);
+    if(kind === "kr" && !yearM) return null;
+    return { month: mi + 1, year: yearM ? +yearM[2] : null };
+  }
+
+  /* One real action sheet divides its months with a bare Excel date instead
+     of a month name. Only accept this on action sheets, where the row is a
+     lone value and a header still has to follow. */
+  if(kind === "action" && cells.length === 1){
+    const iso = tmParseDate(first);
+    if(iso) return { month: +iso.slice(5,7), year: +iso.slice(0,4) };
+  }
+  return null;
+}
+
+/* A header row names several columns. Matching on the title word alone is
+   not enough: a key result reading "First key result" contains "key result"
+   and would abort the block it belongs to. Require the row to map a title
+   column AND at least two more known labels — a data row never does. */
+function tmIsHeaderRow(row, kind){
+  const map = tmColMap(tmRowCells(row));
+  if(map.title === undefined) return false;
+  const titleCell = String(tmRowCells(row)[map.title] || "");
+  const needle = kind === "action" ? /action\s*item/i : /key\s*result/i;
+  if(!needle.test(titleCell)) return false;
+  return Object.keys(map).length >= 3;
+}
+
+function tmFindBlocks(rows, kind){
+  const isHeaderRow = row => tmIsHeaderRow(row, kind);
+  const blocks = [];
+  let lastHeaderAbove = -1;
+
+  for(let i = 0; i < (rows||[]).length; i++){
+    /* Remember any header seen on the way down: one real sheet puts a single
+       header at the very top and then divides months beneath it. */
+    if(isHeaderRow(rows[i])) lastHeaderAbove = i;
+
+    const head = tmReadHeading(rows[i], kind);
+    if(!head) continue;
+
+    /* Prefer a header just below the heading; otherwise reuse the one above.
+       Without a header either way, this was prose, not a heading. */
+    let headerRow = -1;
+    for(let j = i + 1; j <= Math.min(i + 3, rows.length - 1); j++){
+      if(isHeaderRow(rows[j])){ headerRow = j; break; }
+    }
+    if(headerRow === -1) headerRow = lastHeaderAbove;
+    if(headerRow === -1) continue;
+
+    /* rows run from just after the heading (or the header, whichever is
+       lower) until a blank row or the next heading */
+    const firstRow = Math.max(headerRow, i) + 1;
+    let lastRow = firstRow - 1;
+    for(let j = firstRow; j < rows.length; j++){
+      if(tmNonEmpty(rows[j]).length === 0) break;
+      if(tmReadHeading(rows[j], kind)) break;
+      if(isHeaderRow(rows[j])) break;
+      lastRow = j;
+    }
+    if(lastRow < firstRow) continue;
+
+    blocks.push({
+      month: head.month,
+      year: head.year,
+      headerRow,
+      firstRow,
+      lastRow
+    });
+    i = lastRow;
+  }
+  return blocks;
+}
+
+function tmCell(row, map, field){
+  const i = map[field];
+  if(i === undefined) return "";
+  const v = tmRowCells(row)[i];
+  return v==null ? "" : String(v).trim();
+}
+function tmRawCell(row, map, field){
+  const i = map[field];
+  if(i === undefined) return null;
+  const v = tmRowCells(row)[i];
+  return v==null ? null : v;
+}
+function tmPad(n){ return (n<10?"0":"") + n; }
+
+/* Which sheets are worth reading. One real workbook keeps four stale draft
+   copies of months that also live on the MBO sheet ("Sheet9", "Print"…);
+   reading those would silently double those months. Only sheets that name
+   themselves are trusted — anything else is skipped and reported. */
+function tmSheetKind(name){
+  const n = String(name==null?"":name);
+  if(/action\s*item/i.test(n)) return "action";
+  if(/(^|[^a-z])mbo($|[^a-z])/i.test(n)) return "kr";
+  return null;
+}
+
+/* Read every month block on every named sheet into teamMbo records.
+   sheets: [{ name, cells }] where cells is an array of row arrays.
+   Returns { rows, months, flags } — flags are surfaced in the preview so
+   nothing is repaired, skipped or dropped without the user seeing it. */
+function tmReadSheets(sheets, ownerId, batchId, todayIso){
+  const rows = [], flags = [], monthSet = {};
+
+  (sheets||[]).forEach(sheet => {
+    const kind = tmSheetKind(sheet.name);
+    const cells = sheet.cells || [];
+
+    if(!kind){
+      /* say so only if it actually looked like it held MBO data, so a
+         genuinely unrelated tab does not clutter the preview */
+      if(tmFindBlocks(cells, "kr").length || tmFindBlocks(cells, "action").length){
+        flags.push({ kind:"skippedsheet", month:null, title:"(a sheet)",
+                     detail:`sheet "${sheet.name}" looks like it holds MBO rows but is not named `
+                          + `"MBO" or "Action Items", so it was skipped — usually an old draft copy` });
+      }
+      return;
+    }
+
+    /* blocks run in date order down the sheet, so an undated heading can
+       take its year from the block above it */
+    let prevMonth = null, prevYear = null;
+
+    tmFindBlocks(cells, kind).forEach(block => {
+      const map = tmColMap(tmRowCells(cells[block.headerRow]));
+      if(map.title === undefined) return;
+
+      let year = block.year;
+      /* first try a date actually written inside the block */
+      if(year === null){
+        for(let r = block.firstRow; r <= block.lastRow; r++){
+          const iso = tmParseDate(tmRawCell(cells[r], map, "deadline"));
+          if(iso){ year = +iso.slice(0,4); break; }
+        }
+      }
+      /* then fall back to the preceding block, rolling the year over when
+         the month steps backwards (December → January) */
+      if(year === null && prevYear !== null){
+        year = block.month < prevMonth ? prevYear + 1 : prevYear;
+      }
+      if(year === null){
+        flags.push({ kind:"noyear", month:null, title:"(a block heading)",
+                     detail:`a ${TM_MONTHS[block.month-1]} block on "${sheet.name}" gives no year, `
+                          + `no row in it has a readable date, and nothing precedes it — skipped` });
+        return;
+      }
+      prevMonth = block.month; prevYear = year;
+
+      const month = year + "-" + tmPad(block.month);
+      let lastObjective = "", lastObjNum = "";
+
+      for(let r = block.firstRow; r <= block.lastRow; r++){
+        const row = cells[r];
+        const title = tmCell(row, map, "title");
+        if(!title) continue;
+
+        const objRaw = tmCell(row, map, "objective");
+        if(objRaw) lastObjective = objRaw;
+        /* Sr numbers are written "1", "1.0" and even "4..". Parse as a number
+           and keep the whole part — stripping non-digits would turn "1.0"
+           into "10". */
+        const numVal = parseFloat(tmCell(row, map, "objNum"));
+        if(isFinite(numVal)) lastObjNum = String(Math.trunc(numVal));
+
+        const rawDeadline = tmRawCell(row, map, "deadline");
+        const parsed = tmParseDate(rawDeadline);
+        const rep = tmRepairDate(parsed, block.month);
+
+        const priRaw = tmCell(row, map, "priority");
+        const priNum = /^\d+(\.0+)?$/.test(priRaw) ? parseInt(priRaw, 10) : null;
+        const band = priNum === null && priRaw
+          ? (/^h/i.test(priRaw) ? "High"
+            : /^(mid|m)/i.test(priRaw) ? "Medium"
+            : /^l/i.test(priRaw) ? "Low" : "")
+          : "";
+
+        const rec = {
+          id: genId("tmbo"),
+          ownerId: ownerId,
+          month: month,
+          type: kind,
+          objNum: lastObjNum || "1",
+          objective: kind === "action" ? "" : lastObjective,
+          title: title,
+          deadline: rep.iso,
+          deadlineRaw: rawDeadline==null ? "" : String(rawDeadline).trim(),
+          deadlineFixed: rep.fixed,
+          rank: priNum,
+          band: band,
+          status: tmNormStatus(tmCell(row, map, "status")),
+          timeEst: tmCell(row, map, "timeEst"),
+          timeSpent: tmCell(row, map, "timeSpent"),
+          comment: tmCell(row, map, "comment"),
+          ref: tmCell(row, map, "ref"),
+          importedAt: todayIso,
+          importBatch: batchId
+        };
+
+        if(rep.fixed){
+          flags.push({ kind:"repaired", month:month, title:title,
+                       detail:`read as ${parsed}, corrected to ${rep.iso}` });
+        } else if(rec.deadlineRaw && rec.deadlineRaw !== "-" && !rec.deadline){
+          flags.push({ kind:"baddate", month:month, title:title,
+                       detail:`could not read "${rec.deadlineRaw}"` });
+        } else if(rec.deadline && Math.abs(+rec.deadline.slice(0,4) - year) > 5){
+          flags.push({ kind:"wildyear", month:month, title:title,
+                       detail:`year ${rec.deadline.slice(0,4)} is far from ${year} — check for a typo` });
+        }
+
+        monthSet[month] = true;
+        rows.push(rec);
+      }
+    });
+  });
+
+  return { rows: rows, months: Object.keys(monthSet).sort(), flags: flags };
+}
+
+/* Their file holds every month, so the same file gets uploaded repeatedly.
+   Drop this owner's rows for the months the file covers, then add the new
+   ones — otherwise the list doubles on every upload. */
+function tmReplaceMonths(existing, ownerId, months, incoming){
+  const drop = {};
+  (months||[]).forEach(m=>{ drop[m] = true; });
+  const kept = (existing || []).filter(r =>
+    !(r && r.ownerId === ownerId && drop[r.month]));
+  return kept.concat(incoming || []);
+}
+
+/* =====================================================================
+   TEAM MBO · URGENCY
+   ===================================================================== */
+
+/* Live work first, then the historical backlog, then finished work.
+   The split at 30 days is deliberate: across the two real workbooks only 5
+   of 87 outstanding items were late by a month or less, and the oldest was
+   398 days. A single "Overdue" heading reading 87 buries the handful that
+   still need action. Nothing is hidden — the backlog is its own heading. */
+const TM_BUCKETS = [
+  { key:"overdue", label:"⚠ Overdue" },
+  { key:"week",    label:"This week" },
+  { key:"soon",    label:"Next 3 weeks" },
+  { key:"later",   label:"Later" },
+  { key:"undated", label:"No deadline given" },
+  { key:"stale",   label:"Overdue more than a month" },
+  { key:"done",    label:"Done" }
+];
+const TM_STALE_AFTER_DAYS = 30;
+
+function tmDaysLate(rec, todayIso){
+  if(!rec || !rec.deadline) return 0;
+  return Math.round((new Date(todayIso+"T00:00:00Z") - new Date(rec.deadline+"T00:00:00Z")) / 86400000);
+}
+
+/* First match wins, and "done" is checked first so a completed item never
+   shows up as overdue and an undated completed item lands in Done. */
+function tmBucket(rec, todayIso){
+  if(!rec) return "undated";
+  if(rec.status === "Done") return "done";
+  if(!rec.deadline) return "undated";
+  const late = tmDaysLate(rec, todayIso);
+  if(late > TM_STALE_AFTER_DAYS) return "stale";
+  if(late > 0)    return "overdue";
+  if(late >= -6)  return "week";
+  if(late >= -27) return "soon";
+  return "later";
+}
+
 /* shared with docsNavCount() so the "expiring soon" window (180 days,
    6 months) is defined in exactly one place */
 function docExpiryDays(d){ return Math.round((new Date(d.expires)-new Date(TODAY_ISO))/86400000); }
@@ -5593,15 +6245,7 @@ function isDocExpiringSoon(d){ return !!d.expires && docExpiryDays(d)<180; }
 function docsExpiringCount(ngoIds){
   return (DB.documents||[]).filter(d=>ngoIds.has(d.ngoId) && isDocExpiringSoon(d)).length;
 }
-/* V64: the actual list behind docsExpiringCount(), soonest/already-expired
-   first, for the Dashboard "Documents due soon" widget. */
-function docsExpiringList(ngoIds, limit){
-  return (DB.documents||[])
-    .filter(d=>ngoIds.has(d.ngoId) && isDocExpiringSoon(d))
-    .map(d=>({...d, days:docExpiryDays(d)}))
-    .sort((a,b)=>a.days-b.days)
-    .slice(0,limit);
-}
+
 function openDocForm(ngoId, editId){
   if(blockIfCantEditNgo(ngoId)) return;
   const d = editId ? DB.documents.find(x=>x.id===editId) : null;
