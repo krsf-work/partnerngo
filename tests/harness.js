@@ -41,6 +41,14 @@ function extract(src, name){
   return null;
 }
 
+/* NOTE for test authors: values constructed INSIDE an extracted function —
+   an `[]` or `{}` literal, for instance — belong to the sandbox's realm, so
+   their prototype is not this file's Array.prototype. assert.deepStrictEqual
+   compares prototypes and will reject even two empty arrays. Convert first,
+   e.g. Array.from(result, r => r.id), before comparing. Values that merely
+   pass THROUGH a function (because .filter() was called on an array you
+   supplied) keep this realm and compare fine — which is why the mistake
+   hides until an empty result shows up. */
 function loadFns(names, globals){
   const src = fs.readFileSync(APP, 'utf8');
   const missing = [], bodies = [];
