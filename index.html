@@ -2204,9 +2204,15 @@ function ngoById(id){ return DB.ngos.find(n=>n.id===id); }
 function userById(id){ return DB.users.find(u=>u.id===id); }
 /* names of the APLs assigned to an NGO (via their ngoIds), comma-joined.
    Falls back gracefully when no APL is assigned yet. */
+/* Who leads this partnership. Both lead roles count: the role literally
+   coded "APL" is labelled "Partner NGO" in Admin, while the people actually
+   carrying NGO portfolios hold "Programme". Matching only "APL" left this
+   column showing a dash for every NGO — the same mismatch that hid the
+   folders panel, and the same pair visibleNgos() already treats alike. */
 function aplNamesFor(ngoId){
   const names = (DB.users||[])
-    .filter(u=>u.role==="APL" && Array.isArray(u.ngoIds) && u.ngoIds.includes(ngoId))
+    .filter(u=>u && (u.role==="APL" || u.role==="Programme")
+              && Array.isArray(u.ngoIds) && u.ngoIds.includes(ngoId))
     .map(u=>u.name);
   return names.length ? names.join(", ") : "—";
 }
@@ -3009,15 +3015,14 @@ function pageDash(){
     <div class="tbl-wrap">
       <table class="ngo-tbl">
         <colgroup>
-          <col style="width:22%"><col style="width:18%"><col style="width:21%">
-          <col style="width:11%"><col style="width:11%"><col style="width:17%">
+          <col style="width:24%"><col style="width:23%"><col style="width:22%">
+          <col style="width:12%"><col style="width:19%">
         </colgroup>
         <thead><tr>
           <th>NGO</th>
           <th>Partnership Lead</th>
           <th class="num">Approved · Utilised</th>
           <th>Partnership</th>
-          <th>Scorecard</th>
           <th>Delivery</th>
         </tr></thead>
         <tbody>
@@ -3029,8 +3034,6 @@ function pageDash(){
   </div>
   ${tmDashRail()}
   </div>
-
-  ${scorecardPanel(ngos)}
 
   <div class="panel" style="margin-top:14px">
     <div class="panel-h">
@@ -3062,132 +3065,7 @@ function scoreClass(v){
   if(v>=3) return "s-mid";
   return "s-lo";
 }
-let SC_VIEW = "grid";   // grid | trend
-function setScView(v){ SC_VIEW = v; render(); }
 
-function scorecardPanel(ngos){
-  const crit = SCORE_CRITERIA;
-  const tabs = `
-    <div class="sc-tabs">
-      <button class="sc-tab ${SC_VIEW==='grid'?'active':''}" onclick="setScView('grid')">Scorecard</button>
-      <button class="sc-tab ${SC_VIEW==='trend'?'active':''}" onclick="setScView('trend')">Trend</button>
-    </div>`;
-  const body = SC_VIEW==='trend' ? scorecardTrend(ngos) : scorecardGrid(ngos, crit);
-  return `
-  <div class="panel">
-    <div class="panel-h" style="flex-direction:column;align-items:stretch;gap:0;padding-bottom:0">
-      <div style="display:flex;align-items:center;gap:10px;padding-bottom:9px">
-        <h3>Partner Scorecard</h3>
-        <span class="note">${SC_VIEW==='trend'
-          ? 'monthly total / '+SCORE_MAX+' · last 6 reported months'
-          : monthLong(CUR_MONTH)+' · click any cell to score · 0–5 each, total /'+SCORE_MAX}</span>
-      </div>
-      ${tabs}
-    </div>
-    ${body}
-  </div>`;
-}
-
-function scorecardGrid(ngos, crit){
-  const month = CUR_MONTH;
-  const colAvg = crit.map(c=>{
-    const vals = ngos.map(n=>{
-      const sc=(DB.scorecards[n.id]||{})[month]||{};
-      return sc[c.key];
-    }).filter(v=>typeof v==="number");
-    return vals.length? (vals.reduce((a,b)=>a+b,0)/vals.length):0;
-  });
-  const scored = ngos.map(n=>ngoScore(n.id,month)).filter(s=>s.scored);
-  const totAvg = scored.length ? scored.reduce((s,x)=>s+x.total,0)/scored.length : 0;
-
-  return `
-    <div class="tbl-wrap">
-      <table class="sc-tbl">
-        <thead><tr>
-          <th>Partner</th>
-          ${crit.map(c=>`<th class="sc-c" title="${esc(c.label)}">${esc(c.key)}</th>`).join("")}
-          <th class="sc-tot">Total /${SCORE_MAX}</th>
-          <th class="sc-st">Status</th>
-        </tr></thead>
-        <tbody>
-        ${ngos.map(n=>{
-          const sc = (DB.scorecards[n.id]||{})[month] || {};
-          const s = ngoScore(n.id, month);
-          const initials = n.short.slice(0,2).toUpperCase();
-          return `<tr>
-            <td class="sc-name">
-              <span class="av">${esc(initials)}</span>
-              <b>${esc(n.name.length>30?n.name.slice(0,30)+'…':n.name)}</b>
-              <span style="color:var(--ink-3);font-size:11px"> · ${esc(n.vertical)}</span>
-            </td>
-            ${crit.map(c=>{
-              const v = sc[c.key];
-              return `<td class="sc-c">
-                <div class="sc-cell ${scoreClass(v)}"
-                     onclick="openScorePop(event,'${n.id}','${c.key}')">
-                  ${v==null?'–':fmtScore(v)}
-                </div></td>`;
-            }).join("")}
-            <td class="sc-tot"><span class="sc-tot-v">${s.scored?fmtScore(s.total):'–'}</span></td>
-            <td class="sc-st"><span class="badge ${s.status}">${
-              s.scored?scoreStatusLabel(s.total):'Not scored'}</span></td>
-          </tr>`;
-        }).join("")}
-        </tbody>
-        <tfoot class="sc-foot"><tr>
-          <td class="sc-name" style="font-weight:700">Portfolio average</td>
-          ${colAvg.map(a=>`<td class="sc-c"><div class="sc-cell">${a?fmtScore(a):'–'}</div></td>`).join("")}
-          <td class="sc-tot"><span class="sc-tot-v">${totAvg?fmtScore(totAvg):'–'}</span></td>
-          <td class="sc-st"><span class="badge ${totAvg?scoreStatus(totAvg):'gray'}">${
-            totAvg?scoreStatusLabel(totAvg):'—'}</span></td>
-        </tr></tfoot>
-      </table>
-    </div>`;
-}
-
-/* Trend tab — monthly total /40 per partner over the last 6 reported months */
-function scorecardTrend(ngos){
-  const allMonths = new Set();
-  ngos.forEach(n=>{
-    Object.keys(DB.scorecards[n.id]||{}).forEach(m=>allMonths.add(m));
-  });
-  const months = [...allMonths].sort().slice(-6);
-  if(!months.length){
-    return `<div class="empty"><div class="mk">▦</div><p>No scorecard history yet.</p></div>`;
-  }
-  return `
-    <div class="tbl-wrap">
-      <table class="sc-tbl">
-        <thead><tr>
-          <th>Partner</th>
-          ${months.map(m=>`<th class="sc-c">${esc(monthLabel(m))}</th>`).join("")}
-          <th class="sc-st">Latest</th>
-        </tr></thead>
-        <tbody>
-        ${ngos.map(n=>{
-          const initials = n.short.slice(0,2).toUpperCase();
-          const cells = months.map(m=>{
-            const s = ngoScore(n.id, m);
-            return s.scored
-              ? `<td class="sc-c"><div class="sc-cell ${scoreCellClass(s.status)}">${fmtScore(s.total)}</div></td>`
-              : `<td class="sc-c"><div class="sc-cell s-na">–</div></td>`;
-          }).join("");
-          const last = ngoScore(n.id, months[months.length-1]);
-          return `<tr>
-            <td class="sc-name">
-              <span class="av">${esc(initials)}</span>
-              <b>${esc(n.name.length>30?n.name.slice(0,30)+'…':n.name)}</b>
-              <span style="color:var(--ink-3);font-size:11px"> · ${esc(n.vertical)}</span>
-            </td>
-            ${cells}
-            <td class="sc-st"><span class="badge ${last.status}">${
-              last.scored?scoreStatusLabel(last.total):'—'}</span></td>
-          </tr>`;
-        }).join("")}
-        </tbody>
-      </table>
-    </div>`;
-}
 /* show 4.5 not 4.50, and 32 not 32.0 */
 function fmtScore(v){
   if(v==null||isNaN(v)) return "–";
@@ -3196,7 +3074,6 @@ function fmtScore(v){
 
 /* one NGO row + (if expanded) its big-bet sub-rows */
 function dashNgoRow(n){
-  const sc   = ngoScore(n.id);
   const bd   = DB.budgets[n.id]||{};
   const appr = bd.totalAnnual||0;
   const used = ngoSpendUpto(n.id,CUR_MONTH);
@@ -3212,8 +3089,6 @@ function dashNgoRow(n){
   const avgProg = progs.length? Math.round(progs.reduce((a,b)=>a+b,0)/progs.length):0;
   // band reflects DELIVERY (vs plan), not raw % — matches the rest of the app
   const aBand = !bets.length?'gray': offTrack? 'red' : onTrack<bets.length? 'amber' : 'green';
-
-  const scLabel = sc.status==='green'?'Green':sc.status==='amber'?'Yellow':sc.status==='red'?'Red':'—';
 
   const mainRow = `
     <tr class="ngo-main ${open?'open':''}" onclick="toggleNgoRow('${n.id}')">
@@ -3232,7 +3107,6 @@ function dashNgoRow(n){
           <span class="pd"></span>${n.partnership}
         </span>
       </td>
-      <td><span class="badge ${sc.status}"><span class="dot ${sc.status}"></span>${scLabel}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:9px" title="${onTrack} of ${bets.length} milestones on track · ${avgProg}% of annual targets">
           <div class="mini-bar"><i class="${aBand}" style="width:${Math.min(avgProg,100)}%"></i></div>
@@ -3256,7 +3130,7 @@ function dashNgoRow(n){
     </div>`;
   }).join("") : `<div class="bet-sub-inner"><span class="bt" style="color:var(--ink-3)">No milestones defined for this NGO yet.</span></div>`;
 
-  return mainRow + `<tr class="bet-sub"><td colspan="6">${sub}</td></tr>`;
+  return mainRow + `<tr class="bet-sub"><td colspan="5">${sub}</td></tr>`;
 }
 
 function fmtCompact(v,unit){
