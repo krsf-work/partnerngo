@@ -18,6 +18,46 @@ function run(filter){
 
 const ALL = { person:'', month:'', priority:'', status:'', type:'' };
 
+/* ---- the default view is the last two months ----
+   The real data runs 14 months back; showing all of it buries the current
+   month under a year of finished and abandoned rows. "recent" means this
+   calendar month and the one before it, taken from the month the block came
+   from, which is how the team refer to them ("the July MBO"). */
+function runRecent(rows, todayIso){
+  const F = loadFns(['tmFilterRows','tmRecentMonths','tmPad'], {
+    TM_FILTER: { person:'', month:'recent', priority:'', status:'', type:'' },
+    TODAY_ISO: todayIso,
+    visibleTeamMbo: () => rows
+  });
+  return Array.from(F.tmFilterRows(), r => r.id).sort();
+}
+
+const SPAN = [
+  { id:'aug', ownerId:'u1', month:'2026-08', type:'kr', title:'Aug', deadline:'', status:'', rank:null, band:'' },
+  { id:'jul', ownerId:'u1', month:'2026-07', type:'kr', title:'Jul', deadline:'', status:'', rank:null, band:'' },
+  { id:'jun', ownerId:'u1', month:'2026-06', type:'kr', title:'Jun', deadline:'', status:'', rank:null, band:'' },
+  { id:'old', ownerId:'u1', month:'2025-08', type:'kr', title:'Old', deadline:'', status:'', rank:null, band:'' }
+];
+assert.deepStrictEqual(runRecent(SPAN, '2026-08-19'), ['aug','jul'],
+  'this month and last month only');
+assert.deepStrictEqual(runRecent(SPAN, '2026-07-05'), ['jul','jun'],
+  'the window moves with today');
+
+/* January must reach back into the previous year, not to month zero. */
+const ROLL = [
+  { id:'jan', ownerId:'u1', month:'2026-01', type:'kr', title:'Jan', deadline:'', status:'', rank:null, band:'' },
+  { id:'dec', ownerId:'u1', month:'2025-12', type:'kr', title:'Dec', deadline:'', status:'', rank:null, band:'' },
+  { id:'nov', ownerId:'u1', month:'2025-11', type:'kr', title:'Nov', deadline:'', status:'', rank:null, band:'' }
+];
+assert.deepStrictEqual(runRecent(ROLL, '2026-01-10'), ['dec','jan'],
+  'January looks back to December of the previous year');
+
+const RM = loadFns(['tmRecentMonths','tmPad'], { TODAY_ISO: '2026-01-10' });
+assert.deepStrictEqual(Array.from(RM.tmRecentMonths()).sort(), ['2025-12','2026-01']);
+
+/* "All months" must still reach the whole history. */
+assert.deepStrictEqual(run({...ALL, month:''}).length > 0, true);
+
 assert.deepStrictEqual(run(ALL), ['a','b','c','d'], 'empty filters keep everything');
 assert.deepStrictEqual(run({...ALL, person:'u1'}), ['a','b']);
 assert.deepStrictEqual(run({...ALL, month:'2026-08'}), ['a','b','d']);

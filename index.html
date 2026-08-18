@@ -4465,14 +4465,27 @@ async function importMboFile(ngoId){
    objectives, which is a different thing from a lead's personal MBO.
    ===================================================================== */
 
-let TM_FILTER = { person:"", month:"", priority:"", status:"", type:"" };
+/* The month filter defaults to "recent" — this calendar month and the one
+   before it. The real files run 14 months back, and showing all of it buries
+   the current month under a year of finished and abandoned rows. "All months"
+   is one click away in the dropdown. */
+let TM_FILTER = { person:"", month:"recent", priority:"", status:"", type:"" };
+
+function tmRecentMonths(){
+  const y = +TODAY_ISO.slice(0,4), m = +TODAY_ISO.slice(5,7);
+  const prevY = m === 1 ? y - 1 : y;
+  const prevM = m === 1 ? 12 : m - 1;
+  return [ y + "-" + tmPad(m), prevY + "-" + tmPad(prevM) ];
+}
 
 function tmFilterRows(){
   const f = TM_FILTER;
+  const recent = f.month === "recent" ? tmRecentMonths() : null;
   return visibleTeamMbo().filter(r=>{
     if(!r) return false;
     if(f.person && r.ownerId !== f.person) return false;
-    if(f.month  && r.month   !== f.month)  return false;
+    if(recent){ if(recent.indexOf(r.month) < 0) return false; }
+    else if(f.month && r.month !== f.month) return false;
     if(f.type   && r.type    !== f.type)   return false;
     if(f.status === "Done" && r.status !== "Done") return false;
     if(f.status === "open" && r.status === "Done") return false;
@@ -4543,7 +4556,8 @@ function pageTeamMbo(){
       ${isPM ? sel("person","Person",TM_FILTER.person,
           [{v:"",t:"Everyone"}].concat(tmLeads().map(u=>({v:u.id,t:u.name})))) : ""}
       ${sel("month","Month",TM_FILTER.month,
-          [{v:"",t:"All months"}].concat(months.map(m=>({v:m,t:monthLong(m)}))))}
+          [{v:"recent",t:"Last 2 months"},{v:"",t:"All months"}]
+            .concat(months.map(m=>({v:m,t:monthLong(m)}))))}
       ${sel("priority","Priority",TM_FILTER.priority,
           [{v:"",t:"Any priority"},{v:"top",t:"Top priority only"}])}
       ${sel("status","Status",TM_FILTER.status,
@@ -4573,10 +4587,17 @@ function pageTeamMbo(){
       }).join("");
   }).join("");
 
-  const empty = `<div class="empty"><div class="mk">📋</div>
-    <p>${all.length ? "Nothing matches these filters." :
-        (isPM ? "No MBOs uploaded yet. Use <b>Upload MBO</b> to bring in a lead's spreadsheet."
-              : "Nothing here yet — your MBO hasn't been uploaded.")}</p></div>`;
+  /* An empty last-2-months view usually means nobody has uploaded lately,
+     not that something is broken — say which, and offer the way out. */
+  const emptyMsg = !all.length
+    ? (isPM ? "No MBOs uploaded yet. Use <b>Upload MBO</b> to bring in a lead's spreadsheet."
+            : "Nothing here yet — your MBO hasn't been uploaded.")
+    : (TM_FILTER.month === "recent"
+        ? "Nothing for " + esc(monthLong(tmRecentMonths()[1])) + " or "
+          + esc(monthLong(tmRecentMonths()[0])) + ". There is older MBO here — "
+          + `<a href="#" onclick="tmSetFilter('month','');return false">show all months</a>.`
+        : "Nothing matches these filters.");
+  const empty = `<div class="empty"><div class="mk">📋</div><p>${emptyMsg}</p></div>`;
 
   return `
     <div class="phead">
