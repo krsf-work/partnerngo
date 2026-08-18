@@ -638,7 +638,11 @@ window.FIREBASE_CONFIG = {
   /* V64: APL folders — Dashboard, PM only. Hover fans out up to 5 NGO
      avatar chips behind the folder card; click opens the full set via
      the existing modal system (see openAplFolder). */
-  .apl-folders{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:14px}
+  /* V64: folders on the left flow in their own grid; the doc widget is a
+     fixed-width flex sibling pinned to the right, independent of how many
+     folders there are or whether the folder grid wraps to a second row. */
+  .apl-row{display:flex;gap:14px;align-items:stretch;margin-bottom:14px}
+  .apl-folders{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
   .apl-folder{position:relative;cursor:pointer;padding-top:26px}
   .apl-folder-fan{position:absolute;top:0;left:50%;height:34px;pointer-events:none}
   .apl-fan-chip{position:absolute;top:0;left:0;margin-left:-17px;opacity:0;transition:transform .18s ease,opacity .18s ease}
@@ -687,7 +691,7 @@ window.FIREBASE_CONFIG = {
   /* V64: "Documents due soon" — sits as the last item in the same
      .apl-folders grid row, filling the space left over after the
      folder cards instead of leaving it blank. */
-  .apl-doc-widget{background:var(--card);border:1px solid var(--rule);border-radius:13px;
+  .apl-doc-widget{flex:0 0 230px;background:var(--card);border:1px solid var(--rule);border-radius:13px;
                    padding:12px 14px;box-shadow:var(--shadow);text-align:left}
   .apl-doc-h{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:8px}
   .apl-doc-list{display:flex;flex-direction:column;gap:6px}
@@ -1048,6 +1052,8 @@ window.FIREBASE_CONFIG = {
     .hamburger{display:inline-flex}
     .content{padding:22px 16px 60px}
     .topbar{display:flex;padding:0 14px}
+    .apl-row{flex-direction:column}
+    .apl-doc-widget{flex-basis:auto}
   }
   @media(max-width:560px){
     .kpi-grid{grid-template-columns:1fr}
@@ -1239,7 +1245,7 @@ function liveReportingMonth(){
   if(FY_MONTHS.includes(TODAY_MONTH)) return TODAY_MONTH;
   return TODAY_MONTH < FY_MONTHS[0] ? FY_MONTHS[0] : FY_END;
 }
-/* a document is "expiring soon" if it lapses within the next 120 days */
+/* a document is "expiring soon" if it lapses within the next 180 days (6 months) */
 const SOON_CUTOFF_ISO = new Date(TODAY.getTime()+90*86400000).toISOString().slice(0,10);
 const VERTICALS = ["Livelihood","Advocacy","Education","Healthcare","Climate"];
 const BUDGET_CATS = ["Salary","Travel","Programme","Other"];
@@ -2144,7 +2150,8 @@ function aplFoldersPanel(){
   if(ME.role!=="PM") return '';
   const apls = (DB.users||[]).filter(u=>u.role==="Programme");
   if(!apls.length) return '';
-  return `<div class="apl-folders">
+  return `<div class="apl-row">
+  <div class="apl-folders">
     ${apls.map((apl,i)=>{
       const ngos = DB.ngos.filter(n=>(apl.ngoIds||[]).includes(n.id));
       const preview = ngos.slice(0,5);
@@ -2164,7 +2171,8 @@ function aplFoldersPanel(){
         </div>
       </div>`;
     }).join("")}
-    ${docsExpiringWidget()}
+  </div>
+  ${docsExpiringWidget()}
   </div>`;
 }
 function openAplFolder(aplId){
@@ -5542,7 +5550,7 @@ function ngoDocsTab(ngoId){
       if(d.expires){
         const days = Math.round((new Date(d.expires)-new Date(TODAY_ISO))/86400000);
         if(days<0) statusHtml=`<span class="pill red">Expired</span>`;
-        else if(days<120) statusHtml=`<span class="pill amber">Expires in ${days}d</span>`;
+        else if(days<180) statusHtml=`<span class="pill amber">Expires in ${days}d</span>`;
         else statusHtml=`<span class="pill green no-dot">Valid · ${fmtDMY(d.expires)}</span>`;
       }
       const ini = d.type.split(/\s+/)[0].slice(0,3).toUpperCase();
@@ -5569,10 +5577,10 @@ function ngoDocsTab(ngoId){
 const DOC_TYPES = ["MoU","Annual Proposal","Approved Budget","12A Certificate",
                    "80G Certificate","FCRA Certificate","Audited Financials","Other"];
 
-/* shared with docsNavCount() so the "expiring soon" window (120 days)
-   is defined in exactly one place */
+/* shared with docsNavCount() so the "expiring soon" window (180 days,
+   6 months) is defined in exactly one place */
 function docExpiryDays(d){ return Math.round((new Date(d.expires)-new Date(TODAY_ISO))/86400000); }
-function isDocExpiringSoon(d){ return !!d.expires && docExpiryDays(d)<120; }
+function isDocExpiringSoon(d){ return !!d.expires && docExpiryDays(d)<180; }
 function docsExpiringCount(ngoIds){
   return (DB.documents||[]).filter(d=>ngoIds.has(d.ngoId) && isDocExpiringSoon(d)).length;
 }
