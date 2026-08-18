@@ -693,6 +693,15 @@ window.FIREBASE_CONFIG = {
      folder cards instead of leaving it blank. */
   .apl-doc-widget{flex:0 0 230px;background:var(--card);border:1px solid var(--rule);border-radius:13px;
                    padding:12px 14px;box-shadow:var(--shadow);text-align:left}
+  /* V64: on wide monitors, .content maxes out at 1320px and leaves a dead
+     margin to its right — float the doc widget out into that margin
+     instead of the folders row, and let the folders grid reclaim the
+     full row width. Only above ~1650px, where that margin actually
+     exists; narrower screens keep the in-row placement above. */
+  @media(min-width:1650px){
+    .main{position:relative}
+    .apl-doc-widget{position:absolute;top:18px;right:22px;flex:none}
+  }
   .apl-doc-h{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:8px}
   .apl-doc-list{display:flex;flex-direction:column;gap:6px}
   .apl-doc-row{display:flex;justify-content:space-between;gap:6px;font-size:11px;cursor:pointer}
