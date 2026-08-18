@@ -18,25 +18,49 @@ const REPO_COPY = path.join(__dirname, '..', 'index.html');
 const APP = process.env.SAHKAR_APP
   || (fs.existsSync(CANONICAL) ? CANONICAL : REPO_COPY);
 
-function extract(src, name){
-  const start = src.search(new RegExp('function\\s+' + name + '\\s*\\('));
-  if(start === -1) return null;
-  const open = src.indexOf('{', start);
-  if(open === -1) return null;
+/* Walk from `from`, tracking string literals, until the nesting depth
+   returns to zero at `closer` (for a function body) or a `;` is reached at
+   depth zero (for a const declaration). Returns the end index, or -1. */
+function scan(src, from, mode){
   let depth = 0, inStr = null, prev = '';
-  for(let i = open; i < src.length; i++){
+  for(let i = from; i < src.length; i++){
     const c = src[i];
     if(inStr){
       if(c === inStr && prev !== '\\') inStr = null;
     } else if(c === '"' || c === "'" || c === '`'){
       inStr = c;
-    } else if(c === '{'){
+    } else if(c === '{' || c === '[' || c === '('){
       depth++;
-    } else if(c === '}'){
+    } else if(c === '}' || c === ']' || c === ')'){
       depth--;
-      if(depth === 0) return src.slice(start, i + 1);
+      if(mode === 'braces' && depth === 0) return i;
+    } else if(mode === 'semicolon' && c === ';' && depth === 0){
+      return i;
     }
     prev = c;
+  }
+  return -1;
+}
+
+function extract(src, name){
+  /* a function declaration */
+  const fnStart = src.search(new RegExp('function\\s+' + name + '\\s*\\('));
+  if(fnStart !== -1){
+    const open = src.indexOf('{', fnStart);
+    if(open !== -1){
+      const end = scan(src, open, 'braces');
+      if(end !== -1) return src.slice(fnStart, end + 1);
+    }
+  }
+  /* A top-level const/let lookup table the functions depend on. Rewrite the
+     keyword to `var`: const and let create lexical bindings that never become
+     properties of the sandbox object, so the caller would get undefined back
+     even though the declaration ran fine. */
+  const cRe = new RegExp('^(?:const|let|var)\\s+' + name + '\\s*=', 'm');
+  const cm = cRe.exec(src);
+  if(cm){
+    const end = scan(src, cm.index, 'semicolon');
+    if(end !== -1) return src.slice(cm.index, end + 1).replace(/^(?:const|let)\s/, 'var ');
   }
   return null;
 }
