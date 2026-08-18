@@ -265,25 +265,40 @@ Shows what was read before anything is saved:
 - a **needs a look** section: unreadable dates, repaired dates, out-of-range
   years, rows with no title
 
-## Dashboard block
+## Dashboard rail
 
-A compact "MBO overdue" card in the Dashboard's right margin, so the information
-finds the PM rather than waiting to be visited. It lists the most overdue items
-with the owner and how late each is, plus a count of what is due this week, and
-is tinted so it reads as an alert rather than as another list.
+`.content` was capped at 1320px, which left roughly 360px of dead margin on a
+1920px screen. The cap is now 1800px — high enough never to bind on a normal
+monitor (a 1920px window leaves 1684px after the sidebar), while still stopping
+table rows becoming unreadable on an ultrawide.
 
-It appears **only** when something is overdue or due within 7 days. On a quiet
-week the Dashboard looks exactly as it does today.
+The Dashboard gains a **288px rail beside the Partner NGOs table**. The KPI
+tiles and the people folders keep the full width; the rail starts level with
+the table. It holds two cards:
 
-**It replaces the "Documents due soon" widget**, which is removed from the
-Dashboard. Document expiry is not lost: `docsExpiringCount()` still feeds the
-count badge on the Documents nav item, and the Documents page still lists
-everything expiring. Only the dashboard card goes.
+- **⚠ Overdue** — most overdue first, tinted as an alert
+- **Coming up** — soonest first
 
-Removal covers the `docsExpiringWidget()` call inside `aplFoldersPanel()`, the
-`docsExpiringWidget()` function, and `docsExpiringList()` which nothing else
-uses. `docsExpiringCount()` **must stay** — removing it breaks the nav badge.
-The `.apl-doc-*` CSS is repurposed for the new card rather than duplicated.
+Both list key results and action items together, each tagged so they can be
+told apart, capped at six with a "+ N more" link.
+
+The rail deliberately ignores the Team MBO page's filter — it is a standing
+view of current urgency. It needs no month window either: "overdue" already
+excludes anything more than `TM_STALE_AFTER_DAYS` late, and "coming up" is by
+definition ahead of today.
+
+With nothing uploaded it renders nothing, so no empty column appears. With data
+but nothing pressing it says "Nothing overdue" rather than showing a blank box.
+Below 920px it drops beneath the table.
+
+**It replaces the "Documents due soon" widget**, which is removed. Document
+expiry is not lost: `docsExpiringCount()` still feeds the count badge on the
+Documents nav item, and the Documents page still lists everything expiring.
+
+Removal covers the widget call inside `aplFoldersPanel()`, `docsExpiringWidget()`,
+`docsExpiringList()` (nothing else used it), and the now-dead `.apl-doc-*` CSS.
+`docsExpiringCount()` **must stay** — removing it breaks the nav badge.
+`tests/docs-badge.test.js` asserts all of this in both directions.
 
 ## Out of scope
 

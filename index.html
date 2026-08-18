@@ -188,7 +188,10 @@ window.FIREBASE_CONFIG = {
     font-size:12.5px;font-weight:500;border-radius:8px;color:var(--ink);
   }
   .sel-inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-  .content{padding:18px 22px 48px;max-width:1320px;width:100%}
+  /* V65: was 1320px, which left a wide dead margin on a 1920px screen.
+     The cap is now high enough never to bind on a normal monitor, while
+     still stopping table rows becoming unreadably wide on an ultrawide. */
+  .content{padding:18px 22px 48px;max-width:1800px;width:100%}
 
   /* ===== PAGE HEAD ===== */
   .phead{margin-bottom:14px}
@@ -688,35 +691,34 @@ window.FIREBASE_CONFIG = {
   .apl-modal-card{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center}
   .apl-modal-card .ngo-avatar{margin:0 auto}
   .apl-modal-card .nm{font-size:12px;font-weight:600;color:var(--ink);line-height:1.3}
-  /* The right-margin card. V64 introduced it for "Documents due soon";
-     V65 replaced its contents with overdue Team MBO items. It sits as the
-     last item in the .apl-row flex row on narrow screens, and floats into
-     the dead margin beyond .content on wide ones (media query below). */
-  .apl-doc-widget{flex:0 0 230px;background:var(--card);border:1px solid var(--rule);border-radius:13px;
-                   padding:12px 14px;box-shadow:var(--shadow);text-align:left}
-  /* V64: on wide monitors, .content maxes out at 1320px and leaves a dead
-     margin to its right — float the doc widget out into that margin
-     instead of the folders row, and let the folders grid reclaim the
-     full row width. Only above ~1650px, where that margin actually
-     exists; narrower screens keep the in-row placement above. */
-  @media(min-width:1650px){
-    .main{position:relative}
-    .apl-doc-widget{position:absolute;top:18px;right:22px;flex:none}
-  }
-  .apl-doc-h{font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:8px}
-  .apl-doc-list{display:flex;flex-direction:column;gap:6px}
-  .apl-doc-row{display:flex;justify-content:space-between;gap:6px;font-size:11px;cursor:pointer}
-  .apl-doc-row:hover .apl-doc-name{color:var(--accent)}
-  .apl-doc-name{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .apl-doc-days{font-weight:700;flex:none}
-  .apl-doc-empty{font-size:11px;color:var(--ink-3)}
-  /* V65: the right-margin card is now overdue Team MBO items, tinted so it
-     reads as an alert rather than as another list. */
-  .tm-alert{background:var(--red-soft);border-color:var(--red)}
-  .tm-alert .apl-doc-h{color:var(--red)}
-  .tm-alert .apl-doc-name{color:var(--ink-2)}
-  .tm-alert-week{font-weight:700;color:var(--red);border-top:1px solid var(--red);
-                 padding-top:5px;margin-top:2px}
+  /* V65: the dead margin this used to float into is gone — .content now
+     fills the window, and the MBO rail is a real column beside the Partner
+     NGOs table instead of an absolutely positioned overlay. */
+  .dash-split{display:flex;gap:14px;align-items:flex-start}
+  .dash-main{flex:1;min-width:0}
+  .dash-rail{flex:0 0 288px;display:flex;flex-direction:column;gap:10px}
+  .tm-rl{background:var(--card);border:1px solid var(--rule);border-radius:13px;
+         padding:11px 13px;box-shadow:var(--shadow)}
+  .tm-rl-alert{background:var(--red-soft);border-color:var(--red)}
+  .tm-rl-h{font-size:11.5px;font-weight:800;color:var(--ink);margin-bottom:7px}
+  .tm-rl-h-red{color:var(--red)}
+  .tm-rl-ok{font-size:11.5px;color:var(--green);font-weight:600}
+  .tm-rl-row{display:flex;gap:8px;align-items:flex-start;padding:5px 0;cursor:pointer;
+             border-top:1px solid var(--rule)}
+  .tm-rl-row:first-of-type{border-top:none}
+  .tm-rl-alert .tm-rl-row{border-top-color:rgba(217,84,63,.22)}
+  .tm-rl-row:hover .tm-rl-t{color:var(--accent)}
+  .tm-rl-tx{flex:1;min-width:0}
+  .tm-rl-t{font-size:11.5px;color:var(--ink-2);line-height:1.35;
+           display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .tm-rl-s{font-size:9.5px;color:var(--ink-3);margin-top:2px;display:flex;gap:5px;align-items:center}
+  .tm-rl-tag{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700}
+  .tm-rl-d{font-size:11px;font-weight:800;flex:none;color:var(--ink-3);
+           text-align:right;white-space:nowrap;padding-top:1px}
+  .tm-rl-more{font-size:10.5px;font-weight:700;color:var(--red);cursor:pointer;padding-top:6px}
+  .tm-rl-link{font-size:11px;font-weight:700;color:var(--accent);cursor:pointer;
+              text-align:center;padding:2px 0}
+
   /* ---- Team MBO page ---- */
   .tm-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
   .tm-f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ink-3)}
@@ -1125,7 +1127,9 @@ window.FIREBASE_CONFIG = {
     .content{padding:22px 16px 60px}
     .topbar{display:flex;padding:0 14px}
     .apl-row{flex-direction:column}
-    .apl-doc-widget{flex-basis:auto}
+    /* the rail drops below the table rather than squeezing it */
+    .dash-split{flex-direction:column}
+    .dash-rail{flex-basis:auto;width:100%}
   }
   @media(max-width:560px){
     .kpi-grid{grid-template-columns:1fr}
@@ -2218,28 +2222,61 @@ function tmOverdueCount(){
   return visibleTeamMbo().filter(r=>tmBucket(r, TODAY_ISO)==="overdue").length;
 }
 
-function tmOverdueWidget(){
+/* The Dashboard rail, beside the Partner NGOs table. Shows what is slipping
+   and what is coming, key results and action items together.
+
+   It deliberately ignores the Team MBO page's filter — this is a standing
+   view of current urgency. It needs no month window either: "overdue"
+   already excludes anything more than a month late (those sit under their
+   own heading on the page), and "coming up" is by definition ahead of today. */
+function tmDashRail(){
   const rows = visibleTeamMbo();
+  if(!rows.length) return "";   // nothing uploaded — do not occupy a column
+
   const over = rows.filter(r=>tmBucket(r, TODAY_ISO)==="overdue")
                    .sort((a,b)=>tmDaysLate(b,TODAY_ISO)-tmDaysLate(a,TODAY_ISO));
-  const week = rows.filter(r=>tmBucket(r, TODAY_ISO)==="week").length;
-  /* nothing pressing — render nothing, so a quiet week looks like a quiet week */
-  if(!over.length && !week) return "";
+  const next = rows.filter(r=>{
+                     const b = tmBucket(r, TODAY_ISO);
+                     return b==="week" || b==="soon";
+                   })
+                   .sort((a,b)=>a.deadline.localeCompare(b.deadline));
 
-  return `<div class="apl-doc-widget tm-alert">
-    <div class="apl-doc-h">⚠ MBO overdue</div>
-    <div class="apl-doc-list">
-      ${over.slice(0,4).map(r=>`
-        <div class="apl-doc-row" onclick="go('okrupload')">
-          <span class="apl-doc-name">${esc(tmInitials(r.ownerId))} · ${esc(r.title)}</span>
-          <span class="apl-doc-days tm-late">${tmDaysLate(r,TODAY_ISO)}d</span>
-        </div>`).join("")}
-      ${over.length>4?`<div class="apl-doc-row"><span class="apl-doc-name">+ ${over.length-4} more overdue</span><span></span></div>`:""}
-      ${week?`<div class="apl-doc-row tm-alert-week" onclick="go('okrupload')">
-          <span class="apl-doc-name">Due this week</span>
-          <span class="apl-doc-days">${week}</span>
-        </div>`:""}
-    </div>
+  const LIMIT = 6;
+  const line = (r, right, cls) => `
+    <div class="tm-rl-row" onclick="go('okrupload')">
+      <div class="tm-rl-tx">
+        <div class="tm-rl-t">${esc(r.title)}</div>
+        <div class="tm-rl-s">${esc(tmInitials(r.ownerId))}
+          <span class="tm-rl-tag ${r.type==="kr"?"tm-kr":"tm-ai"}">${r.type==="kr"?"Key result":"Action"}</span>
+        </div>
+      </div>
+      <div class="tm-rl-d ${cls}">${right}</div>
+    </div>`;
+
+  const more = (list) => list.length > LIMIT
+    ? `<div class="tm-rl-more" onclick="go('okrupload')">+ ${list.length-LIMIT} more →</div>` : "";
+
+  const overCard = over.length
+    ? `<div class="tm-rl tm-rl-alert">
+         <div class="tm-rl-h tm-rl-h-red">⚠ Overdue — ${over.length}</div>
+         ${over.slice(0,LIMIT).map(r=>line(r, tmDaysLate(r,TODAY_ISO)+"d", "tm-late")).join("")}
+         ${more(over)}
+       </div>`
+    : `<div class="tm-rl">
+         <div class="tm-rl-h">Team MBO</div>
+         <div class="tm-rl-ok">✓ Nothing overdue</div>
+       </div>`;
+
+  const nextCard = next.length
+    ? `<div class="tm-rl">
+         <div class="tm-rl-h">Coming up — ${next.length}</div>
+         ${next.slice(0,LIMIT).map(r=>line(r, tmDateLabel(r), "")).join("")}
+         ${more(next)}
+       </div>`
+    : "";
+
+  return `<div class="dash-rail">${overCard}${nextCard}
+    <div class="tm-rl-link" onclick="go('okrupload')">Open Team MBO →</div>
   </div>`;
 }
 function aplFoldersPanel(){
@@ -2268,7 +2305,6 @@ function aplFoldersPanel(){
       </div>`;
     }).join("")}
   </div>
-  ${tmOverdueWidget()}
   </div>`;
 }
 function openAplFolder(aplId){
@@ -2958,6 +2994,8 @@ function pageDash(){
 
   ${aplFoldersPanel()}
 
+  <div class="dash-split">
+  <div class="dash-main">
   <div class="panel" style="margin-bottom:14px">
     <div class="panel-h">
       <h3>Partner NGOs</h3>
@@ -2983,6 +3021,9 @@ function pageDash(){
         </tbody>
       </table>
     </div>
+  </div>
+  </div>
+  ${tmDashRail()}
   </div>
 
   ${scorecardPanel(ngos)}
