@@ -267,12 +267,23 @@ Shows what was read before anything is saved:
 
 ## Dashboard block
 
-A compact "MBO — overdue and due this week" card on the Dashboard, so the
-information finds the PM rather than waiting to be visited.
+A compact "MBO overdue" card in the Dashboard's right margin, so the information
+finds the PM rather than waiting to be visited. It lists the most overdue items
+with the owner and how late each is, plus a count of what is due this week, and
+is tinted so it reads as an alert rather than as another list.
 
-**Open item:** the page's right margin already holds the "Documents due soon"
-widget. Whether this card shares that margin, replaces it, or sits elsewhere is a
-visual decision to settle with a mockup before the build starts.
+It appears **only** when something is overdue or due within 7 days. On a quiet
+week the Dashboard looks exactly as it does today.
+
+**It replaces the "Documents due soon" widget**, which is removed from the
+Dashboard. Document expiry is not lost: `docsExpiringCount()` still feeds the
+count badge on the Documents nav item, and the Documents page still lists
+everything expiring. Only the dashboard card goes.
+
+Removal covers the `docsExpiringWidget()` call inside `aplFoldersPanel()`, the
+`docsExpiringWidget()` function, and `docsExpiringList()` which nothing else
+uses. `docsExpiringCount()` **must stay** — removing it breaks the nav badge.
+The `.apl-doc-*` CSS is repurposed for the new card rather than duplicated.
 
 ## Out of scope
 
