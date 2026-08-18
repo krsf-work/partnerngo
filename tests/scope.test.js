@@ -12,7 +12,7 @@ const ROWS = [
 const idsOf = rows => Array.from(rows, r => r.id);
 
 function visibleWith(me){
-  const { visibleTeamMbo } = loadFns(['visibleTeamMbo'], { DB:{ teamMbo: ROWS }, ME: me });
+  const { visibleTeamMbo } = loadFns(['teamOf','visibleTeamMbo'], { DB:{ teamMbo: ROWS, users: [] }, ME: me });
   return visibleTeamMbo();
 }
 
@@ -31,7 +31,7 @@ assert.deepStrictEqual(idsOf(visibleWith(null)), [],
   'no signed-in user must see nothing');
 
 // And it must not crash when the collection is absent.
-const { visibleTeamMbo } = loadFns(['visibleTeamMbo'], { DB:{}, ME:{ id:'u1', role:'PM' } });
+const { visibleTeamMbo } = loadFns(['teamOf','visibleTeamMbo'], { DB:{}, ME:{ id:'u1', role:'PM' } });
 assert.deepStrictEqual(idsOf(visibleTeamMbo()), [], 'missing collection returns empty, not a throw');
 
 console.log('scope: all assertions passed');

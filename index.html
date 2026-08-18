@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V65</title>
+<title>Sahkar · KRSF Partnership Program · V66</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -769,6 +769,10 @@ window.FIREBASE_CONFIG = {
   .tm-pv-fh{font-size:12px;font-weight:800;color:var(--ink);margin-bottom:6px}
   .tm-pv-f{font-size:11.5px;color:var(--ink-2);line-height:1.55;padding:2px 0}
   .tm-pv-note{font-size:11.5px;color:var(--ink-3);line-height:1.55;margin-top:11px}
+  /* shown to a manager on a subordinate's NGO, where Save is deliberately absent */
+  .ngo-viewonly{font-size:12.5px;color:var(--ink-2);background:var(--amber-soft);
+                border:1px solid var(--amber);border-radius:9px;
+                padding:9px 12px;margin-bottom:12px;line-height:1.5}
   @media(max-width:920px){
     /* two filters per line, and a select tall enough to hit with a thumb */
     .tm-filters{gap:8px}
@@ -1228,7 +1232,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V65</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V66</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1253,7 +1257,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V65</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V66</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2156,12 +2160,86 @@ function emptyBudget(){
 // Programme logins are scoped strictly to their assigned NGOs, and see
 // NOTHING if unassigned (fail safe, not fail open — an unassigned login
 // must never default to full network access).
-function visibleNgos(){
-  if(ME && (ME.role==="APL" || ME.role==="Programme")){
-    const assigned = Array.isArray(ME.ngoIds) ? ME.ngoIds : [];
-    return DB.ngos.filter(n=>assigned.includes(n.id));
+/* =====================================================================
+   REPORTING HIERARCHY
+   A user's `reportsTo` names their manager. A manager SEES everything
+   belonging to the people below them, at any depth; they never gain the
+   right to CHANGE it. Visibility flows down only — a subordinate never
+   sees their manager's records.
+   ===================================================================== */
+
+/* The user plus everyone below them. Breadth-first with a visited set, so a
+   circular line terminates instead of hanging. Admin refuses to create one,
+   but a restored backup or a concurrent edit could still produce it. */
+function teamOf(userId){
+  const out = new Set();
+  if(!userId) return out;
+  const users = (DB && DB.users) || [];
+  const queue = [userId];
+  while(queue.length){
+    const id = queue.shift();
+    if(out.has(id)) continue;
+    out.add(id);
+    users.forEach(u=>{
+      if(u && u.reportsTo === id && !out.has(u.id)) queue.push(u.id);
+    });
   }
-  return DB.ngos.slice();
+  return out;
+}
+
+/* Would making `userId` report to `managerId` close a loop? True if the
+   proposed manager is the user themselves, or is already somewhere below
+   them. Clearing the field is always allowed. */
+function wouldCreateCycle(userId, managerId){
+  if(!managerId) return false;
+  return teamOf(userId).has(managerId);
+}
+
+/* Who may be picked as someone's manager: the other lead-role users, minus
+   themselves and anyone already below them. Finance, Accounts, Viewer and
+   the PM are not part of the partnership reporting line. */
+function reportsToOptions(u){
+  const leads = ((DB && DB.users) || [])
+    .filter(x => x && (x.role==="APL" || x.role==="Programme"));
+  if(!u) return leads.map(x=>({ id:x.id, name:x.name }));
+  return leads
+    .filter(x => x.id !== u.id && !wouldCreateCycle(u.id, x.id))
+    .map(x => ({ id:x.id, name:x.name }));
+}
+
+/* Every NGO this user may SEE: their own, plus their whole team's. */
+function effectiveNgoIds(userId){
+  const team = teamOf(userId);
+  const out = new Set();
+  ((DB && DB.users) || []).forEach(u=>{
+    if(!u || !team.has(u.id)) return;
+    (Array.isArray(u.ngoIds) ? u.ngoIds : []).forEach(id=>out.add(id));
+  });
+  return out;
+}
+
+/* Only the signed-in user's OWN NGOs. This is what grants edit rights, and
+   it must never be widened to the team. */
+function myNgoIds(){
+  return (ME && Array.isArray(ME.ngoIds)) ? ME.ngoIds : [];
+}
+
+/* Roles whose work spans the whole portfolio rather than an assigned slice:
+   the PM, the two finance-side roles who process debit notes for every
+   partner, and the read-only auditor. */
+const PORTFOLIO_WIDE_ROLES = ["PM","Accounts","Finance","Viewer"];
+
+function visibleNgos(){
+  if(!ME) return [];
+  if(ME.role==="APL" || ME.role==="Programme"){
+    const allowed = effectiveNgoIds(ME.id);
+    return DB.ngos.filter(n=>allowed.has(n.id));
+  }
+  if(PORTFOLIO_WIDE_ROLES.indexOf(ME.role) >= 0) return DB.ngos.slice();
+  /* Fail closed. An earlier version returned every NGO from here, which
+     exposed the whole portfolio to a Programme login before that role was
+     recognised. A role nobody has taught this function about sees nothing. */
+  return [];
 }
 /* Team MBO rows the signed-in user may see. Fails CLOSED: an unrecognised
    role or no session sees nothing. A lead sees only rows they own. */
@@ -2169,7 +2247,9 @@ function visibleTeamMbo(){
   const rows = (typeof DB!=="undefined" && DB && DB.teamMbo) || [];
   if(!ME) return [];
   if(ME.role === "PM") return rows;
-  return rows.filter(r => r && r.ownerId === ME.id);
+  /* own rows plus everyone below them in the reporting line */
+  const team = teamOf(ME.id);
+  return rows.filter(r => r && team.has(r.ownerId));
 }
 function docsNavCount(){
   const n = docsExpiringCount(new Set(visibleNgos().map(x=>x.id)));
@@ -2196,7 +2276,11 @@ function canEdit(){ return ME && (ME.role==="PM"||ME.role==="APL"||ME.role==="Pr
 function canEditNgo(ngoId){
   if(!ME || ME.role==="Viewer") return false;
   if(ME.role==="PM") return true;
-  return Array.isArray(ME.ngoIds) && ME.ngoIds.includes(ngoId);
+  if(ME.role!=="APL" && ME.role!=="Programme") return false;
+  /* myNgoIds(), NOT effectiveNgoIds(): a manager can see everything their
+     team owns but changes only their own. Widening this to the team is the
+     single most damaging mistake available in this file. */
+  return myNgoIds().indexOf(ngoId) >= 0;
 }
 // only PM can add/remove partner NGOs or manage logins
 function canManageNgos(){ return ME && ME.role==="PM"; }
@@ -2793,6 +2877,8 @@ function toggleNgoRow(id){
 function setPartnership(ngoId, ev){
   if(ev) ev.stopPropagation();
   if(blockIfReadOnly()) return;
+  /* a manager can see a subordinate's NGO but must not flip its status */
+  if(blockIfCantEditNgo(ngoId)) return;
   const n = ngoById(ngoId);
   if(!n) return;
   const next = (n.partnership==="Active") ? "Passive" : "Active";
@@ -3174,7 +3260,8 @@ function pageBets(){
   <div class="phead slim">
     <div class="eyebrow">Outcome tracking</div>
     <h1 class="serif">Milestones</h1>
-    ${canEdit()?`<button class="btn accent" style="margin-left:auto" onclick="openBetForm()">+ New Milestone</button>`:''}
+    ${canEdit() && visibleNgos().some(n=>canEditNgo(n.id))
+      ? `<button class="btn accent" style="margin-left:auto" onclick="openBetForm()">+ New Milestone</button>` : ''}
   </div>
 
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
@@ -3269,11 +3356,11 @@ function renderBetRow(bet){
           <b>${prog}%</b> ${h.status!=='gray'?`· <span style="color:var(--${h.status})">${h.label} (${h.pace}% of plan-to-date)</span>`:'· not started'}
         </span>
         <span style="display:flex;gap:8px">
-          ${canEdit()?`<button class="btn sm" onclick="event.stopPropagation();openBetForm('${bet.id}')">Edit bet</button>`:''}
+          ${canEditNgo(bet.ngoId)?`<button class="btn sm" onclick="event.stopPropagation();openBetForm('${bet.id}')">Edit bet</button>`:''}
         </span>
       </div>
       <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:6px">
-        Monthly ladder ${canEdit()?'· tap a month to enter plan &amp; achieved':'· read-only'}
+        Monthly ladder ${canEditNgo(bet.ngoId)?'· tap a month to enter plan &amp; achieved':'· read-only'}
       </div>
       <div class="ladder">${cellsHtml}</div>
       ${bet.editedAt?`<div style="font-size:10.5px;color:var(--ink-3);margin-top:8px">Last updated ${esc(bet.editedAt)} by ${esc(bet.editedBy||'—')}</div>`:''}
@@ -3671,8 +3758,12 @@ function pageNgos(){
    ================================================================= */
 function openNgoForm(editId){
   if(blockIfReadOnly()) return;
+  /* editing an existing partnership needs ownership of it; creating a new
+     one is a PM action */
+  if(editId){ if(blockIfCantEditNgo(editId)) return; }
+  else if(!canManageNgos()){ toast("Only the programme manager can add a partner NGO"); return; }
   const n = editId ? ngoById(editId) : null;
-  const apls = DB.users.filter(u=>u.role==="APL");
+  const apls = DB.users.filter(u=>u && (u.role==="APL" || u.role==="Programme"));
   const body = `
     <div class="frow">
       <div class="field">
@@ -3735,6 +3826,10 @@ function openNgoForm(editId){
   showModal(modalShell(editId?"Edit partner":"New partner", editId?"Edit Partner NGO":"Add a Partner NGO", body, foot));
 }
 async function saveNgo(editId){
+  /* re-checked here, not only in the opener: a manager can see a
+     subordinate's NGO, so the save itself has to refuse it */
+  if(editId){ if(blockIfCantEditNgo(editId)) return; }
+  else if(!canManageNgos()){ toast("Only the programme manager can add a partner NGO"); return; }
   const name = el("nfName").value.trim();
   const short = el("nfShort").value.trim();
   if(!name || !short){ toast("Name and short name are required"); return; }
@@ -3763,6 +3858,8 @@ async function saveNgo(editId){
   toast(editId?"Partner updated":"Partner added — set up its budget & milestones next");
 }
 function deleteNgo(id){
+  /* removing a partner organisation is a PM action, never a lead's */
+  if(!canManageNgos()){ toast("Only the programme manager can remove a partner NGO"); return; }
   const n = ngoById(id);
   if(!n) return;
   const betN = betsForNgo(id).length;
@@ -3865,10 +3962,17 @@ function pageNgoDetail(ngoId){
   else if(NGO_TAB==="scorecard") body = ngoScorecardTab(ngoId);
   else if(NGO_TAB==="reffiles")  body = ngoRefFilesTab(ngoId);
 
+  /* A manager can reach a subordinate's NGO but cannot change it. Say so
+     plainly, otherwise the missing Save buttons read as a fault. */
+  const viewOnly = ME && ME.role!=="PM" && !canEditNgo(ngoId)
+    ? `<div class="ngo-viewonly">👁 Led by <b>${esc(aplNamesFor(ngoId))}</b> — you can view this
+         partnership but not change it.</div>` : "";
+
   return `
   <div style="margin-bottom:12px">
     <button class="btn ghost sm" onclick="go('ngos')">&larr; All NGOs</button>
   </div>
+  ${viewOnly}
 
   <div class="ngo-hero">
     <div class="ngo-hero-stripe ${cls}"></div>
@@ -7145,6 +7249,10 @@ function importDebitExcel(){
 }
 
 async function saveDebit(ngoId, editId){
+  /* openDebitForm() already refuses an NGO this user does not own, but this
+     is a money path — re-check at the point of writing rather than trusting
+     that the form is the only way in */
+  if(blockIfCantEditNgo(ngoId)) return;
   const scrolls = readScrollLines().filter(l=>l.scrollId || l.amount);
   if(!scrolls.length){ toast("Add at least one scroll line with an amount"); return; }
   const amt = scrolls.reduce((s,l)=>s+l.amount,0);
@@ -8294,7 +8402,10 @@ async function toggleTask(id){
 }
 function openTaskForm(editId){
   if(blockIfReadOnly()) return;
-  const ngos = visibleNgos();
+  /* only NGOs this user owns — a manager sees their team's but cannot
+     create work against them */
+  const ngos = visibleNgos().filter(n=>canEditNgo(n.id));
+  if(!ngos.length){ toast("You can only create tasks for the NGOs assigned to you"); return; }
   const t = editId ? DB.tasks.find(x=>x.id===editId) : null;
   const body = `
     <div class="field">
@@ -8329,6 +8440,9 @@ async function saveTask(editId){
   const title = el("tfTitle").value.trim();
   if(!title){ toast("Add a task title"); return; }
   const ngoId = el("tfNgo").value;
+  /* the NGO dropdown is already filtered to what this user owns, but the
+     save re-checks: a manager can see their team's NGOs */
+  if(ngoId && blockIfCantEditNgo(ngoId)) return;
   if(editId){
     const t = DB.tasks.find(x=>x.id===editId);
     if(t){ Object.assign(t, { title, ngoId, due:el("tfDue").value, priority:el("tfPri").value }); }
@@ -8345,6 +8459,8 @@ async function saveTask(editId){
 function deleteTask(id){
   const t = DB.tasks.find(x=>x.id===id);
   if(!t) return;
+  /* a task belongs to an NGO — a manager may see it but not delete it */
+  if(t.ngoId && blockIfCantEditNgo(t.ngoId)) return;
   confirmAction("Delete this task?",
     `"${esc((t.title||"").slice(0,80))}" will be permanently removed.`,
     async ()=>{
@@ -8459,7 +8575,7 @@ function pageAdmin(){
     ${apls.length? `<div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>Name</th><th>Login (phone)</th><th>Role</th><th>Assigned NGOs</th><th></th>
+          <th>Name</th><th>Login (phone)</th><th>Role</th><th>Reports to</th><th>Assigned NGOs</th><th></th>
         </tr></thead>
         <tbody>
         ${apls.map(u=>{
@@ -8469,7 +8585,14 @@ function pageAdmin(){
             <td><b>${esc(u.name)}</b></td>
             <td class="mono">${esc(u.username||'—')}${onPhone?'':' <span class="badge amber" style="font-size:9.5px" title="Edit this user to set their phone number">set phone</span>'}</td>
             <td style="font-size:11.5px"><span class="badge ${u.role==='APL'?'blue':u.role==='Accounts'?'violet':u.role==='Finance'?'green':u.role==='Programme'?'amber':'gray'}">${({APL:'Partner NGO',Accounts:'Vadali Accounts',Finance:'Ahmedabad Finance',Programme:'Programme',Viewer:'Viewer'}[u.role])||u.role}</span></td>
-            <td style="font-size:12px">${u.role!=='APL' ? '<span style="color:var(--ink-3)">—</span>' : (assigned.length ? assigned.map(n=>esc(n.short)).join(", ") : '<span style="color:var(--ink-3)">none yet</span>')}</td>
+            <td style="font-size:12px">${(()=>{
+              const mgr = (DB.users||[]).find(x=>x.id===u.reportsTo);
+              return mgr ? esc(mgr.name) : '<span style="color:var(--ink-3)">—</span>';
+            })()}</td>
+            <td style="font-size:12px">${(u.role!=='APL' && u.role!=='Programme')
+              ? '<span style="color:var(--ink-3)">—</span>'
+              : (assigned.length ? assigned.map(n=>esc(n.short)).join(", ")
+                                 : '<span style="color:var(--ink-3)">none yet</span>')}</td>
             <td class="num" style="white-space:nowrap">
               <button class="btn ghost sm" onclick="openAplForm('${u.id}')">Edit</button>
               <button class="btn ghost sm" style="color:var(--red)" onclick="deleteApl('${u.id}')">Remove</button>
@@ -8564,6 +8687,16 @@ function openAplForm(editId){
       </select>
     </div>
     <div class="field">
+      <label>Reports to <span style="text-transform:none;font-weight:400">— optional</span></label>
+      <select id="apReportsTo">
+        <option value="">Nobody (top level)</option>
+        ${reportsToOptions(u).map(o=>
+          `<option value="${o.id}" ${u&&u.reportsTo===o.id?'selected':''}>${esc(o.name)}</option>`).join("")}
+      </select>
+      <div class="hint">Their manager sees everything this person's NGOs cover — milestones,
+        finance, debit notes, MBO and daily sheet — but cannot change them.</div>
+    </div>
+    <div class="field">
       <label>Assigned NGOs <span style="text-transform:none;font-weight:400">— limits Partner NGO &amp; Programme logins to these NGOs (leave empty on a Programme login for all NGOs)</span></label>
       ${ngos.length? `<div class="chk-grid">
         ${ngos.map(n=>`<label class="chk">
@@ -8592,14 +8725,23 @@ async function saveApl(editId){
   if(clash){ toast("That phone number is already used by another login"); return; }
   const ngoIds = Array.from(document.querySelectorAll(".apNgo"))
     .filter(c=>c.checked).map(c=>c.value);
+  const reportsTo = el("apReportsTo") ? el("apReportsTo").value : "";
+  /* The dropdown already hides anyone below this person, but re-check: the
+     tree can have changed in another browser since the modal was opened. */
+  if(editId && wouldCreateCycle(editId, reportsTo)){
+    const mgr = (DB.users||[]).find(x=>x.id===reportsTo);
+    toast(name+" cannot report to "+((mgr&&mgr.name)||"them")+" — "
+          +((mgr&&mgr.name)||"they")+" already reports up to "+name);
+    return;
+  }
   const initials = name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
   if(editId){
     const u = (DB.users||[]).find(x=>x.id===editId);
-    Object.assign(u, { name, phone, username, password, role, ngoIds,
+    Object.assign(u, { name, phone, username, password, role, ngoIds, reportsTo,
       title: el("apTitle").value.trim()||"Associate Partnership Lead", avatar:initials });
     stampEdit(u);
   } else {
-    const rec = { id:genId("u"), role, name, phone, username, password, ngoIds,
+    const rec = { id:genId("u"), role, name, phone, username, password, ngoIds, reportsTo,
       title: el("apTitle").value.trim()||"Associate Partnership Lead", avatar:initials };
     stampEdit(rec);
     if(!DB.users) DB.users=[];
