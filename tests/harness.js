@@ -42,7 +42,20 @@ function scan(src, from, mode){
   return -1;
 }
 
-function extract(src, name){
+/* Comments must go before any brace matching. The scanner tracks string
+   literals, so an apostrophe inside a comment — "the block's year" — opens a
+   string that never closes, and extraction then swallows the rest of the
+   file. That produced a 96KB "function" once and a silently wrong one before
+   that. Block comments and whole-line // comments only, so a URL sitting
+   mid-line inside a string survives. */
+function stripComments(s){
+  return s
+    .replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' '))
+    .replace(/^([ \t]*)\/\/.*$/gm, '$1');
+}
+
+function extract(rawSrc, name){
+  const src = stripComments(rawSrc);
   /* a function declaration */
   const fnStart = src.search(new RegExp('function\\s+' + name + '\\s*\\('));
   if(fnStart !== -1){

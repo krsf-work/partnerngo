@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V67</title>
+<title>Sahkar · KRSF Partnership Program · V68</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1232,7 +1232,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V67</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V68</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1257,7 +1257,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V67</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V68</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -5902,7 +5902,11 @@ function tmIsoOf(y,m,d){
   return dt.toISOString().slice(0,10);
 }
 
-function tmParseDate(cell){
+/* defaultYear is the year of the block the row sits in. One real file writes
+   deadlines as "20th June" with no year at all; without a year to fall back
+   on such a cell stays unreadable rather than being guessed. A year written
+   in the cell always wins. */
+function tmParseDate(cell, defaultYear){
   if(cell==null) return "";
   if(typeof cell === "number" && cell > 20000 && cell < 80000) return tmSerialToIso(cell);
   const s = String(cell).trim();
@@ -5929,6 +5933,20 @@ function tmParseDate(cell){
     const mi = TM_MONTHS.findIndex(x => x.startsWith(m[1].toLowerCase().slice(0,3)));
     if(mi >= 0) return tmIsoOf(+m[3], mi+1, +m[2]);
   }
+
+  /* no year in the cell — take it from the block, e.g. "20th June" */
+  if(defaultYear){
+    m = /^(\d{1,2})\s*(?:st|nd|rd|th)?\s+([A-Za-z]+)\.?$/.exec(s);
+    if(m){
+      const mi = TM_MONTHS.findIndex(x => x.startsWith(m[2].toLowerCase().slice(0,3)));
+      if(mi >= 0) return tmIsoOf(defaultYear, mi+1, +m[1]);
+    }
+    m = /^([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?$/.exec(s);
+    if(m){
+      const mi = TM_MONTHS.findIndex(x => x.startsWith(m[1].toLowerCase().slice(0,3)));
+      if(mi >= 0) return tmIsoOf(defaultYear, mi+1, +m[2]);
+    }
+  }
   return "";
 }
 
@@ -5951,40 +5969,53 @@ const TM_COLS = {
   timeEst:   ["timeestimate"],
   timeSpent: ["timespent"],
   objective: ["objective","goal"],
-  title:     ["keyresult","actionitem"],
+  /* "action" alone is a real header; so is "Action Item" and "July Action
+     Item". Which of these counts is decided per sheet — see tmColMap. */
+  title:     ["keyresult","actionitem","action"],
   deadline:  ["deadline","timeline","when","targetdate","duedate"],
   status:    ["status"],
   priority:  ["priority"],
   comment:   ["comment","notes","remark"],
   /* "resourse" is a real misspelling in a live file */
   ref:       ["reference","resource","resourse"],
-  owner:     ["whom","bywhom"],
-  objNum:    ["srno","srnumber","no"]
+  owner:     ["whom","bywhom","who"],
+  objNum:    ["srno","srnumber","no","sl","slno"]
 };
 
 /* Two passes: exact header matches first, then substring matches for headers
    carrying extra words ("July Action Item"). Without the exact-first pass,
    a substring match on a differently ordered sheet can capture the wrong
    column — which is the whole failure this per-block mapping exists to stop. */
-function tmColMap(cells){
+function tmColMap(cells, kind){
   const map = {};
   const norm = raw => String(raw==null?"":raw).toLowerCase().replace(/[^a-z]/g,"");
+
+  /* Which words may name the title column depends on the sheet. Without
+     this, a key-result sheet that also has a column called "Action" would
+     hand the title to it instead of to "Key result". */
+  const cols = {};
+  Object.keys(TM_COLS).forEach(k=>{ cols[k] = TM_COLS[k]; });
+  if(kind === "kr")          cols.title = ["keyresult"];
+  else if(kind === "action") cols.title = ["actionitem","action"];
 
   (cells||[]).forEach((raw, i) => {
     const n = norm(raw);
     if(!n) return;
-    for(const field of Object.keys(TM_COLS)){
+    for(const field of Object.keys(cols)){
       if(map[field] !== undefined) continue;
-      if(TM_COLS[field].some(x => n === x)){ map[field] = i; return; }
+      if(cols[field].some(x => n === x)){ map[field] = i; return; }
     }
   });
   (cells||[]).forEach((raw, i) => {
     const n = norm(raw);
     if(!n) return;
     if(Object.keys(map).some(f => map[f] === i)) return;
-    for(const field of Object.keys(TM_COLS)){
+    for(const field of Object.keys(cols)){
       if(map[field] !== undefined) continue;
-      if(TM_COLS[field].some(x => n.includes(x))){ map[field] = i; return; }
+      /* Short tokens are exact-match only. "no" (from "Sr. No") is a
+         substring of "Not Done", which made a data row look like a header
+         row and swallowed the block it belonged to. */
+      if(cols[field].some(x => x.length >= 4 && n.includes(x))){ map[field] = i; return; }
     }
   });
   return map;
@@ -6021,12 +6052,11 @@ function tmReadHeading(row, kind){
 
   const mi = tmMonthIndex(text);
   if(mi >= 0){
-    if(kind === "kr"){
-      /* Key-result headings always name the sheet, e.g. "MBO - August 2026"
-         or "MBO_Someone_August 2026". Same \b trap as tmMonthIndex — an
-         underscore is a word character, so \bMBO\b misses "MBO_Someone". */
-      if(!/(^|[^a-z])mbo($|[^a-z])/i.test(text)) return null;
-    }
+    /* A key-result heading must carry a year. It used to have to say "MBO"
+       too, but a third real file heads its blocks with a bare "June 2026".
+       What keeps a data row from passing as a heading is not the word MBO —
+       it is the cell-count limit above plus the header row that has to
+       follow within three rows. */
     const yearM = /(^|[^0-9])(20\d{2})($|[^0-9])/.exec(text);
     if(kind === "kr" && !yearM) return null;
     return { month: mi + 1, year: yearM ? +yearM[2] : null };
@@ -6047,10 +6077,11 @@ function tmReadHeading(row, kind){
    and would abort the block it belongs to. Require the row to map a title
    column AND at least two more known labels — a data row never does. */
 function tmIsHeaderRow(row, kind){
-  const map = tmColMap(tmRowCells(row));
+  const map = tmColMap(tmRowCells(row), kind);
   if(map.title === undefined) return false;
   const titleCell = String(tmRowCells(row)[map.title] || "");
-  const needle = kind === "action" ? /action\s*item/i : /key\s*result/i;
+  /* one real action sheet heads the column simply "Action" */
+  const needle = kind === "action" ? /action/i : /key\s*result/i;
   if(!needle.test(titleCell)) return false;
   return Object.keys(map).length >= 3;
 }
@@ -6121,8 +6152,9 @@ function tmPad(n){ return (n<10?"0":"") + n; }
    themselves are trusted — anything else is skipped and reported. */
 function tmSheetKind(name){
   const n = String(name==null?"":name);
-  if(/action\s*item/i.test(n)) return "action";
-  if(/(^|[^a-z])mbo($|[^a-z])/i.test(n)) return "kr";
+  if(/action/i.test(n)) return "action";
+  /* leads name this sheet either "MBO" or "OKR" */
+  if(/(^|[^a-z])(mbo|okr)($|[^a-z])/i.test(n)) return "kr";
   return null;
 }
 
@@ -6153,7 +6185,7 @@ function tmReadSheets(sheets, ownerId, batchId, todayIso){
     let prevMonth = null, prevYear = null;
 
     tmFindBlocks(cells, kind).forEach(block => {
-      const map = tmColMap(tmRowCells(cells[block.headerRow]));
+      const map = tmColMap(tmRowCells(cells[block.headerRow]), kind);
       if(map.title === undefined) return;
 
       let year = block.year;
@@ -6194,7 +6226,8 @@ function tmReadSheets(sheets, ownerId, batchId, todayIso){
         if(isFinite(numVal)) lastObjNum = String(Math.trunc(numVal));
 
         const rawDeadline = tmRawCell(row, map, "deadline");
-        const parsed = tmParseDate(rawDeadline);
+        /* the block's year fills in for a deadline written without one */
+        const parsed = tmParseDate(rawDeadline, year);
         const rep = tmRepairDate(parsed, block.month);
 
         const priRaw = tmCell(row, map, "priority");
