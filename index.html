@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V68</title>
+<title>Sahkar · KRSF Partnership Program · V69</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1232,7 +1232,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V68</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V69</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1257,7 +1257,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V68</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V69</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -4692,11 +4692,25 @@ function tmPreviewHtml(res){
   const acts = res.rows.filter(r=>r.type==="action").length;
 
   if(!res.rows.length){
+    /* Say what was actually looked at. A bare "couldn't read it" leaves the
+       user with nothing to act on, and every lead's file differs slightly. */
+    const seen = res.seen || [];
+    const sheetLines = seen.length ? `
+        <div class="tm-pv-m">Sheets in that file</div>
+        ${seen.map(s=>`<div class="tm-pv-r">${esc(s.name)} —
+            ${s.kind
+              ? (s.blocks ? s.blocks+" month block"+(s.blocks===1?"":"s")+" found, but no rows under them"
+                          : "recognised, but no month headings found inside")
+              : "not read (its name doesn't look like an MBO, OKR or Action Items sheet)"}
+          </div>`).join("")}` : "";
     return `<div class="tm-pv-empty">
-      Couldn't find any month blocks in that file — nothing was read, and nothing has been saved.
-      Each month needs a heading naming the month and year, with a row beneath it containing
-      a <b>Key Result</b> or <b>Action Item</b> column.
-    </div>`;
+        <b>Nothing was read, and nothing has been saved.</b><br>
+        A month needs a heading naming the month and year — <i>June 2026</i>, or
+        <i>MBO - June 2026</i> — with a row beneath it naming the columns, one of which
+        is the key result or action item.
+      </div>${sheetLines}
+      <div class="tm-pv-note">If this file looks right to you, send it over — it is
+        probably a layout variation the reader hasn't met yet.</div>`;
   }
 
   const plural = (n, one) => n + " " + one + (n===1?"":"s");
@@ -5917,8 +5931,12 @@ function tmParseDate(cell, defaultYear){
     const n = parseFloat(s);
     if(n > 20000 && n < 80000) return tmSerialToIso(n);
   }
+  /* yyyy-mm-dd, as a spreadsheet exported from Google Sheets often gives */
+  let m = /^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/.exec(s);
+  if(m) return tmIsoOf(+m[1], +m[2], +m[3]);
+
   /* d/m/yyyy or d-m-yyyy — day first */
-  let m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s);
+  m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s);
   if(m) return tmIsoOf(+m[3], +m[2], +m[1]);
 
   /* "28th Feb 2026", "31th July 2026", "30 June 2026" */
@@ -5971,7 +5989,8 @@ const TM_COLS = {
   objective: ["objective","goal"],
   /* "action" alone is a real header; so is "Action Item" and "July Action
      Item". Which of these counts is decided per sheet — see tmColMap. */
-  title:     ["keyresult","actionitem","action"],
+  title:     ["keyresult","keyresults","kr","activity","deliverable",
+              "actionitem","action","actionpoint","task"],
   deadline:  ["deadline","timeline","when","targetdate","duedate"],
   status:    ["status"],
   priority:  ["priority"],
@@ -5995,8 +6014,8 @@ function tmColMap(cells, kind){
      hand the title to it instead of to "Key result". */
   const cols = {};
   Object.keys(TM_COLS).forEach(k=>{ cols[k] = TM_COLS[k]; });
-  if(kind === "kr")          cols.title = ["keyresult"];
-  else if(kind === "action") cols.title = ["actionitem","action"];
+  if(kind === "kr")          cols.title = ["keyresult","keyresults","kr","activity","deliverable"];
+  else if(kind === "action") cols.title = ["actionitem","action","actionpoint","task"];
 
   (cells||[]).forEach((raw, i) => {
     const n = norm(raw);
@@ -6062,6 +6081,10 @@ function tmReadHeading(row, kind){
     return { month: mi + 1, year: yearM ? +yearM[2] : null };
   }
 
+  /* a numeric heading: "06/2026" or "6-2026" */
+  const numM = /^(0?[1-9]|1[0-2])\s*[\/\-.]\s*(20\d{2})$/.exec(text);
+  if(numM) return { month: +numM[1], year: +numM[2] };
+
   /* One real action sheet divides its months with a bare Excel date instead
      of a month name. Only accept this on action sheets, where the row is a
      lone value and a header still has to follow. */
@@ -6076,13 +6099,18 @@ function tmReadHeading(row, kind){
    not enough: a key result reading "First key result" contains "key result"
    and would abort the block it belongs to. Require the row to map a title
    column AND at least two more known labels — a data row never does. */
+/* A header row names several columns, one of them the title. There is no
+   separate word test: tmColMap only sets `title` when a cell actually
+   matched one of this sheet kind's title labels, so re-testing the text
+   would just be a second, staler copy of that list — which is how "KR" came
+   to be accepted as a column but rejected as a header.
+
+   The three-label floor is what keeps a data row out: a key result reading
+   "Write the first key result" matches the title label, but a real row never
+   also matches two more column names. */
 function tmIsHeaderRow(row, kind){
   const map = tmColMap(tmRowCells(row), kind);
   if(map.title === undefined) return false;
-  const titleCell = String(tmRowCells(row)[map.title] || "");
-  /* one real action sheet heads the column simply "Action" */
-  const needle = kind === "action" ? /action/i : /key\s*result/i;
-  if(!needle.test(titleCell)) return false;
   return Object.keys(map).length >= 3;
 }
 
@@ -6152,9 +6180,11 @@ function tmPad(n){ return (n<10?"0":"") + n; }
    themselves are trusted — anything else is skipped and reported. */
 function tmSheetKind(name){
   const n = String(name==null?"":name);
+  /* a to-do list is a different artefact and is deliberately not imported */
+  if(/to\s*do/i.test(n)) return null;
   if(/action/i.test(n)) return "action";
-  /* leads name this sheet either "MBO" or "OKR" */
-  if(/(^|[^a-z])(mbo|okr)($|[^a-z])/i.test(n)) return "kr";
+  /* leads name this sheet MBO, OKR, OKRs or KRA */
+  if(/(^|[^a-z])(mbo|okrs?|kra)($|[^a-z])/i.test(n)) return "kr";
   return null;
 }
 
@@ -6163,11 +6193,17 @@ function tmSheetKind(name){
    Returns { rows, months, flags } — flags are surfaced in the preview so
    nothing is repaired, skipped or dropped without the user seeing it. */
 function tmReadSheets(sheets, ownerId, batchId, todayIso){
-  const rows = [], flags = [], monthSet = {};
+  const rows = [], flags = [], monthSet = {}, seen = [];
 
   (sheets||[]).forEach(sheet => {
     const kind = tmSheetKind(sheet.name);
     const cells = sheet.cells || [];
+    /* Recorded for every sheet, read or not, so a file that yields nothing
+       can still show the user what was looked at and why it was passed
+       over — otherwise a new layout is just a dead end. */
+    seen.push({ name: sheet.name, kind: kind,
+                blocks: kind ? tmFindBlocks(cells, kind).length : 0,
+                rows: (cells||[]).length });
 
     if(!kind){
       /* say so only if it actually looked like it held MBO data, so a
@@ -6277,7 +6313,7 @@ function tmReadSheets(sheets, ownerId, batchId, todayIso){
     });
   });
 
-  return { rows: rows, months: Object.keys(monthSet).sort(), flags: flags };
+  return { rows: rows, months: Object.keys(monthSet).sort(), flags: flags, seen: seen };
 }
 
 /* Their file holds every month, so the same file gets uploaded repeatedly.
