@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V66</title>
+<title>Sahkar · KRSF Partnership Program · V67</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1232,7 +1232,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V66</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V67</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1257,7 +1257,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V66</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V67</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2255,12 +2255,27 @@ function docsNavCount(){
   const n = docsExpiringCount(new Set(visibleNgos().map(x=>x.id)));
   return n||null;
 }
+/* Whose daily sheets the signed-in user may look at: themselves plus anyone
+   below them in the reporting line. The PM sees every lead. Before V66 every
+   lead could see every other lead's day regardless of the reporting line. */
+function dailyPeople(){
+  if(!ME) return [];
+  const leads = ((DB && DB.users) || [])
+    .filter(u => u && (u.role==="APL" || u.role==="Programme"));
+  if(ME.role === "PM") return leads;
+  if(ME.role !== "APL" && ME.role !== "Programme") return [];
+  const team = teamOf(ME.id);
+  return leads.filter(u => team.has(u.id));
+}
+
 function dailyNavCount(){
+  if(!ME) return null;
   if(ME.role==="PM"){
-    const apls=(DB.users||[]).filter(u=>u.role==="APL"||u.role==="Programme");
-    const n=apls.filter(a=>!dailyFilled(dailyRec(a.id,TODAY_ISO))).length;
+    const n=dailyPeople().filter(a=>!dailyFilled(dailyRec(a.id,TODAY_ISO))).length;
     return n||null;
   }
+  /* A lead's badge counts only their OWN unfilled day, not their team's —
+     it is a reminder to fill yours in, not a roll-up. */
   if(ME.role==="APL"||ME.role==="Programme"){
     return dailyFilled(dailyRec(ME.id,TODAY_ISO)) ? null : 1;
   }
@@ -8098,10 +8113,15 @@ function pageDaily(){
   return tabs + (DAILY_PM_TAB==="mine" ? dailyAplPage() : dailyPmPage());
 }
 
-/* ---------- APL view: own editable sheet (+ read-only peek at teammates) ---------- */
+/* ---------- lead view: own editable sheet (+ read-only view of their team) ---------- */
 function dailyAplPage(){
-  const apls=(DB.users||[]).filter(u=>u.role==="APL"||u.role==="Programme");
-  const whoId=(DAILY_WHO && DAILY_WHO!=="all") ? DAILY_WHO : ME.id;
+  const apls=dailyPeople();
+  /* DAILY_WHO survives a role or reporting-line change, so a stale value
+     could point at someone no longer in this user's team — fall back to
+     their own sheet rather than showing a day they may not see. */
+  const allowed = new Set(apls.map(a=>a.id));
+  const asked = (DAILY_WHO && DAILY_WHO!=="all") ? DAILY_WHO : ME.id;
+  const whoId = allowed.has(asked) ? asked : ME.id;
   const editable = whoId===ME.id;
   const who=userById(whoId)||ME;
   const dates=dailyRecentDates(14);
@@ -8209,7 +8229,7 @@ function dailyKpi(cls,ic,lab,val,sub){
   return `<div class="kpi"><div class="ktop"><div class="ktile ${cls}">${ic}</div><div class="lab">${lab}</div></div><div class="val">${val}</div><div class="sub">${sub}</div></div>`;
 }
 function dailyPmPage(){
-  const apls=(DB.users||[]).filter(u=>u.role==="APL"||u.role==="Programme");
+  const apls=dailyPeople();
   const range=dailyRangeDates(DAILY_RANGE);
   const who=DAILY_WHO||"all";
   const people = who==="all" ? apls : apls.filter(a=>a.id===who);
