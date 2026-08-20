@@ -3,7 +3,7 @@ const { loadFns } = require('./harness');
 
 const F = loadFns(
   ['TM_MONTHS','TM_COLS',
-   'tmNormStatus','tmSerialToIso','tmIsoOf','tmParseDate','tmRepairDate',
+   'tmNormStatus','tmSerialToIso','tmIsoOf','tmParseDate','tmWeekOfMonth','TM_ORDINALS','tmRepairDate',
    'tmColMap','tmMonthIndex','tmReadHeading','tmHasHeaderNear','tmHeaderMonth','tmSheetYear','tmFindInlineMonthBlocks','TM_HEADING_MAX_CHARS','tmIsHeaderRow','tmFindBlocks','tmRowCells','tmNonEmpty'],
   {}
 );

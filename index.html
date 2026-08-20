@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V70</title>
+<title>Sahkar · KRSF Partnership Program · V71</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1232,7 +1232,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V70</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V71</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1257,7 +1257,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V70</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V71</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -5916,6 +5916,35 @@ function tmIsoOf(y,m,d){
   return dt.toISOString().slice(0,10);
 }
 
+const TM_ORDINALS = { first:1, second:2, third:3, fourth:4, fifth:5 };
+
+/* "First week of Jan", "2nd week of Feb" — one lead writes every deadline
+   this way. Read as the LAST day of that week, because a deadline is the
+   point by which the work is due: the first week of January means by the
+   7th. A fifth week runs to the end of the month, whatever its length. */
+function tmWeekOfMonth(text, defaultYear){
+  const s = String(text==null?"":text).trim();
+  const m = /^(\d)(?:st|nd|rd|th)?\s+week\s+of\s+([A-Za-z]+)\.?(?:\s+(\d{4}))?$/i.exec(s)
+         || /^([A-Za-z]+)\s+week\s+of\s+([A-Za-z]+)\.?(?:\s+(\d{4}))?$/i.exec(s);
+  if(!m) return "";
+
+  const week = /^\d$/.test(m[1]) ? +m[1] : TM_ORDINALS[m[1].toLowerCase()];
+  if(!week || week < 1 || week > 5) return "";
+
+  const mi = TM_MONTHS.findIndex(x => x.startsWith(m[2].toLowerCase().slice(0,3)));
+  if(mi < 0) return "";
+
+  const year = m[3] ? +m[3] : defaultYear;
+  if(!year) return "";
+
+  if(week === 5){
+    /* last day of the month — day 0 of the next month */
+    const last = new Date(Date.UTC(year, mi + 1, 0)).getUTCDate();
+    return tmIsoOf(year, mi + 1, last);
+  }
+  return tmIsoOf(year, mi + 1, week * 7);
+}
+
 /* defaultYear is the year of the block the row sits in. One real file writes
    deadlines as "20th June" with no year at all; without a year to fall back
    on such a cell stays unreadable rather than being guessed. A year written
@@ -5951,6 +5980,10 @@ function tmParseDate(cell, defaultYear){
     const mi = TM_MONTHS.findIndex(x => x.startsWith(m[1].toLowerCase().slice(0,3)));
     if(mi >= 0) return tmIsoOf(+m[3], mi+1, +m[2]);
   }
+
+  /* "First week of Jan", "2nd week of Feb" */
+  const wk = tmWeekOfMonth(s, defaultYear);
+  if(wk) return wk;
 
   /* no year in the cell — take it from the block, e.g. "20th June" */
   if(defaultYear){

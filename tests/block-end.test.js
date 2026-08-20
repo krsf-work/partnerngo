@@ -16,7 +16,7 @@ const { loadFns } = require('./harness');
 let n = 0;
 const F = loadFns(
   ['TM_MONTHS','TM_COLS','tmSheetKind','tmReadHeading','tmIsHeaderRow','tmFindBlocks',
-   'tmColMap','tmMonthIndex','tmParseDate','tmSerialToIso','tmIsoOf','tmRepairDate','tmHasHeaderNear','tmHeaderMonth','tmSheetYear','tmFindInlineMonthBlocks','TM_HEADING_MAX_CHARS',
+   'tmColMap','tmMonthIndex','tmParseDate','tmWeekOfMonth','TM_ORDINALS','tmSerialToIso','tmIsoOf','tmRepairDate','tmHasHeaderNear','tmHeaderMonth','tmSheetYear','tmFindInlineMonthBlocks','TM_HEADING_MAX_CHARS',
    'tmNormStatus','tmRowCells','tmNonEmpty','tmCell','tmRawCell','tmPad',
    'tmReadSheets','tmReplaceMonths'],
   { genId: p => `${p}_${++n}` });
