@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V69</title>
+<title>Sahkar · KRSF Partnership Program · V70</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1232,7 +1232,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V69</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V70</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1257,7 +1257,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V69</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V70</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -6015,7 +6015,9 @@ function tmColMap(cells, kind){
   const cols = {};
   Object.keys(TM_COLS).forEach(k=>{ cols[k] = TM_COLS[k]; });
   if(kind === "kr")          cols.title = ["keyresult","keyresults","kr","activity","deliverable"];
-  else if(kind === "action") cols.title = ["actionitem","action","actionpoint","task"];
+  /* "Activity" heads the column on one real action sheet and the key-result
+     column on another, so it belongs to both */
+  else if(kind === "action") cols.title = ["actionitem","action","actionpoint","task","activity"];
 
   (cells||[]).forEach((raw, i) => {
     const n = norm(raw);
@@ -6063,11 +6065,19 @@ function tmMonthIndex(text){
    read "...will send MBO by 5 January 2026". A real heading may still carry
    a stray jotting off to the right, so a small number of extra cells is
    tolerated; requiring exactly one silently swallowed a whole month. */
+/* A month heading is short — the longest real one seen is 35 characters
+   ("MBO_Some Name_November_ 2025"). A key result, by contrast, is a
+   sentence, and one reading "...for MNREGA by March 2027" was being taken
+   as the start of a new month, ending its block early and silently dropping
+   every row beneath it. */
+const TM_HEADING_MAX_CHARS = 60;
+
 function tmReadHeading(row, kind){
   const cells = tmNonEmpty(row);
   if(!cells.length || cells.length > 3) return null;
   const first = cells[0];
   const text = String(first).trim();
+  if(text.length > TM_HEADING_MAX_CHARS) return null;
 
   const mi = tmMonthIndex(text);
   if(mi >= 0){
@@ -6114,6 +6124,32 @@ function tmIsHeaderRow(row, kind){
   return Object.keys(map).length >= 3;
 }
 
+/* Does a header row sit within the next three rows of `i`? Used both to
+   confirm a heading starts a block and to confirm one ends the previous
+   block, so the two rules cannot drift apart. */
+function tmHasHeaderNear(rows, i, kind){
+  for(let j = i + 1; j <= Math.min(i + 3, rows.length - 1); j++){
+    if(tmIsHeaderRow(rows[j], kind)) return true;
+  }
+  return false;
+}
+
+/* The year written into a sheet's name: "MBO 2026" -> 2026,
+   "OKR 2025-26" -> 2025. Used as a last resort for a file that names its
+   months but never its years. */
+function tmSheetYear(name){
+  const m = /(20\d{2})/.exec(String(name==null?"":name));
+  return m ? +m[1] : null;
+}
+
+/* Does this header row name the month itself — "March (Key Results)" — with
+   no heading row above it? One real file is laid out entirely this way. */
+function tmHeaderMonth(row, kind){
+  const map = tmColMap(tmRowCells(row), kind);
+  if(map.title === undefined) return -1;
+  return tmMonthIndex(String(tmRowCells(row)[map.title] || ""));
+}
+
 function tmFindBlocks(rows, kind){
   const isHeaderRow = row => tmIsHeaderRow(row, kind);
   const blocks = [];
@@ -6136,14 +6172,37 @@ function tmFindBlocks(rows, kind){
     if(headerRow === -1) headerRow = lastHeaderAbove;
     if(headerRow === -1) continue;
 
-    /* rows run from just after the heading (or the header, whichever is
-       lower) until a blank row or the next heading */
+    /* Rows run from just after the heading (or the header, whichever is
+       lower) until a blank row, the next real heading, or a header row.
+
+       "Real heading" means one that would actually START a block — heading
+       text AND a header row following it. Testing only tmReadHeading here
+       made ending a block easier than starting one, so a row that could
+       never have begun a block could still terminate one. */
     const firstRow = Math.max(headerRow, i) + 1;
+    const map = tmColMap(tmRowCells(rows[headerRow]), kind);
+    /* Text sitting in THIS block's own title column makes a row a data row,
+       whatever else it says. That is what separates a key result reading
+       "...by March 2027" from a heading reading "March 2027": the heading
+       has nothing in the title column. Length and month-name tests both
+       failed on real data; column position does not. */
+    const isDataRow = row =>
+      map.title !== undefined &&
+      String(tmRowCells(row)[map.title] || "").trim() !== "" &&
+      /* A lone value is a divider, not a row — one real action sheet marks
+         each month with a bare date that lands in the title column. A data
+         row always carries something besides its title. */
+      tmNonEmpty(row).length > 1;
+
     let lastRow = firstRow - 1;
     for(let j = firstRow; j < rows.length; j++){
       if(tmNonEmpty(rows[j]).length === 0) break;
-      if(tmReadHeading(rows[j], kind)) break;
       if(isHeaderRow(rows[j])) break;
+      /* Not tmHasHeaderNear() here: one real action sheet carries a single
+         header at the very top and divides months beneath it, so its later
+         dividers have no header following them. isDataRow is what does the
+         work — a heading never has text in the title column. */
+      if(!isDataRow(rows[j]) && tmReadHeading(rows[j], kind)) break;
       lastRow = j;
     }
     if(lastRow < firstRow) continue;
@@ -6156,6 +6215,39 @@ function tmFindBlocks(rows, kind){
       lastRow
     });
     i = lastRow;
+  }
+
+  /* Only if nothing was found the normal way: a file whose header rows name
+     their own month — "March (Key Results)" — and which has no heading rows
+     at all. Kept as a fallback rather than a competing rule, because plenty
+     of ordinary headers mention a month ("July Action Item") and would
+     otherwise swallow the sheet in one block. */
+  if(!blocks.length) return tmFindInlineMonthBlocks(rows, kind);
+  return blocks;
+}
+
+function tmFindInlineMonthBlocks(rows, kind){
+  const blocks = [];
+  for(let i = 0; i < (rows||[]).length; i++){
+    if(!tmIsHeaderRow(rows[i], kind)) continue;
+    const month = tmHeaderMonth(rows[i], kind);
+    if(month < 0) continue;
+
+    const map = tmColMap(tmRowCells(rows[i]), kind);
+    const titleCell = String(tmRowCells(rows[i])[map.title] || "");
+    const yearM = /(^|[^0-9])(20\d{2})($|[^0-9])/.exec(titleCell);
+
+    let last = i;
+    for(let j = i + 1; j < rows.length; j++){
+      if(tmNonEmpty(rows[j]).length === 0) break;
+      if(tmIsHeaderRow(rows[j], kind)) break;
+      last = j;
+    }
+    if(last === i) continue;
+
+    blocks.push({ month: month + 1, year: yearM ? +yearM[2] : null,
+                  headerRow: i, firstRow: i + 1, lastRow: last });
+    i = last;
   }
   return blocks;
 }
@@ -6237,6 +6329,9 @@ function tmReadSheets(sheets, ownerId, batchId, todayIso){
       if(year === null && prevYear !== null){
         year = block.month < prevMonth ? prevYear + 1 : prevYear;
       }
+      /* last resort, the year in the sheet's own name — one real file names
+         its months but never its years, and carries no dates either */
+      if(year === null) year = tmSheetYear(sheet.name);
       if(year === null){
         flags.push({ kind:"noyear", month:null, title:"(a block heading)",
                      detail:`a ${TM_MONTHS[block.month-1]} block on "${sheet.name}" gives no year, `

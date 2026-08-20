@@ -4,7 +4,7 @@ const { loadFns } = require('./harness');
 const F = loadFns(
   ['TM_MONTHS','TM_COLS',
    'tmNormStatus','tmSerialToIso','tmIsoOf','tmParseDate','tmRepairDate',
-   'tmColMap','tmMonthIndex','tmReadHeading','tmIsHeaderRow','tmFindBlocks','tmRowCells','tmNonEmpty'],
+   'tmColMap','tmMonthIndex','tmReadHeading','tmHasHeaderNear','tmHeaderMonth','tmSheetYear','tmFindInlineMonthBlocks','TM_HEADING_MAX_CHARS','tmIsHeaderRow','tmFindBlocks','tmRowCells','tmNonEmpty'],
   {}
 );
 assert.strictEqual(F.TM_MONTHS.length, 12, 'the month table came across, not just the functions');
