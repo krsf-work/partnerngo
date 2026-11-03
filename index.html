@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V73</title>
+<title>Sahkar · KRSF Partnership Program · V74</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -1269,6 +1269,435 @@ window.FIREBASE_CONFIG = {
 #introGreet.exit{animation:introFadeOut .45s ease forwards!important}
 @keyframes introFadeOut{to{opacity:0;transform:translateY(-12px)}}
 </style>
+<style>
+
+/* =================================================================
+   V74 · DESIGN SYSTEM
+   One token set for the whole app. The older modules already read the
+   --paper/--ink/--accent family, so redefining those here refreshes them
+   too; the new screens use the --v-* tokens only.
+   ================================================================= */
+:root{
+  --paper:#f5f6fa; --paper-2:#eef0f6; --card:#ffffff;
+  --ink:#141a2b; --ink-2:#4a5468; --ink-3:#8b94a7;
+  --rule:#e8eaf1; --rule-2:#d8dce6;
+  --accent:#5b3fc0; --accent-soft:#efeafd;
+  --green:#16935f; --green-soft:#e1f5ec;
+  --amber:#c47f12; --amber-soft:#fcf0da;
+  --red:#d6453a;  --red-soft:#fde6e3;
+  --blue:#2f6fc0; --blue-soft:#e2ecf8;
+
+  /* brand */
+  --v-primary:#5b3fc0; --v-primary-hover:#4c32a8; --v-primary-2:#7c5cf0;
+  --v-primary-subtle:#efeafd; --v-primary-ink:#3d2793;
+  --v-grad:linear-gradient(135deg,#5b3fc0 0%,#7c5cf0 55%,#9b7bff 100%);
+  /* semantic */
+  --v-success:#16935f; --v-success-subtle:#e1f5ec;
+  --v-warning:#c47f12; --v-warning-subtle:#fcf0da;
+  --v-error:#d6453a;   --v-error-subtle:#fde6e3;
+  --v-info:#2f6fc0;    --v-info-subtle:#e2ecf8;
+  /* neutrals */
+  --v-n0:#ffffff; --v-n50:#f7f8fb; --v-n100:#f0f2f7; --v-n200:#e6e9f0; --v-n300:#d5dae4;
+  --v-n400:#a9b1c1; --v-n500:#7d8699; --v-n600:#596377; --v-n700:#3c4558; --v-n800:#232a3b; --v-n900:#121726;
+  --v-bg:#f5f6fa; --v-surface:#ffffff; --v-line:#e8eaf1;
+  /* space (4px base) */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px; --s10:40px; --s12:48px;
+  /* radius */
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px; --r-full:999px;
+  /* type */
+  --t-xs:12px; --t-sm:13px; --t-base:15px; --t-md:16px; --t-lg:18px; --t-xl:22px; --t-2xl:28px;
+  /* elevation */
+  --e1:0 1px 2px rgba(18,23,38,.04),0 1px 1px rgba(18,23,38,.03);
+  --e2:0 1px 2px rgba(18,23,38,.04),0 6px 20px rgba(18,23,38,.06);
+  --e3:0 8px 30px rgba(18,23,38,.12),0 2px 6px rgba(18,23,38,.06);
+  --e-primary:0 8px 22px rgba(91,63,192,.28);
+  /* motion */
+  --ease:cubic-bezier(.2,.8,.2,1); --ease-out:cubic-bezier(.16,1,.3,1);
+  --d1:140ms; --d2:220ms; --d3:360ms;
+  /* layout */
+  --appbar-h:60px; --tabbar-h:66px; --side-w:248px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+body{background:var(--v-bg);font-size:14px}
+::selection{background:var(--v-primary-subtle)}
+
+/* ---------- icons ---------- */
+.i{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle}
+.i.sm{width:16px;height:16px}
+.i.xs{width:14px;height:14px}
+.i.lg{width:24px;height:24px}
+
+/* ---------- shell: desktop sidebar ---------- */
+.side{background:var(--v-surface);border-right:1px solid var(--v-line);width:var(--side-w)}
+.side .brand{padding:20px 20px 14px;border-bottom:none}
+.v-brand{display:flex;align-items:center;gap:10px}
+.v-logo{width:34px;height:34px;border-radius:10px;background:var(--v-grad);box-shadow:var(--e-primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;letter-spacing:-.02em}
+.v-brand b{font-size:17px;font-weight:750;letter-spacing:-.02em;color:var(--v-n900)}
+.v-brand small{display:block;font-size:11px;color:var(--v-n500);font-weight:500;margin-top:1px}
+.nav{padding:6px 12px 12px}
+.nav-sec{font-size:11px;letter-spacing:.06em;text-transform:none;color:var(--v-n500);font-weight:600;padding:18px 12px 6px}
+.nav-item{border-radius:10px;padding:9px 12px;font-size:13.5px;font-weight:550;color:var(--v-n700);gap:11px;transition:background var(--d1) var(--ease),color var(--d1) var(--ease);position:relative}
+.nav-item:hover{background:var(--v-n100);color:var(--v-n900)}
+.nav-item.active{background:var(--v-primary-subtle);color:var(--v-primary-ink)}
+.nav-item.active::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--v-primary)}
+.nav-item .ic{width:20px;font-size:14px;display:flex;align-items:center;justify-content:center}
+.nav-item .ct{background:var(--v-n100);color:var(--v-n600);font-size:11px;font-weight:650;padding:1px 8px}
+.nav-item.active .ct{background:var(--v-primary);color:#fff}
+.nav-item .ct.hot{background:var(--v-error);color:#fff}
+.side-foot{border-top:1px solid var(--v-line);padding:14px 16px}
+.side-foot .av{background:var(--v-grad)}
+
+/* ---------- shell: app bar ---------- */
+.main{background:var(--v-bg)}
+.topbar.v-appbar{position:sticky;top:0;z-index:40;height:var(--appbar-h);display:flex;align-items:center;gap:var(--s3);
+  padding:0 var(--s6);background:color-mix(in srgb,var(--v-bg) 82%,transparent);
+  backdrop-filter:saturate(1.6) blur(14px);-webkit-backdrop-filter:saturate(1.6) blur(14px);border-bottom:1px solid transparent;transition:border-color var(--d2) var(--ease)}
+.topbar.v-appbar.scrolled{border-bottom-color:var(--v-line)}
+.v-appbar .hamburger{display:none!important}
+.v-appbar-title{font-size:var(--t-lg);font-weight:700;letter-spacing:-.015em;color:var(--v-n900);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v-appbar-back{width:38px;height:38px;border-radius:12px;display:none;align-items:center;justify-content:center;color:var(--v-n700);margin-left:-8px}
+.v-appbar-back.show{display:flex}
+.v-appbar-back:hover{background:var(--v-n100)}
+.v-appbar-actions{margin-left:auto;display:flex;align-items:center;gap:6px}
+.v-iconbtn{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--v-n700);position:relative;transition:background var(--d1) var(--ease),transform var(--d1) var(--ease)}
+.v-iconbtn:hover{background:var(--v-n100)}
+.v-iconbtn:active{transform:scale(.94)}
+.v-dot{position:absolute;top:5px;right:4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--v-error);color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--v-bg);line-height:1}
+.v-dot.pop{animation:v-pop .5s var(--ease-out)}
+.v-avatar{width:34px;height:34px;border-radius:50%;background:var(--v-grad);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.v-avatar.lg{width:52px;height:52px;font-size:17px}
+.content{max-width:1180px;margin:0 auto;padding:var(--s2) var(--s6) var(--s12)}
+
+/* ---------- shell: bottom tab bar (phone) ---------- */
+.v-tabbar{display:none}
+@media (max-width:767px){
+  .side{display:none!important}
+  .side-scrim{display:none!important}
+  .topbar.v-appbar{padding:0 var(--s4)}
+  .content{padding:var(--s1) var(--s4) calc(var(--tabbar-h) + var(--safe-b) + var(--s6))}
+  .v-tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;height:calc(var(--tabbar-h) + var(--safe-b));padding:6px 6px calc(6px + var(--safe-b));
+    background:color-mix(in srgb,#fff 88%,transparent);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);border-top:1px solid var(--v-line)}
+  .v-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:14px;color:var(--v-n500);font-size:10.5px;font-weight:600;position:relative;transition:color var(--d1) var(--ease)}
+  .v-tab .i{transition:transform var(--d2) var(--ease-out)}
+  .v-tab.on{color:var(--v-primary)}
+  .v-tab.on .i{transform:translateY(-1px) scale(1.06)}
+  .v-tab.on::before{content:"";position:absolute;top:4px;width:44px;height:30px;border-radius:12px;background:var(--v-primary-subtle);z-index:-1;animation:v-pill var(--d2) var(--ease-out)}
+  .v-tab .v-dot{top:2px;right:calc(50% - 22px);border-color:#fff}
+  .toast{bottom:calc(var(--tabbar-h) + var(--safe-b) + 14px)!important}
+}
+body.ngo-mode .v-tabbar, body.ngo-mode .topbar.v-appbar{display:none!important}
+
+/* ---------- page scaffolding ---------- */
+.v-page{animation:v-enter var(--d3) var(--ease-out) both}
+.v-page.noanim{animation:none}
+.v-stagger > *{animation:v-enter var(--d3) var(--ease-out) both}
+.v-stagger > *:nth-child(2){animation-delay:40ms}.v-stagger > *:nth-child(3){animation-delay:80ms}
+.v-stagger > *:nth-child(4){animation-delay:120ms}.v-stagger > *:nth-child(5){animation-delay:160ms}
+.v-stagger > *:nth-child(6){animation-delay:200ms}.v-stagger > *:nth-child(n+7){animation-delay:240ms}
+.v-noanim .v-stagger > *{animation:none}
+.v-head{display:flex;align-items:flex-end;gap:var(--s4);margin:var(--s4) 0 var(--s5);flex-wrap:wrap}
+.v-head h1{font-size:var(--t-2xl);font-weight:750;letter-spacing:-.025em;line-height:1.15;color:var(--v-n900)}
+.v-head p{color:var(--v-n500);font-size:var(--t-sm);margin-top:4px}
+.v-head .v-head-act{margin-left:auto;display:flex;gap:var(--s2)}
+.v-sec{display:flex;align-items:center;gap:var(--s2);margin:var(--s8) 0 var(--s3)}
+.v-sec h2{font-size:var(--t-md);font-weight:700;letter-spacing:-.01em;color:var(--v-n900)}
+.v-sec .v-sec-n{font-size:var(--t-xs);font-weight:650;color:var(--v-n500);background:var(--v-n100);padding:2px 8px;border-radius:var(--r-full)}
+.v-sec .v-link{margin-left:auto}
+.v-grid{display:grid;gap:var(--s4)}
+.v-grid.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.v-grid.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.v-grid.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1023px){.v-grid.c3,.v-grid.c4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:767px){
+  .v-head{margin:var(--s2) 0 var(--s4)} .v-head h1{font-size:var(--t-xl)}
+  .v-grid.c2,.v-grid.c3{grid-template-columns:1fr}
+  .v-grid.c4{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+  .v-hide-m{display:none!important}
+}
+@media (min-width:768px){.v-only-m{display:none!important}}
+
+/* ---------- components ---------- */
+.v-card{background:var(--v-surface);border:1px solid var(--v-line);border-radius:var(--r-lg);box-shadow:var(--e1);transition:box-shadow var(--d2) var(--ease),transform var(--d2) var(--ease),border-color var(--d2) var(--ease)}
+.v-card.pad{padding:var(--s5)}
+.v-card.tap{cursor:pointer}
+.v-card.tap:hover{box-shadow:var(--e2);border-color:var(--v-n300)}
+.v-card.tap:active{transform:scale(.985)}
+.v-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:var(--r-md);font-size:var(--t-sm);font-weight:650;
+  background:var(--v-surface);color:var(--v-n800);border:1px solid var(--v-n300);transition:all var(--d1) var(--ease);white-space:nowrap}
+.v-btn:hover{border-color:var(--v-n400);background:var(--v-n50)}
+.v-btn:active{transform:scale(.97)}
+.v-btn.primary{background:var(--v-primary);border-color:var(--v-primary);color:#fff;box-shadow:0 1px 2px rgba(91,63,192,.3)}
+.v-btn.primary:hover{background:var(--v-primary-hover);border-color:var(--v-primary-hover)}
+.v-btn.ghost{background:transparent;border-color:transparent;color:var(--v-primary)}
+.v-btn.ghost:hover{background:var(--v-primary-subtle)}
+.v-btn.sm{height:32px;padding:0 12px;font-size:12.5px;border-radius:10px}
+.v-btn.danger{color:var(--v-error);border-color:color-mix(in srgb,var(--v-error) 35%,transparent)}
+.v-btn:focus-visible,.v-iconbtn:focus-visible,.v-tab:focus-visible,.v-chip:focus-visible,.v-card.tap:focus-visible,.v-seg button:focus-visible{outline:2px solid var(--v-primary);outline-offset:2px}
+.v-link{color:var(--v-primary);font-weight:650;font-size:var(--t-sm);display:inline-flex;align-items:center;gap:2px}
+.v-link:hover{color:var(--v-primary-hover)}
+.v-badge{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:var(--r-full);font-size:11.5px;font-weight:650;white-space:nowrap;background:var(--v-n100);color:var(--v-n600)}
+.v-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
+.v-badge.nodot::before{display:none}
+.v-badge.ok{background:var(--v-success-subtle);color:var(--v-success)}
+.v-badge.warn{background:var(--v-warning-subtle);color:var(--v-warning)}
+.v-badge.bad{background:var(--v-error-subtle);color:var(--v-error)}
+.v-badge.info{background:var(--v-info-subtle);color:var(--v-info)}
+.v-badge.brand{background:var(--v-primary-subtle);color:var(--v-primary-ink)}
+.v-chips{display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;padding:2px 2px var(--s1);margin:0 -2px;scroll-snap-type:x proximity}
+.v-chips::-webkit-scrollbar{display:none}
+.v-chip{flex:none;height:34px;padding:0 14px;border-radius:var(--r-full);border:1px solid var(--v-n300);background:var(--v-surface);font-size:12.5px;font-weight:600;color:var(--v-n700);transition:all var(--d1) var(--ease);display:inline-flex;align-items:center;gap:6px;scroll-snap-align:start}
+.v-chip:hover{border-color:var(--v-n400)}
+.v-chip.on{background:var(--v-n900);border-color:var(--v-n900);color:#fff}
+.v-chip .n{font-size:11px;opacity:.7}
+.v-seg{display:flex;background:var(--v-n100);border-radius:var(--r-md);padding:4px;gap:2px;position:relative}
+.v-seg button{flex:1;height:36px;border-radius:9px;font-size:var(--t-sm);font-weight:650;color:var(--v-n600);transition:color var(--d1) var(--ease),background var(--d2) var(--ease),box-shadow var(--d2) var(--ease);display:flex;align-items:center;justify-content:center;gap:6px}
+.v-seg button.on{background:var(--v-surface);color:var(--v-n900);box-shadow:var(--e1),0 0 0 1px var(--v-line)}
+.v-seg button .n{font-size:11px;font-weight:700;color:var(--v-n500)}
+.v-search{position:relative}
+.v-search input{width:100%;height:42px;border-radius:var(--r-md);border:1px solid var(--v-n300);padding:0 14px 0 40px;font-size:var(--t-base);background:var(--v-surface);transition:border-color var(--d1),box-shadow var(--d1)}
+.v-search input:focus{outline:none;border-color:var(--v-primary);box-shadow:0 0 0 4px var(--v-primary-subtle)}
+.v-search .i{position:absolute;left:13px;top:11px;color:var(--v-n500)}
+.v-meter{height:8px;border-radius:var(--r-full);background:var(--v-n100);overflow:hidden;position:relative}
+.v-meter > i{display:block;height:100%;border-radius:inherit;background:var(--v-primary);transform-origin:left;animation:v-grow .9s var(--ease-out) both}
+.v-meter.ok > i{background:var(--v-success)} .v-meter.warn > i{background:var(--v-warning)} .v-meter.bad > i{background:var(--v-error)}
+.v-meter.thin{height:5px}
+.v-ring{position:relative;flex:none}
+.v-ring svg{transform:rotate(-90deg);display:block}
+.v-ring .trk{stroke:var(--v-n100)}
+.v-ring .val{stroke:var(--v-primary);stroke-linecap:round;transition:stroke-dashoffset 1s var(--ease-out);animation:v-ring 1.1s var(--ease-out) both}
+.v-ring.ok .val{stroke:var(--v-success)}
+.v-ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:750;letter-spacing:-.02em;color:var(--v-n900);line-height:1}
+.v-ring .lbl small{font-size:10px;font-weight:600;color:var(--v-n500);margin-top:3px;letter-spacing:0}
+.v-empty{text-align:center;padding:var(--s10) var(--s6);color:var(--v-n500)}
+.v-empty .v-empty-ic{width:56px;height:56px;border-radius:18px;margin:0 auto var(--s4);display:flex;align-items:center;justify-content:center;background:var(--v-primary-subtle);color:var(--v-primary)}
+.v-empty .v-empty-ic.ok{background:var(--v-success-subtle);color:var(--v-success)}
+.v-empty h3{font-size:var(--t-md);color:var(--v-n900);font-weight:700;margin-bottom:4px}
+.v-empty p{font-size:var(--t-sm);max-width:340px;margin:0 auto}
+.v-empty .v-btn{margin-top:var(--s4)}
+.v-skel{background:linear-gradient(90deg,var(--v-n100) 0%,var(--v-n50) 50%,var(--v-n100) 100%);background-size:200% 100%;animation:v-shimmer 1.3s linear infinite;border-radius:var(--r-sm)}
+.v-muted{color:var(--v-n500)}
+.v-num{font-variant-numeric:tabular-nums}
+
+/* ---------- list rows ---------- */
+.v-list{background:var(--v-surface);border:1px solid var(--v-line);border-radius:var(--r-lg);box-shadow:var(--e1);overflow:hidden}
+.v-row{display:flex;align-items:center;gap:var(--s3);padding:14px var(--s4);border-bottom:1px solid var(--v-line);transition:background var(--d1) var(--ease);min-height:60px;position:relative}
+.v-row:last-child{border-bottom:none}
+.v-row.tap{cursor:pointer}
+.v-row.tap:hover{background:var(--v-n50)}
+.v-row-main{flex:1;min-width:0}
+.v-row-t{font-size:14px;font-weight:600;color:var(--v-n900);line-height:1.35;overflow-wrap:anywhere}
+.v-row-s{font-size:12.5px;color:var(--v-n500);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.v-row-s .sep{width:3px;height:3px;border-radius:50%;background:var(--v-n400)}
+.v-row-end{flex:none;display:flex;align-items:center;gap:var(--s2)}
+.v-row.done .v-row-t{color:var(--v-n500);text-decoration:line-through;text-decoration-color:var(--v-n300)}
+.v-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--v-n300);flex:none;display:flex;align-items:center;justify-content:center;color:transparent;transition:all var(--d2) var(--ease-out);background:var(--v-surface)}
+.v-check:hover{border-color:var(--v-success)}
+.v-check .i{width:14px;height:14px;stroke-width:3}
+.v-check.on{background:var(--v-success);border-color:var(--v-success);color:#fff;animation:v-pop .45s var(--ease-out)}
+.v-check:disabled{opacity:.5;cursor:not-allowed}
+.v-kind{width:36px;height:36px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center}
+.v-kind.k-mykr{background:var(--v-primary-subtle);color:var(--v-primary)}
+.v-kind.k-myact{background:var(--v-info-subtle);color:var(--v-info)}
+.v-kind.k-task{background:var(--v-warning-subtle);color:var(--v-warning)}
+.v-kind.k-ngokr{background:var(--v-success-subtle);color:var(--v-success)}
+.v-due{font-size:12px;font-weight:650;white-space:nowrap}
+.v-due.late{color:var(--v-error)} .v-due.today{color:var(--v-warning)} .v-due.week{color:var(--v-n700)} .v-due.later{color:var(--v-n500)}
+
+/* ---------- home ---------- */
+.v-hello{display:flex;align-items:center;gap:var(--s4);margin:var(--s4) 0 var(--s5)}
+.v-hello h1{font-size:var(--t-2xl);font-weight:780;letter-spacing:-.03em;line-height:1.1;color:var(--v-n900)}
+.v-hello p{color:var(--v-n500);font-size:var(--t-sm);margin-top:5px}
+@media (max-width:767px){.v-hello{margin:var(--s2) 0 var(--s4)} .v-hello h1{font-size:24px}}
+.v-hero{position:relative;overflow:hidden;border-radius:var(--r-xl);padding:var(--s6);color:#fff;background:var(--v-grad);box-shadow:var(--e-primary)}
+.v-hero::after{content:"";position:absolute;width:320px;height:320px;right:-90px;top:-150px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),rgba(255,255,255,0) 70%);pointer-events:none}
+.v-hero::before{content:"";position:absolute;width:220px;height:220px;left:-60px;bottom:-140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.14),rgba(255,255,255,0) 70%);pointer-events:none}
+.v-hero-top{display:flex;align-items:center;gap:var(--s2);font-size:12.5px;font-weight:650;opacity:.92;position:relative}
+.v-hero h2{font-size:var(--t-xl);font-weight:750;letter-spacing:-.02em;margin:6px 0 var(--s4);position:relative;line-height:1.25}
+.v-hero-stats{display:flex;gap:var(--s2);position:relative;flex-wrap:wrap}
+.v-hstat{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:var(--r-md);padding:10px 14px;min-width:92px;backdrop-filter:blur(6px);transition:background var(--d1) var(--ease),transform var(--d1) var(--ease);text-align:left;color:#fff}
+.v-hstat:hover{background:rgba(255,255,255,.22)}
+.v-hstat:active{transform:scale(.97)}
+.v-hstat b{display:block;font-size:24px;font-weight:780;letter-spacing:-.03em;line-height:1.05}
+.v-hstat span{font-size:11.5px;font-weight:600;opacity:.88}
+.v-hstat.hot{background:rgba(255,255,255,.95);color:var(--v-error);border-color:transparent}
+.v-hero-cta{position:relative;margin-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap}
+.v-hero-cta .v-btn{background:rgba(255,255,255,.95);border-color:transparent;color:var(--v-primary-ink)}
+.v-hero-cta .v-btn.ghosty{background:transparent;border-color:rgba(255,255,255,.4);color:#fff}
+.v-dl-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(260px,1fr);gap:var(--s3);overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px;margin:0 -2px;scroll-snap-type:x mandatory}
+.v-dl-strip::-webkit-scrollbar{display:none}
+@media (max-width:767px){.v-dl-strip{grid-auto-columns:84%;margin:0 calc(var(--s4) * -1);padding:2px var(--s4) 6px;scroll-padding:0 var(--s4)}}
+.v-dl{scroll-snap-align:start;padding:var(--s4);display:flex;flex-direction:column;gap:10px;min-height:150px;border-left:4px solid var(--v-n300)}
+.v-dl.late{border-left-color:var(--v-error)} .v-dl.today{border-left-color:var(--v-warning)} .v-dl.week{border-left-color:var(--v-primary)}
+.v-dl-top{display:flex;align-items:center;gap:var(--s2)}
+.v-dl-t{font-size:14.5px;font-weight:650;color:var(--v-n900);line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.v-dl-s{font-size:12px;color:var(--v-n500);margin-top:auto;display:flex;align-items:center;gap:var(--s2)}
+.v-dl-act{margin-left:auto}
+.v-pillar{padding:var(--s5);display:flex;flex-direction:column;gap:var(--s3);min-height:168px}
+.v-pillar-h{display:flex;align-items:center;gap:var(--s3)}
+.v-pillar-ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.v-pillar-ic.p1{background:var(--v-success-subtle);color:var(--v-success)}
+.v-pillar-ic.p2{background:var(--v-primary-subtle);color:var(--v-primary)}
+.v-pillar-ic.p3{background:var(--v-warning-subtle);color:var(--v-warning)}
+.v-pillar-h h3{font-size:15px;font-weight:700;color:var(--v-n900);letter-spacing:-.01em}
+.v-pillar-h p{font-size:12px;color:var(--v-n500)}
+.v-pillar-h .i.chev{margin-left:auto;color:var(--v-n400);transition:transform var(--d2) var(--ease)}
+.v-pillar:hover .i.chev{transform:translateX(3px);color:var(--v-primary)}
+.v-pillar-body{display:flex;align-items:center;gap:var(--s4);margin-top:auto}
+.v-kpi b{display:block;font-size:26px;font-weight:780;letter-spacing:-.03em;color:var(--v-n900);line-height:1.05}
+.v-kpi span{font-size:12px;color:var(--v-n500);font-weight:550}
+.v-kpis{display:flex;gap:var(--s5);flex-wrap:wrap}
+.v-remind{display:flex;align-items:center;gap:var(--s3);padding:var(--s4);border-radius:var(--r-lg);background:var(--v-info-subtle);color:var(--v-n800);margin-top:var(--s4)}
+.v-remind .i{color:var(--v-info)}
+.v-remind div{flex:1;font-size:13px}
+.v-remind b{display:block;font-size:13.5px}
+
+/* ---------- NGO cards / detail ---------- */
+.v-ngo{padding:var(--s4);display:flex;flex-direction:column;gap:var(--s3)}
+.v-ngo-h{display:flex;align-items:center;gap:var(--s3)}
+.v-mono{width:42px;height:42px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:750;font-size:14px;letter-spacing:-.02em;color:#fff}
+.v-mono.lg{width:56px;height:56px;border-radius:17px;font-size:19px}
+.v-ngo-h h3{font-size:15px;font-weight:700;color:var(--v-n900);letter-spacing:-.01em;line-height:1.25}
+.v-ngo-h p{font-size:12px;color:var(--v-n500);margin-top:2px}
+.v-ngo-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2)}
+.v-ngo-stat{background:var(--v-n50);border-radius:10px;padding:8px 10px}
+.v-ngo-stat b{display:block;font-size:15px;font-weight:750;color:var(--v-n900);letter-spacing:-.02em}
+.v-ngo-stat span{font-size:11px;color:var(--v-n500);font-weight:550}
+.v-ngo-stat.bad b{color:var(--v-error)}
+.v-ngo-hero{display:flex;align-items:center;gap:var(--s4);margin:var(--s3) 0 var(--s5)}
+.v-ngo-hero h1{font-size:var(--t-2xl);font-weight:780;letter-spacing:-.03em;line-height:1.1;color:var(--v-n900)}
+.v-ngo-hero p{font-size:var(--t-sm);color:var(--v-n500);margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+@media (max-width:767px){.v-ngo-hero h1{font-size:22px}}
+.v-tabs-sticky{position:sticky;top:var(--appbar-h);z-index:20;background:var(--v-bg);padding:6px 0 10px;margin-bottom:var(--s2)}
+.v-obj{margin-bottom:var(--s4)}
+.v-obj-h{display:flex;gap:var(--s3);align-items:flex-start;padding:var(--s4) var(--s4) var(--s3)}
+.v-obj-n{width:26px;height:26px;border-radius:8px;flex:none;background:var(--v-n900);color:#fff;font-size:12px;font-weight:750;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.v-obj-t{font-size:14px;font-weight:650;color:var(--v-n800);line-height:1.4;flex:1}
+.v-obj-p{font-size:12px;font-weight:700;color:var(--v-n500);white-space:nowrap}
+.v-kr{padding:12px var(--s4);border-top:1px solid var(--v-line);display:flex;gap:var(--s3);align-items:flex-start}
+.v-kr-main{flex:1;min-width:0}
+.v-kr-t{font-size:14px;color:var(--v-n900);line-height:1.45;overflow-wrap:anywhere}
+.v-kr-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.v-kr-cmt{margin-top:8px;font-size:12.5px;color:var(--v-n600);background:var(--v-n50);border-radius:10px;padding:8px 10px;display:flex;gap:8px;line-height:1.45}
+.v-kr-cmt .i{color:var(--v-n400);margin-top:1px}
+.v-stat-btn{height:28px;padding:0 10px 0 8px;border-radius:var(--r-full);font-size:12px;font-weight:650;display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;transition:all var(--d1) var(--ease)}
+.v-stat-btn::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.v-stat-btn.s-done{background:var(--v-success-subtle);color:var(--v-success)}
+.v-stat-btn.s-prog{background:var(--v-warning-subtle);color:var(--v-warning)}
+.v-stat-btn.s-not{background:var(--v-error-subtle);color:var(--v-error)}
+.v-stat-btn.s-none{background:var(--v-n100);color:var(--v-n600)}
+.v-stat-btn.can:hover{border-color:currentColor}
+.v-stat-btn.can::after{content:"";width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg) translateY(-2px);margin-left:2px;opacity:.7}
+.v-bet{padding:var(--s4);display:flex;flex-direction:column;gap:10px}
+.v-bet-h{display:flex;gap:var(--s3);align-items:flex-start}
+.v-bet-h .t{font-size:14px;font-weight:650;color:var(--v-n900);line-height:1.35;flex:1}
+.v-bet-n{display:flex;justify-content:space-between;font-size:12px;color:var(--v-n500)}
+.v-bet-n b{color:var(--v-n900);font-weight:700}
+.v-money{padding:var(--s5)}
+.v-money-top{display:flex;align-items:flex-end;gap:var(--s4);flex-wrap:wrap;margin-bottom:var(--s4)}
+.v-money-top .big{font-size:30px;font-weight:780;letter-spacing:-.03em;color:var(--v-n900);line-height:1}
+.v-money-top .of{font-size:13px;color:var(--v-n500);margin-top:6px}
+.v-cat{display:grid;grid-template-columns:96px 1fr 88px;gap:var(--s3);align-items:center;font-size:12.5px;padding:7px 0}
+.v-cat span{color:var(--v-n700);font-weight:600}
+.v-cat em{font-style:normal;text-align:right;color:var(--v-n600);font-variant-numeric:tabular-nums}
+.v-amt{font-size:14px;font-weight:700;color:var(--v-n900);font-variant-numeric:tabular-nums;white-space:nowrap}
+.v-stage{display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none}
+.v-stage::-webkit-scrollbar{display:none}
+.v-stage-i{flex:1;min-width:130px;padding:var(--s3) var(--s4);border-radius:var(--r-md);background:var(--v-surface);border:1px solid var(--v-line);cursor:pointer;transition:all var(--d1) var(--ease);text-align:left}
+.v-stage-i:hover{border-color:var(--v-n300)}
+.v-stage-i.on{border-color:var(--v-primary);box-shadow:0 0 0 3px var(--v-primary-subtle)}
+.v-stage-i b{display:block;font-size:22px;font-weight:780;letter-spacing:-.03em;color:var(--v-n900)}
+.v-stage-i span{font-size:11.5px;color:var(--v-n500);font-weight:600;line-height:1.3;display:block}
+
+/* ---------- More ---------- */
+.v-tile{padding:var(--s4);display:flex;align-items:center;gap:var(--s3)}
+.v-tile .v-pillar-ic{background:var(--v-n100);color:var(--v-n700)}
+.v-tile b{font-size:14px;font-weight:650;color:var(--v-n900);display:block}
+.v-tile small{font-size:12px;color:var(--v-n500)}
+.v-tile .ct{margin-left:auto;font-size:11.5px;font-weight:700;background:var(--v-n100);color:var(--v-n600);padding:2px 9px;border-radius:var(--r-full)}
+.v-me{display:flex;align-items:center;gap:var(--s4);padding:var(--s5)}
+.v-me b{font-size:16px;font-weight:700;display:block;color:var(--v-n900)}
+.v-me small{font-size:12.5px;color:var(--v-n500)}
+
+/* ---------- bottom sheet / panel ---------- */
+.v-sheet-bg{position:fixed;inset:0;z-index:300;background:rgba(18,23,38,.36);opacity:0;pointer-events:none;transition:opacity var(--d2) var(--ease)}
+.v-sheet-bg.show{opacity:1;pointer-events:auto}
+.v-sheet{position:fixed;z-index:301;background:var(--v-surface);box-shadow:var(--e3);display:flex;flex-direction:column;max-height:88vh;
+  right:16px;top:16px;width:420px;border-radius:var(--r-xl);transform:translateY(-8px) scale(.98);opacity:0;pointer-events:none;transition:transform var(--d2) var(--ease-out),opacity var(--d2) var(--ease)}
+.v-sheet.show{transform:none;opacity:1;pointer-events:auto}
+.v-sheet.center{left:50%;right:auto;top:50%;transform:translate(-50%,-48%) scale(.98);width:min(460px,calc(100vw - 32px))}
+.v-sheet.center.show{transform:translate(-50%,-50%)}
+.v-sheet-h{display:flex;align-items:center;gap:var(--s3);padding:var(--s5) var(--s5) var(--s3)}
+.v-sheet-h h3{font-size:var(--t-lg);font-weight:750;letter-spacing:-.02em;color:var(--v-n900);flex:1}
+.v-sheet-b{overflow-y:auto;padding:0 var(--s5) var(--s5);overscroll-behavior:contain}
+.v-grab{display:none}
+@media (max-width:767px){
+  .v-sheet,.v-sheet.center{left:0;right:0;top:auto;bottom:0;width:auto;border-radius:24px 24px 0 0;transform:translateY(100%);opacity:1;max-height:90vh;padding-bottom:var(--safe-b);transition:transform var(--d3) var(--ease-out)}
+  .v-sheet.show,.v-sheet.center.show{transform:translateY(0)}
+  .v-grab{display:block;width:40px;height:5px;border-radius:3px;background:var(--v-n300);margin:10px auto 0}
+  .v-sheet-h{padding-top:var(--s3)}
+}
+.v-opt{width:100%;display:flex;align-items:center;gap:var(--s3);padding:13px var(--s3);border-radius:var(--r-md);font-size:14.5px;font-weight:600;color:var(--v-n800);text-align:left;transition:background var(--d1) var(--ease)}
+.v-opt:hover{background:var(--v-n50)}
+.v-opt .sw{width:12px;height:12px;border-radius:50%;flex:none}
+.v-opt.on{background:var(--v-primary-subtle);color:var(--v-primary-ink)}
+.v-opt.on::after{content:"✓";margin-left:auto;font-weight:800}
+.v-ta{width:100%;min-height:96px;border:1px solid var(--v-n300);border-radius:var(--r-md);padding:12px 14px;font-size:var(--t-base);line-height:1.5;resize:vertical;font-family:inherit}
+.v-ta:focus{outline:none;border-color:var(--v-primary);box-shadow:0 0 0 4px var(--v-primary-subtle)}
+.v-ngroup{font-size:11.5px;font-weight:700;color:var(--v-n500);text-transform:uppercase;letter-spacing:.06em;margin:var(--s4) 0 var(--s2)}
+.v-ngroup:first-child{margin-top:0}
+
+/* ---------- older modules inside the new shell ---------- */
+.btn{border-radius:10px;font-weight:600;transition:all var(--d1) var(--ease)}
+.btn.primary{background:var(--v-primary);border-color:var(--v-primary)}
+.btn.primary:hover{background:var(--v-primary-hover);border-color:var(--v-primary-hover)}
+.modal-bg{background:rgba(18,23,38,.38);backdrop-filter:blur(3px)}
+.modal{border-radius:var(--r-xl)!important;box-shadow:var(--e3)!important;border:none!important}
+.modal-bg.show .modal{animation:v-modal var(--d2) var(--ease-out)}
+.modal-h .eyebrow{letter-spacing:.04em;text-transform:none;font-size:12px;font-weight:650}
+.field label{letter-spacing:0;text-transform:none;font-size:12.5px;font-weight:650;color:var(--v-n700)}
+.field input,.field select,.field textarea{border-radius:10px!important;min-height:42px;font-size:14px!important}
+.toast{border-radius:var(--r-md)!important;box-shadow:var(--e3)!important;background:var(--v-n900)!important;font-weight:600}
+@media (max-width:767px){
+  .modal-bg{align-items:flex-end!important;padding:0!important}
+  .modal,.modal.wide{width:100%!important;max-width:100%!important;max-height:92vh!important;border-radius:24px 24px 0 0!important;margin:0!important}
+  .modal-bg.show .modal{animation:v-sheetup var(--d3) var(--ease-out)}
+  .modal-f{padding-bottom:calc(14px + var(--safe-b))!important;flex-wrap:wrap}
+  .modal-f .btn{flex:1;min-height:44px}
+  .frow{flex-direction:column;gap:0}
+}
+
+/* ---------- motion ---------- */
+@keyframes v-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes v-pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes v-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes v-ring{from{stroke-dashoffset:var(--circ)}}
+@keyframes v-shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@keyframes v-pill{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes v-modal{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes v-sheetup{from{transform:translateY(100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-delay:0ms!important;transition-duration:1ms!important}
+}
+/* tablet + desktop: the sidebar is always there (the older drawer rule hid it below 920px) */
+@media (min-width:768px){ .side{position:sticky!important;transform:none!important;box-shadow:none!important;display:flex!important} }
+@media (min-width:768px) and (max-width:1023px){ :root{--side-w:212px} .side{width:var(--side-w)} }
+.v-logo{background:var(--logo) center/cover no-repeat,var(--v-grad)}
+/* NGO monograms */
+.mc0{background:linear-gradient(135deg,#5b3fc0,#8b6cf0)} .mc1{background:linear-gradient(135deg,#0f8a6a,#34c08f)}
+.mc2{background:linear-gradient(135deg,#c2410c,#f59e5b)} .mc3{background:linear-gradient(135deg,#1d5fb8,#53a0f0)}
+.mc4{background:linear-gradient(135deg,#b4235a,#ee6a9a)} .mc5{background:linear-gradient(135deg,#7a5a00,#d4a72c)}
+.mc6{background:linear-gradient(135deg,#0e7490,#38bdd8)} .mc7{background:linear-gradient(135deg,#3f4a5e,#7d899e)}
+/* hero counters: one row of four, always */
+.v-hero-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:520px}
+.v-hstat{min-width:0}
+@media (max-width:767px){.v-hero{padding:var(--s5)} .v-hstat{padding:9px 10px} .v-hstat b{font-size:21px} .v-hstat span{font-size:10.5px}}
+/* the big page title moves into the app bar as you scroll */
+.v-appbar-title{opacity:0;transform:translateY(6px);transition:opacity var(--d2) var(--ease),transform var(--d2) var(--ease)}
+.v-appbar.scrolled .v-appbar-title,.v-appbar.always .v-appbar-title{opacity:1;transform:none}
+.v-cat{grid-template-columns:84px 1fr auto}
+.v-cat em{font-size:12px;white-space:nowrap}
+
+</style>
 </head>
 <body>
 
@@ -1281,7 +1710,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V73</span></div>
+    <div class="sub">NGO OKRs, my OKRs, budgets and debit notes <span style="opacity:.5">· V74</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1305,8 +1734,8 @@ window.FIREBASE_CONFIG = {
   <div class="shell">
     <aside class="side" id="side">
       <div class="brand">
-        <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V73</span></div>
+        <div class="v-brand"><div class="v-logo"></div><div style="flex:1"><b>Sahkar</b><small>KRSF Partnership Program</small></div>
+          <span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1319,8 +1748,14 @@ window.FIREBASE_CONFIG = {
       </div>
     </aside>
     <div class="main">
-      <div class="topbar">
+      <div class="topbar v-appbar" id="v4Appbar">
         <button class="hamburger" id="hamburger" onclick="toggleSide()" aria-label="Open menu" title="Menu">☰</button>
+        <button class="v-appbar-back" id="v4Back" onclick="v4Back()" aria-label="Back"><svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="v-appbar-title" id="v4Title">Sahkar</div>
+        <div class="v-appbar-actions">
+          <button class="v-iconbtn" id="v4Bell" onclick="v4OpenNotifs()" aria-label="Notifications"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="v-dot" id="v4BellDot" hidden></span></button>
+          <button class="v-iconbtn v-only-m" onclick="go('more')" aria-label="Account"><span class="v-avatar" id="v4Av"></span></button>
+        </div>
       </div>
       <div class="content" id="content"></div>
     </div>
@@ -1336,6 +1771,9 @@ window.FIREBASE_CONFIG = {
   <div class="modal" id="confirmModal"></div>
 </div>
 <div class="side-scrim" id="sideScrim" onclick="toggleSide(false)"></div>
+<nav class="v-tabbar" id="v4Tabbar" aria-label="Main"></nav>
+<div class="v-sheet-bg" id="v4SheetBg" onclick="v4CloseSheet()"></div>
+<div class="v-sheet" id="v4Sheet"></div>
 <div class="toast" id="toast"></div>
 <script>
 (function(){
@@ -2980,8 +3418,11 @@ function bootApp(){
   document.body.classList.toggle("ngo-mode", ME.role==="NGO");
   NGO_OKR_MONTH = null; NGO_CMT_OPEN = null; NGO_CMT_DRAFT = {};
   buildNav();
-  CUR_PAGE = (ME.role==="NGO") ? "nokr" : "dash"; PAGE_ARG=null;
+  CUR_PAGE = (ME.role==="NGO") ? "nokr" : (v4IsTeam() ? "home" : "dash"); PAGE_ARG=null;
+  V4.lastKey = null; V4.myPerson = null; V4.myMonth = null; V4.stage = null; V4.q = "";
+  if(ME.role!=="NGO") v4Shell();
   render();
+  if(ME.role!=="NGO") setTimeout(()=>v4DailyReminder(false), 1500);
   maybeWeeklyBackup();   // V49: silent weekly backup for the PM
 }
 
@@ -3038,7 +3479,7 @@ async function init(){
 /* V47: Fund Disbursement (FDNMS) is a demo-only module — hidden from the
    whole app. Its code is kept intact; flip this to true to bring it back. */
 const SHOW_FDNMS = false;
-function navItems(){
+function navItemsLegacy(){
   if(!ME) return [];
   /* V72: an NGO login reaches only its own OKRs and tasks */
   if(ME.role==="NGO") return [
@@ -3083,14 +3524,36 @@ function navItems(){
   }
   return items;
 }
+/* V74: the main four (Home, My NGOs, My OKRs, Money) plus every older
+   module under Workspace. The older list keeps its role rules. */
+function navItems(){
+  const legacy = navItemsLegacy();
+  if(!ME || ME.role==="NGO") return legacy;
+  const mapped = legacy.map(x=>Object.assign({}, x, {
+    ic: (V4_LEGACY[x.id]||{}).ic || "dot",
+    label: (V4_LEGACY[x.id]||{}).label || x.label,
+    sec: "Workspace" }));
+  if(!v4IsTeam()) return mapped;
+  const urgent = v4UrgentCount();
+  return [
+    { id:"home",   label:"Home",    ic:"home",    sec:"", primary:true, count: urgent || null, hot:true },
+    { id:"myngos", label:"My NGOs", short:"NGOs", ic:"building", sec:"", primary:true },
+    { id:"myokr",  label:"My OKRs", ic:"target",  sec:"", primary:true },
+    { id:"money",  label:"Budget & debit notes", short:"Money", ic:"wallet", sec:"", primary:true }
+  ].concat(mapped).concat([{ id:"more", label:"More", ic:"grid", sec:"", mobileOnly:true }]);
+}
 function buildNav(){
   const items = navItems();
+  if(ME && ME.role==="NGO"){ el("nav").innerHTML = ""; return; }
+  const act = v4ActiveTab();
   let html=""; let lastSec=null;
   items.forEach(it=>{
-    if(it.sec!==lastSec){ html+=`<div class="nav-sec">${it.sec}</div>`; lastSec=it.sec; }
-    html+=`<button class="nav-item ${it.id===CUR_PAGE?'active':''}" data-page="${it.id}" onclick="go('${it.id}')">
-      <span class="ic">${it.ic}</span><span>${it.label}</span>
-      ${it.count!=null?`<span class="ct">${it.count}</span>`:''}
+    if(it.mobileOnly) return;
+    if(it.sec!==lastSec){ if(it.sec) html+=`<div class="nav-sec">${it.sec}</div>`; lastSec=it.sec; }
+    const on = it.id===CUR_PAGE || (it.id===act && it.primary);
+    html+=`<button class="nav-item ${on?'active':''}" data-page="${it.id}" onclick="go('${it.id}')">
+      <span class="ic">${vi(it.ic,"sm")}</span><span>${esc(it.label)}</span>
+      ${it.count!=null?`<span class="ct ${it.hot?'hot':''}">${it.count}</span>`:''}
     </button>`;
   });
   el("nav").innerHTML = html;
@@ -3112,7 +3575,7 @@ function go(page, arg){
 }
 function render(){
   if(!ME) return;
-  { const _al=navItems().map(i=>i.id); if(_al.length && !_al.includes(CUR_PAGE) && (CUR_PAGE!=="ngo" || ME.role==="NGO")) CUR_PAGE=_al.includes("fdnms")?"fdnms":_al[0]; }
+  { const _al=navItems().map(i=>i.id); if(_al.length && !_al.includes(CUR_PAGE) && ((CUR_PAGE!=="ngo" && CUR_PAGE!=="ngo2") || ME.role==="NGO")) CUR_PAGE=_al.includes("fdnms")?"fdnms":_al[0]; }
   buildNav();
   const c = el("content");
   switch(CUR_PAGE){
@@ -3130,8 +3593,1081 @@ function render(){
     case "admin":  c.innerHTML = (ME.role==="PM") ? pageAdmin() : pageDash(); break;
     case "nokr":   c.innerHTML = (ME.role==="NGO") ? pageNgoOkr()   : pageDash(); break;
     case "ntask":  c.innerHTML = (ME.role==="NGO") ? pageNgoTasks() : pageDash(); break;
+    case "home":   c.innerHTML = pageV4Home(); break;
+    case "myngos": c.innerHTML = pageV4Ngos(); break;
+    case "ngo2":   c.innerHTML = pageV4Ngo(PAGE_ARG); break;
+    case "myokr":  c.innerHTML = pageV4MyOkr(); break;
+    case "money":  c.innerHTML = pageV4Money(); break;
+    case "more":   c.innerHTML = pageV4More(); break;
     default: c.innerHTML = pageDash();
   }
+  if(ME.role!=="NGO") v4AfterRender();
+}
+
+/* =================================================================
+   V74 · NEW INTERFACE
+   A team member uses Sahkar for three jobs: their NGOs' OKRs and action
+   items, their own OKRs and action items, and each NGO's budget and debit
+   notes. Home puts every deadline across the three at the top.
+   Storage, sign-in and permissions are unchanged: these screens read the
+   same DB and write through saveDB() with the same ownership checks.
+   ================================================================= */
+const V4_IC = {
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  building:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  wallet:'<path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v3h-4a2 2 0 0 0 0 4h4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6"/>',
+  grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  checksq:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="m8.5 12 2.5 2.5 5-5"/>',
+  flag:'<path d="M4 22V4"/><path d="M4 4h12l-2 4 2 4H4"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/>',
+  chevr:'<path d="m9 18 6-6-6-6"/>', chevl:'<path d="m15 18-6-6 6-6"/>', chevd:'<path d="m6 9 6 6 6-6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  msg:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  receipt:'<path d="M5 3v18l2.5-1.5L10 21l2-1.5 2 1.5 2.5-1.5L19 21V3l-2.5 1.5L14 3l-2 1.5L10 3 7.5 4.5z"/><path d="M9 9h6M9 13h6"/>',
+  chart:'<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/>',
+  layout:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/>',
+  cal:'<rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/>',
+  folder:'<path d="M4 20h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-8l-2-3H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1z"/>',
+  swap:'<path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
+  sparkle:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  ext:'<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  dot:'<circle cx="12" cy="12" r="3"/>'
+};
+function vi(n, cls){ return `<svg class="i ${cls||""}" viewBox="0 0 24 24" aria-hidden="true">${V4_IC[n]||V4_IC.dot}</svg>`; }
+
+const V4_LEGACY = {
+  dash:   { label:"Dashboard",         ic:"layout",  sub:"Portfolio overview" },
+  bets:   { label:"Milestones",        ic:"flag",    sub:"Annual targets by NGO" },
+  ngos:   { label:"NGO register",      ic:"building",sub:"Add and edit partners" },
+  budget: { label:"Finance",           ic:"chart",   sub:"Budget books and reports" },
+  debits: { label:"Debit notes",       ic:"receipt", sub:"Every note, every NGO" },
+  fdnms:  { label:"Fund disbursement", ic:"swap",    sub:"Disbursement workflow" },
+  tasks:  { label:"All NGO actions",   ic:"list",    sub:"Every action item" },
+  daily:  { label:"Daily sheet",       ic:"cal",     sub:"Hours and daily log" },
+  okrupload:{ label:"Team MBO import", ic:"upload",  sub:"Upload monthly MBO sheets" },
+  docs:   { label:"Documents",         ic:"folder",  sub:"Agreements and files" },
+  admin:  { label:"Admin",             ic:"gear",    sub:"Logins and settings" }
+};
+const V4_PAGES_NEW = ["home","myngos","ngo2","myokr","money","more"];
+const V4_NOTIF_KEY = "sahkar_v74_notified:";
+const V4_REMIND_HIDE = "sahkar_v74_remind_hide:";
+const V4 = { ngoTab:{}, ngoMonth:{}, myMonth:null, myPerson:null, myView:"kr", stage:null,
+             q:"", lastKey:null, showDone:{}, showOld:false, moneyMore:false };
+
+/* ---------- who and what ---------- */
+function v4IsTeam(){ return !!(ME && (ME.role==="PM" || ME.role==="Programme" || ME.role==="APL")); }
+function v4MyNgos(){
+  if(!ME) return [];
+  if(ME.role==="PM") return visibleNgos();
+  const mine = new Set(myNgoIds());
+  return visibleNgos().filter(n=>mine.has(n.id));
+}
+function v4TeamNgos(){
+  const mine = new Set(v4MyNgos().map(n=>n.id));
+  return visibleNgos().filter(n=>!mine.has(n.id));
+}
+function v4First(name){ return String(name||"").trim().split(/\s+/)[0] || "there"; }
+function v4Initials(s){
+  const w = String(s||"").replace(/[^A-Za-z0-9 ]/g," ").trim().split(/\s+/).filter(Boolean);
+  if(!w.length) return "•";
+  return (w.length===1 ? w[0].slice(0,2) : w[0][0]+w[1][0]).toUpperCase();
+}
+function v4Hue(s){ let h=0; String(s||"").split("").forEach(c=>{ h=(h*31+c.charCodeAt(0))>>>0; }); return h%8; }
+
+/* ---------- dates and deadlines ---------- */
+function v4DaysTo(iso){
+  return Math.round((new Date(iso+"T00:00:00Z") - new Date(TODAY_ISO+"T00:00:00Z")) / 86400000);
+}
+function v4MonthEnd(m){
+  const y = +m.slice(0,4), mo = +m.slice(5,7);
+  return new Date(Date.UTC(y, mo, 0)).toISOString().slice(0,10);
+}
+function v4PrevMonth(m){
+  let y = +m.slice(0,4), mo = +m.slice(5,7) - 1;
+  if(mo < 1){ mo = 12; y--; }
+  return y+"-"+String(mo).padStart(2,"0");
+}
+/* an NGO key result is due on its timeline date, else at the end of its month */
+function v4KrDue(r){
+  if(!r) return "";
+  const year = r.month ? +r.month.slice(0,4) : null;
+  const d = r.timeline ? tmParseDate(r.timeline, year) : "";
+  return d || (r.month ? v4MonthEnd(r.month) : "");
+}
+function v4Bucket(due){
+  if(!due) return "none";
+  const d = v4DaysTo(due);
+  if(d < -30) return "old";
+  if(d < 0)   return "late";
+  if(d === 0) return "today";
+  if(d <= 7)  return "week";
+  return "later";
+}
+function v4DueLabel(due){
+  if(!due) return "No deadline";
+  const d = v4DaysTo(due);
+  if(d < -1)  return (-d)+" days late";
+  if(d === -1)return "1 day late";
+  if(d === 0) return "Due today";
+  if(d === 1) return "Due tomorrow";
+  if(d <= 7)  return "Due in "+d+" days";
+  return "Due "+shortDate(due);
+}
+function v4DueCls(due){
+  const b = v4Bucket(due);
+  return b==="late"||b==="old" ? "late" : b==="today" ? "today" : b==="week" ? "week" : "later";
+}
+const V4_KIND = {
+  mykr:  { label:"My key result", ic:"target" },
+  myact: { label:"My action",     ic:"checksq" },
+  task:  { label:"NGO action",    ic:"flag" },
+  ngokr: { label:"NGO key result",ic:"building" }
+};
+/* every open item with a deadline that belongs to the signed-in person */
+function v4Deadlines(){
+  const out = [];
+  if(!ME || !DB) return out;
+  (DB.teamMbo||[]).forEach(r=>{
+    if(!r || r.ownerId!==ME.id || r.status==="Done" || !r.deadline) return;
+    out.push({ kind: r.type==="kr" ? "mykr" : "myact", id:r.id,
+      title: r.title || r.objective || "Untitled", sub: monthLabel(r.month), due:r.deadline });
+  });
+  const mine = new Set(v4MyNgos().map(n=>n.id));
+  (DB.tasks||[]).forEach(t=>{
+    if(!t || t.status==="Done" || !t.due || !mine.has(t.ngoId)) return;
+    out.push({ kind:"task", id:t.id, title:t.title || "Action", sub:(ngoById(t.ngoId)||{}).short || "NGO",
+      ngoId:t.ngoId, due:t.due });
+  });
+  const since = v4PrevMonth(TODAY_MONTH);
+  (DB.mbo||[]).forEach(r=>{
+    if(!r || r.status==="Done" || !mine.has(r.ngoId) || !r.month || r.month < since) return;
+    out.push({ kind:"ngokr", id:r.id, title:r.kr || "Key result", sub:(ngoById(r.ngoId)||{}).short || "NGO",
+      ngoId:r.ngoId, due:v4KrDue(r) });
+  });
+  out.forEach(x=>{ x.bucket = v4Bucket(x.due); });
+  return out.sort((a,b)=> a.due<b.due ? -1 : a.due>b.due ? 1 : 0);
+}
+function v4Count(list){
+  const c = { late:0, today:0, week:0, later:0, old:0, none:0 };
+  list.forEach(x=>{ c[x.bucket] = (c[x.bucket]||0) + 1; });
+  return c;
+}
+function v4UrgentCount(){ const c = v4Count(v4Deadlines()); return c.late + c.today; }
+
+/* ---------- status vocabulary ---------- */
+const V4_MY_STATUS  = [["Done","s-done"],["In Progress","s-prog"],["Not Done","s-not"],["","s-none"]];
+const V4_KR_STATUS  = [["Done","s-done"],["Pending","s-prog"],["Not Done","s-not"]];
+function v4StatCls(s){
+  if(s==="Done") return "s-done";
+  if(s==="In Progress" || s==="Pending") return "s-prog";
+  if(s==="Not Done") return "s-not";
+  return "s-none";
+}
+function v4StatLabel(s){ return s || "Not started"; }
+function v4StatBtn(s, onclick){
+  return onclick
+    ? `<button class="v-stat-btn can ${v4StatCls(s)}" onclick="event.stopPropagation();${onclick}">${esc(v4StatLabel(s))}</button>`
+    : `<span class="v-stat-btn ${v4StatCls(s)}">${esc(v4StatLabel(s))}</span>`;
+}
+function v4DnCls(s){
+  const i = DN_STATUS.indexOf(s || DN_STATUS_DEFAULT);
+  return ["warn","info","brand","ok"][i] || "";
+}
+
+/* ---------- small building blocks ---------- */
+function v4Ring(done, total, size, cls, sub){
+  const p = total ? done/total : 0, r = (size-10)/2, circ = 2*Math.PI*r;
+  return `<div class="v-ring ${cls||""}" style="width:${size}px;height:${size}px">
+    <svg width="${size}" height="${size}" style="--circ:${circ.toFixed(1)}">
+      <circle class="trk" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="8"/>
+      <circle class="val" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="8"
+        stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${(circ*(1-p)).toFixed(1)}"/>
+    </svg>
+    <div class="lbl" style="font-size:${Math.round(size/4.4)}px">${Math.round(p*100)}%<small>${sub!=null ? sub : done+"/"+total}</small></div>
+  </div>`;
+}
+function v4Meter(p, cls){
+  const w = Math.max(0, Math.min(100, p||0));
+  return `<div class="v-meter ${cls||""}"><i style="width:${w}%"></i></div>`;
+}
+function v4Empty(ic, title, text, btn, ok){
+  return `<div class="v-empty"><div class="v-empty-ic ${ok?"ok":""}">${vi(ic,"lg")}</div>
+    <h3>${title}</h3><p>${text}</p>${btn||""}</div>`;
+}
+function v4Mono(n, lg){
+  return `<div class="v-mono ${lg?"lg":""} mc${v4Hue(n.id)}">${esc(v4Initials(n.short||n.name))}</div>`;
+}
+function v4Sec(title, n, link){
+  return `<div class="v-sec"><h2>${title}</h2>${n!=null?`<span class="v-sec-n">${n}</span>`:""}${link?`<span class="v-link-wrap" style="margin-left:auto">${link}</span>`:""}</div>`;
+}
+function v4Arg(s){ return esc(String(s==null?"":s)); }
+
+/* ---------- per-NGO numbers ---------- */
+function v4NgoMonths(ngoId){
+  const s = new Set();
+  (DB.mbo||[]).forEach(r=>{ if(r && r.ngoId===ngoId && r.month) s.add(r.month); });
+  return [...s].sort().reverse();
+}
+function v4NgoStats(ngoId){
+  const months = v4NgoMonths(ngoId);
+  const m = months.find(x=>x<=TODAY_MONTH) || months[0] || null;
+  const krs = m ? (DB.mbo||[]).filter(r=>r && r.ngoId===ngoId && r.month===m) : [];
+  const tasks = (DB.tasks||[]).filter(t=>t && t.ngoId===ngoId);
+  const open = tasks.filter(t=>t.status!=="Done");
+  const late = open.filter(t=>t.due && v4DaysTo(t.due)<0).length;
+  const b = DB.budgets && DB.budgets[ngoId];
+  const total = (b && b.totalAnnual) || 0;
+  const spent = ngoSpendUpto(ngoId, FY_END);
+  const dns = (DB.debits||[]).filter(d=>d && d.ngoId===ngoId);
+  const pending = dns.filter(d=>(d.status||DN_STATUS_DEFAULT)!=="Payment released");
+  return { month:m, krDone:krs.filter(r=>r.status==="Done").length, krTotal:krs.length,
+           open:open.length, late, total, spent, used: total ? pct(spent,total) : 0,
+           pending:pending.length, pendingAmt: pending.reduce((s,d)=>s+(+d.amount||0),0), dns };
+}
+
+/* ---------- my OKR rows ---------- */
+function v4RowsOf(personId){
+  return visibleTeamMbo().filter(r=>r && r.ownerId===personId);
+}
+function v4DefaultMonth(rows){
+  const ms = [...new Set(rows.map(r=>r.month).filter(Boolean))].sort();
+  const past = ms.filter(m=>m<=TODAY_MONTH);
+  return past.length ? past[past.length-1] : (ms[ms.length-1] || TODAY_MONTH);
+}
+function v4People(){
+  const ids = new Set(visibleTeamMbo().map(r=>r.ownerId));
+  ids.add(ME.id);
+  return [...ids].map(id=>(DB.users||[]).find(u=>u && u.id===id)).filter(Boolean)
+    .sort((a,b)=> a.id===ME.id ? -1 : b.id===ME.id ? 1 : String(a.name).localeCompare(b.name));
+}
+
+/* =================================================================
+   SHELL
+   ================================================================= */
+function v4Shell(){
+  const av = el("v4Av"); if(av) av.textContent = ME.avatar || v4Initials(ME.name);
+  const sa = el("meAv"); if(sa) sa.textContent = ME.avatar || v4Initials(ME.name);
+  if(!window._v4Wired){
+    window._v4Wired = true;
+    window.addEventListener("scroll", ()=>{
+      const b = el("v4Appbar"); if(b) b.classList.toggle("scrolled", window.scrollY > 48);
+    }, { passive:true });
+    document.addEventListener("keydown", e=>{ if(e.key==="Escape" && V4.sheetOpen) v4CloseSheet(); });
+    document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") v4DailyReminder(false); });
+  }
+}
+function v4TabItems(items){
+  const prim = items.filter(i=>i.primary);
+  if(prim.length) return prim.concat(items.filter(i=>i.id==="more"));
+  return items.slice(0,5);
+}
+function v4ActiveTab(){
+  if(CUR_PAGE==="ngo2" || CUR_PAGE==="ngo") return "myngos";
+  if(V4_PAGES_NEW.indexOf(CUR_PAGE)>=0) return CUR_PAGE;
+  return v4IsTeam() ? "more" : CUR_PAGE;
+}
+function v4BuildTabbar(items){
+  const bar = el("v4Tabbar"); if(!bar) return;
+  const act = v4ActiveTab();
+  bar.innerHTML = v4TabItems(items).map(it=>`
+    <button class="v-tab ${it.id===act?"on":""}" onclick="go('${it.id}')" aria-label="${esc(it.label)}">
+      ${vi(it.ic)}<span>${esc(it.short||it.label)}</span>
+      ${it.hot && it.count ? `<span class="v-dot">${it.count}</span>` : ""}
+    </button>`).join("");
+}
+const V4_TITLES = { home:"Home", myngos:"My NGOs", myokr:"My OKRs", money:"Budget & debit notes", more:"More" };
+function v4AfterRender(){
+  const c = el("content");
+  const key = CUR_PAGE+"|"+(PAGE_ARG||"")+"|"+(CUR_PAGE==="ngo2" ? (V4.ngoTab[PAGE_ARG]||"okr") : CUR_PAGE==="myokr" ? V4.myView : "");
+  if(key !== V4.lastKey){
+    c.classList.remove("v-noanim","v-page"); void c.offsetWidth; c.classList.add("v-page");
+    V4.lastKey = key;
+  } else {
+    c.classList.add("v-noanim");
+  }
+  /* title + back */
+  let title = V4_TITLES[CUR_PAGE] || (V4_LEGACY[CUR_PAGE] && V4_LEGACY[CUR_PAGE].label) || "Sahkar";
+  if(CUR_PAGE==="ngo2" || CUR_PAGE==="ngo"){ const n = ngoById(PAGE_ARG); title = n ? n.short : "NGO"; }
+  const t = el("v4Title"); if(t) t.textContent = title;
+  const bar = el("v4Appbar");
+  if(bar){ bar.classList.toggle("always", V4_PAGES_NEW.indexOf(CUR_PAGE)<0); bar.classList.toggle("scrolled", window.scrollY > 48); }
+  const back = el("v4Back");
+  if(back){
+    const showBack = CUR_PAGE==="ngo2" || CUR_PAGE==="ngo" ||
+      (v4IsTeam() && V4_PAGES_NEW.indexOf(CUR_PAGE)<0 && window.innerWidth<768);
+    back.classList.toggle("show", showBack);
+  }
+  /* bell */
+  const dot = el("v4BellDot");
+  if(dot){
+    const n = v4IsTeam() ? v4UrgentCount() : 0;
+    const was = dot.textContent;
+    dot.hidden = !n; dot.textContent = n > 99 ? "99+" : String(n);
+    if(n && was !== dot.textContent){ dot.classList.remove("pop"); void dot.offsetWidth; dot.classList.add("pop"); }
+  }
+  const bell = el("v4Bell"); if(bell) bell.style.display = v4IsTeam() ? "" : "none";
+  v4BuildTabbar(navItems());
+}
+function v4Back(){
+  if(CUR_PAGE==="ngo") return go("ngo2", PAGE_ARG);
+  if(CUR_PAGE==="ngo2") return go("myngos");
+  go(window.innerWidth<768 ? "more" : "home");
+}
+
+/* ---------- sheet (bottom sheet on phone, panel on desktop) ---------- */
+function v4OpenSheet(title, body, center){
+  const bg = el("v4SheetBg"), sh = el("v4Sheet");
+  sh.className = "v-sheet" + (center ? " center" : "");
+  sh.setAttribute("role","dialog"); sh.setAttribute("aria-modal","true");
+  sh.innerHTML = `<div class="v-grab"></div>
+    <div class="v-sheet-h"><h3>${title}</h3>
+      <button class="v-iconbtn" onclick="v4CloseSheet()" aria-label="Close">${vi("x")}</button></div>
+    <div class="v-sheet-b">${body}</div>`;
+  requestAnimationFrame(()=>{ bg.classList.add("show"); sh.classList.add("show"); });
+  V4.sheetOpen = true;
+}
+function v4CloseSheet(){
+  const bg = el("v4SheetBg"), sh = el("v4Sheet");
+  if(bg) bg.classList.remove("show");
+  if(sh) sh.classList.remove("show");
+  V4.sheetOpen = false;
+}
+function v4Rerender(){ render(); }
+
+/* =================================================================
+   HOME
+   ================================================================= */
+function v4Greeting(){
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
+function v4DlCard(x){
+  const k = V4_KIND[x.kind];
+  return `<div class="v-card tap v-dl ${v4DueCls(x.due)}" role="button" tabindex="0"
+      onclick="v4OpenItem('${x.kind}','${v4Arg(x.id)}')" onkeydown="if(event.key==='Enter')this.click()">
+    <div class="v-dl-top">
+      <span class="v-badge nodot brand">${vi(k.ic,"xs")} ${k.label}</span>
+      <span class="v-due ${v4DueCls(x.due)}" style="margin-left:auto">${v4DueLabel(x.due)}</span>
+    </div>
+    <div class="v-dl-t">${esc(x.title)}</div>
+    <div class="v-dl-s">${esc(x.sub)}
+      ${v4CanComplete(x) ? `<button class="v-check v-dl-act" title="Mark done" aria-label="Mark done"
+         onclick="event.stopPropagation();v4Complete('${x.kind}','${v4Arg(x.id)}')">${vi("check")}</button>` : ""}
+    </div>
+  </div>`;
+}
+function v4CanComplete(x){
+  if(x.kind==="mykr" || x.kind==="myact") return true;
+  return canEditNgo(x.ngoId);
+}
+function v4Complete(kind, id){
+  if(kind==="mykr" || kind==="myact") return v4SetMy(id, "Done");
+  if(kind==="task") return v4ToggleTask(id, true);
+  if(kind==="ngokr") return v4SetKr(id, "Done");
+}
+function v4OpenItem(kind, id){
+  if(kind==="mykr" || kind==="myact") return v4MySheet(id);
+  if(kind==="task") return v4TaskSheet(id);
+  if(kind==="ngokr") return v4KrSheet(id);
+}
+function v4RemindCard(){
+  if(!("Notification" in window) || Notification.permission!=="default") return "";
+  try{ if(localStorage.getItem(V4_REMIND_HIDE+ME.id)) return ""; }catch(e){}
+  return `<div class="v-remind">${vi("bell")}
+    <div><b>Get a daily deadline reminder</b>Sahkar will nudge you when something is due.</div>
+    <button class="v-btn sm primary" onclick="v4EnableReminders()">Turn on</button>
+    <button class="v-iconbtn" onclick="v4HideRemind()" aria-label="Dismiss">${vi("x","sm")}</button>
+  </div>`;
+}
+function v4HideRemind(){ try{ localStorage.setItem(V4_REMIND_HIDE+ME.id, "1"); }catch(e){} render(); }
+
+function pageV4Home(){
+  const list = v4Deadlines(), c = v4Count(list);
+  const soon = list.filter(x=>x.bucket==="late"||x.bucket==="today"||x.bucket==="week");
+  const need = c.late + c.today + c.week;
+  const date = new Date().toLocaleDateString("en-IN",{ weekday:"long", day:"numeric", month:"long" });
+  const headline = need===0 ? "You're all caught up this week"
+    : c.late ? `${c.late} overdue${c.today?`, ${c.today} due today`:""} — let's clear ${c.late+c.today>1?"them":"it"}`
+    : c.today ? `${c.today} due today, ${c.week} more this week`
+    : `${c.week} deadline${c.week>1?"s":""} coming up this week`;
+
+  /* pillar numbers */
+  const ngos = v4MyNgos();
+  const stats = ngos.map(n=>v4NgoStats(n.id));
+  const krD = stats.reduce((s,x)=>s+x.krDone,0), krT = stats.reduce((s,x)=>s+x.krTotal,0);
+  const openActs = stats.reduce((s,x)=>s+x.open,0);
+  const myRows = v4RowsOf(ME.id), mm = v4DefaultMonth(myRows);
+  const mine = myRows.filter(r=>r.month===mm);
+  const myKr = mine.filter(r=>r.type==="kr"), myAct = mine.filter(r=>r.type!=="kr");
+  const myDone = myKr.filter(r=>r.status==="Done").length;
+  const budget = stats.reduce((s,x)=>s+x.total,0), spent = stats.reduce((s,x)=>s+x.spent,0);
+  const pend = stats.reduce((s,x)=>s+x.pending,0), pendAmt = stats.reduce((s,x)=>s+x.pendingAmt,0);
+
+  return `
+  <div class="v-hello">
+    <div style="flex:1;min-width:0"><h1>${v4Greeting()}, ${esc(v4First(ME.name))}</h1><p>${esc(date)}</p></div>
+  </div>
+
+  <div class="v-hero">
+    <div class="v-hero-top">${vi("clock","sm")} Deadlines</div>
+    <h2>${esc(headline)}</h2>
+    <div class="v-hero-stats">
+      <button class="v-hstat ${c.late?"hot":""}" onclick="v4OpenNotifs('late')"><b>${c.late}</b><span>Overdue</span></button>
+      <button class="v-hstat" onclick="v4OpenNotifs('today')"><b>${c.today}</b><span>Due today</span></button>
+      <button class="v-hstat" onclick="v4OpenNotifs('week')"><b>${c.week}</b><span>This week</span></button>
+      <button class="v-hstat" onclick="v4OpenNotifs('later')"><b>${c.later}</b><span>Later</span></button>
+    </div>
+  </div>
+  ${v4RemindCard()}
+
+  ${v4Sec("Up next", soon.length || null, soon.length || c.old ? `<button class="v-link" onclick="v4OpenNotifs()">See all ${vi("chevr","sm")}</button>` : "")}
+  ${soon.length ? `<div class="v-dl-strip v-stagger">${soon.slice(0,12).map(v4DlCard).join("")}</div>`
+    : `<div class="v-card">${v4Empty("check","Nothing due this week",
+        c.old ? `${c.old} older item${c.old>1?"s are":" is"} still open from earlier months.` : "New deadlines from your OKRs and NGO actions will show up here.",
+        c.old ? `<button class="v-btn" onclick="go('myokr')">Review older items</button>` : "", true)}</div>`}
+
+  ${v4Sec("Your work")}
+  <div class="v-grid c3 v-stagger">
+    <div class="v-card tap v-pillar" role="button" tabindex="0" onclick="go('myngos')" onkeydown="if(event.key==='Enter')this.click()">
+      <div class="v-pillar-h"><div class="v-pillar-ic p1">${vi("building")}</div>
+        <div><h3>My NGOs</h3><p>OKRs and action items</p></div>${vi("chevr","chev")}</div>
+      <div class="v-pillar-body"><div class="v-kpis">
+        <div class="v-kpi"><b>${ngos.length}</b><span>Partners</span></div>
+        <div class="v-kpi"><b>${krT ? pct(krD,krT)+"%" : "—"}</b><span>KRs done</span></div>
+        <div class="v-kpi"><b>${openActs}</b><span>Open actions</span></div>
+      </div></div>
+    </div>
+    <div class="v-card tap v-pillar" role="button" tabindex="0" onclick="go('myokr')" onkeydown="if(event.key==='Enter')this.click()">
+      <div class="v-pillar-h"><div class="v-pillar-ic p2">${vi("target")}</div>
+        <div><h3>My OKRs</h3><p>${esc(monthLong(mm))}</p></div>${vi("chevr","chev")}</div>
+      <div class="v-pillar-body">
+        ${v4Ring(myDone, myKr.length, 76, myKr.length && myDone===myKr.length ? "ok" : "")}
+        <div class="v-kpis">
+          <div class="v-kpi"><b>${myKr.length - myDone}</b><span>KRs open</span></div>
+          <div class="v-kpi"><b>${myAct.filter(r=>r.status!=="Done").length}</b><span>Actions open</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="v-card tap v-pillar" role="button" tabindex="0" onclick="go('money')" onkeydown="if(event.key==='Enter')this.click()">
+      <div class="v-pillar-h"><div class="v-pillar-ic p3">${vi("wallet")}</div>
+        <div><h3>Budget &amp; debit notes</h3><p>FY ${esc(FY_MONTHS[0].slice(0,4))}–${esc(FY_END.slice(2,4))}</p></div>${vi("chevr","chev")}</div>
+      <div style="margin-top:auto">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <div class="v-kpi"><b>${budget ? pct(spent,budget)+"%" : "—"}</b><span>of ${fmtRs(budget)} used</span></div>
+          <div class="v-kpi" style="text-align:right"><b>${pend}</b><span>DNs pending · ${fmtRs(pendAmt)}</span></div>
+        </div>
+        ${v4Meter(budget ? pct(spent,budget) : 0, pct(spent,budget)>100 ? "bad" : "")}
+      </div>
+    </div>
+  </div>
+
+  ${ngos.length ? v4Sec("My NGOs", ngos.length, `<button class="v-link" onclick="go('myngos')">All NGOs ${vi("chevr","sm")}</button>`) +
+    `<div class="v-grid c3 v-stagger">${ngos.slice(0,6).map((n,i)=>v4NgoCard(n, stats[i])).join("")}</div>` : ""}
+  `;
+}
+
+/* ---------- notifications panel ---------- */
+function v4OpenNotifs(focus){
+  const list = v4Deadlines(), c = v4Count(list);
+  const groups = [["late","Overdue"],["today","Due today"],["week","This week"],["later","Later"]];
+  let perm = "";
+  if("Notification" in window){
+    perm = Notification.permission==="granted"
+      ? `<div class="v-remind" style="margin:0 0 16px;background:var(--v-success-subtle)">${vi("check")}<div><b>Reminders are on</b>One summary a day when you open Sahkar.</div>
+           <button class="v-btn sm" onclick="v4DailyReminder(true)">Test</button></div>`
+      : Notification.permission==="default"
+      ? `<div class="v-remind" style="margin:0 0 16px">${vi("bell")}<div><b>Turn on reminders</b>A daily summary of what's due.</div>
+           <button class="v-btn sm primary" onclick="v4EnableReminders()">Turn on</button></div>`
+      : `<div class="v-remind" style="margin:0 0 16px;background:var(--v-n100)">${vi("bell")}<div><b>Reminders are blocked</b>Allow notifications for this site in your browser settings.</div></div>`;
+  }
+  const body = perm + (list.filter(x=>x.bucket!=="old").length ? groups.map(([b,label])=>{
+    const rows = list.filter(x=>x.bucket===b);
+    if(!rows.length) return "";
+    return `<div class="v-ngroup" id="v4n-${b}">${label} · ${rows.length}</div>
+      <div class="v-list">${rows.map(v4DlRow).join("")}</div>`;
+  }).join("") : v4Empty("check","No deadlines ahead","Nothing open with a date on it. Nice work.","",true))
+  + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
+      <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
+      ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
+  v4OpenSheet("Notifications", body);
+  if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
+}
+function v4DlRow(x){
+  const k = V4_KIND[x.kind];
+  return `<div class="v-row tap" onclick="v4OpenItem('${x.kind}','${v4Arg(x.id)}')">
+    <div class="v-kind k-${x.kind}">${vi(k.ic,"sm")}</div>
+    <div class="v-row-main"><div class="v-row-t">${esc(x.title)}</div>
+      <div class="v-row-s"><span>${k.label}</span><span class="sep"></span><span>${esc(x.sub)}</span></div></div>
+    <div class="v-row-end"><span class="v-due ${v4DueCls(x.due)}">${v4DueLabel(x.due)}</span></div>
+  </div>`;
+}
+
+/* ---------- reminders (browser notifications) ---------- */
+async function v4EnableReminders(){
+  if(!("Notification" in window)){ toast("This browser can't show reminders"); return; }
+  let p = "denied";
+  try{ p = await Notification.requestPermission(); }catch(e){}
+  if(p==="granted"){
+    toast("Reminders on");
+    try{ localStorage.removeItem(V4_NOTIF_KEY+ME.id); }catch(e){}
+    v4DailyReminder(true);
+  } else toast("Reminders not allowed");
+  v4CloseSheet(); render();
+}
+async function v4DailyReminder(force){
+  try{
+    if(!ME || !v4IsTeam() || !DB) return;
+    const list = v4Deadlines(), c = v4Count(list);
+    const urgent = c.late + c.today;
+    if(navigator.setAppBadge){ urgent ? navigator.setAppBadge(urgent) : (navigator.clearAppBadge && navigator.clearAppBadge()); }
+    if(!("Notification" in window) || Notification.permission!=="granted") return;
+    const key = V4_NOTIF_KEY + ME.id;
+    let last = null; try{ last = localStorage.getItem(key); }catch(e){}
+    const n = c.late + c.today + c.week;
+    if(!force && (last===TODAY_ISO || !n)) return;
+    const parts = [];
+    if(c.late) parts.push(c.late+" overdue");
+    if(c.today) parts.push(c.today+" due today");
+    if(c.week) parts.push(c.week+" this week");
+    const first = list.find(x=>x.bucket==="late"||x.bucket==="today"||x.bucket==="week");
+    const title = n ? parts.join(" · ") : "You're all caught up";
+    const opts = { body: first ? (V4_KIND[first.kind].label+": "+first.title).slice(0,140) : "No deadlines this week.",
+      icon:"icon-192.png", badge:"icon-192.png", tag:"sahkar-daily", data:{ url: location.href.split("#")[0] } };
+    const reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
+    if(reg && reg.showNotification) await reg.showNotification(title, opts);
+    else new Notification(title, opts);
+    try{ localStorage.setItem(key, TODAY_ISO); }catch(e){}
+  }catch(e){ console.warn("reminder", e); }
+}
+
+/* =================================================================
+   NGOs
+   ================================================================= */
+function v4NgoCard(n, st){
+  st = st || v4NgoStats(n.id);
+  const act = (n.partnership||"Active")==="Active";
+  return `<div class="v-card tap v-ngo" role="button" tabindex="0" onclick="go('ngo2','${v4Arg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
+    <div class="v-ngo-h">${v4Mono(n)}
+      <div style="flex:1;min-width:0"><h3>${esc(n.short||n.name)}</h3>
+        <p>${esc([n.state,n.vertical].filter(Boolean).join(" · ") || n.name || "")}</p></div>
+      ${act ? "" : `<span class="v-badge">${esc(n.partnership)}</span>`}
+    </div>
+    <div class="v-ngo-stats">
+      <div class="v-ngo-stat"><b>${st.krTotal ? st.krDone+"/"+st.krTotal : "—"}</b><span>KRs ${st.month ? esc(monthLabel(st.month)) : ""}</span></div>
+      <div class="v-ngo-stat ${st.late?"bad":""}"><b>${st.open}</b><span>${st.late ? st.late+" late" : "Open actions"}</span></div>
+      <div class="v-ngo-stat"><b>${st.total ? st.used+"%" : "—"}</b><span>Budget used</span></div>
+    </div>
+    ${st.total ? v4Meter(st.used, "thin " + (st.used>100?"bad":"")) : ""}
+    ${st.pending ? `<div style="display:flex;gap:6px;flex-wrap:wrap"><span class="v-badge warn">${st.pending} debit note${st.pending>1?"s":""} pending</span></div>` : ""}
+  </div>`;
+}
+function v4NgoFilter(list){
+  const q = (V4.q||"").trim().toLowerCase();
+  if(!q) return list;
+  return list.filter(n=>[n.short,n.name,n.state,n.vertical,n.lead].join(" ").toLowerCase().indexOf(q)>=0);
+}
+function v4SetQuery(v){
+  V4.q = v;
+  const box = el("v4NgoList"); if(box) box.innerHTML = v4NgoListHtml();
+}
+function v4NgoListHtml(){
+  const mine = v4NgoFilter(v4MyNgos()), team = v4NgoFilter(v4TeamNgos());
+  if(!mine.length && !team.length) return `<div class="v-card">${v4Empty("search", V4.q ? "No NGO matches" : "No NGOs assigned yet",
+      V4.q ? "Try a different name or state." : "Ask the Program Manager to assign partners to you in Admin.")}</div>`;
+  return (mine.length ? `<div class="v-grid c3 v-stagger">${mine.map(n=>v4NgoCard(n)).join("")}</div>` : "")
+    + (team.length ? v4Sec("My team's NGOs", team.length) + `<div class="v-grid c3 v-stagger">${team.map(n=>v4NgoCard(n)).join("")}</div>` : "");
+}
+function pageV4Ngos(){
+  const mine = v4MyNgos();
+  return `<div class="v-head"><div><h1>My NGOs</h1>
+      <p>${mine.length} partner${mine.length===1?"":"s"}${ME.role==="PM"?" across the program":" assigned to you"}</p></div></div>
+    <div class="v-search" style="margin-bottom:16px">${vi("search","sm")}
+      <input type="search" placeholder="Search by name, state or vertical" value="${esc(V4.q)}" oninput="v4SetQuery(this.value)" aria-label="Search NGOs"></div>
+    <div id="v4NgoList">${v4NgoListHtml()}</div>`;
+}
+
+/* ---------- one NGO ---------- */
+function v4SetNgoTab(id, tab){ V4.ngoTab[id] = tab; render(); }
+function v4SetNgoMonth(id, m){ V4.ngoMonth[id] = m; render(); }
+function pageV4Ngo(id){
+  const n = ngoById(id);
+  if(!n || !visibleNgos().some(x=>x.id===id)) return `<div class="v-card">${v4Empty("building","NGO not found","It may have been removed, or it isn't assigned to you.",`<button class="v-btn" onclick="go('myngos')">Back to NGOs</button>`)}</div>`;
+  const tab = V4.ngoTab[id] || "okr", st = v4NgoStats(id), can = canEditNgo(id);
+  const tasksOpen = (DB.tasks||[]).filter(t=>t && t.ngoId===id && t.status!=="Done").length;
+  const lead = (DB.users||[]).find(u=>u && u.id===n.aplId);
+  let body = "";
+  if(tab==="okr") body = v4NgoOkrTab(n, can);
+  else if(tab==="act") body = v4NgoActTab(n, can);
+  else body = v4NgoMoneyTab(n, can, st);
+  return `
+  <div class="v-ngo-hero">${v4Mono(n, true)}
+    <div style="flex:1;min-width:0"><h1>${esc(n.short||n.name)}</h1>
+      <p>${esc(n.name && n.name!==n.short ? n.name : "")}${n.state?` <span class="v-badge nodot">${esc(n.state)}</span>`:""}${n.vertical?` <span class="v-badge nodot">${esc(n.vertical)}</span>`:""}
+        ${lead?` <span class="v-badge nodot brand">${vi("users","xs")} ${esc(lead.name)}</span>`:""}${can?"":` <span class="v-badge nodot">View only</span>`}</p></div>
+    <button class="v-btn sm v-hide-m" onclick="go('ngo','${v4Arg(id)}')">${vi("ext","sm")} Full record</button>
+  </div>
+  <div class="v-tabs-sticky"><div class="v-seg" role="tablist">
+    <button class="${tab==="okr"?"on":""}" onclick="v4SetNgoTab('${v4Arg(id)}','okr')">${vi("target","sm")} OKRs</button>
+    <button class="${tab==="act"?"on":""}" onclick="v4SetNgoTab('${v4Arg(id)}','act')">${vi("checksq","sm")} Actions <span class="n">${tasksOpen||""}</span></button>
+    <button class="${tab==="money"?"on":""}" onclick="v4SetNgoTab('${v4Arg(id)}','money')">${vi("wallet","sm")} Money</button>
+  </div></div>
+  ${body}
+  <div class="v-only-m" style="text-align:center;margin-top:24px"><button class="v-btn ghost" onclick="go('ngo','${v4Arg(id)}')">${vi("ext","sm")} Open full record</button></div>`;
+}
+function v4ObjGroups(rows, numKey, textKey){
+  const groups = [], by = {};
+  rows.forEach(r=>{
+    const k = String(r[numKey]||"") + "|" + String(r[textKey]||"");
+    if(!by[k]){ by[k] = { num:r[numKey], text:r[textKey], rows:[] }; groups.push(by[k]); }
+    by[k].rows.push(r);
+  });
+  return groups;
+}
+function v4NgoOkrTab(n, can){
+  const months = v4NgoMonths(n.id);
+  const m = V4.ngoMonth[n.id] && months.indexOf(V4.ngoMonth[n.id])>=0 ? V4.ngoMonth[n.id]
+          : (months.find(x=>x<=TODAY_MONTH) || months[0]);
+  const rows = m ? (DB.mbo||[]).filter(r=>r && r.ngoId===n.id && r.month===m) : [];
+  const done = rows.filter(r=>r.status==="Done").length;
+  const bets = betsForNgo(n.id);
+  const add = can ? `<button class="v-btn sm primary" onclick="openMboModal('${v4Arg(n.id)}')">${vi("plus","sm")} Add key results</button>` : "";
+  let krHtml;
+  if(!months.length){
+    krHtml = `<div class="v-card">${v4Empty("target","No key results yet", can ? "Add this month's objectives and key results for "+esc(n.short)+"." : "Key results will appear once the NGO's lead adds them.", add)}</div>`;
+  } else {
+    krHtml = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div class="v-chips" style="flex:1">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetNgoMonth('${v4Arg(n.id)}','${x}')">${esc(monthLabel(x))}</button>`).join("")}</div>
+        <span class="v-hide-m">${add}</span></div>
+      <div class="v-card pad" style="display:flex;align-items:center;gap:18px;margin-bottom:16px">
+        ${v4Ring(done, rows.length, 72, rows.length && done===rows.length ? "ok" : "")}
+        <div><div style="font-size:16px;font-weight:700;color:var(--v-n900)">${done} of ${rows.length} key results done</div>
+          <div class="v-muted" style="font-size:13px;margin-top:2px">${esc(monthLong(m))}${rows.some(r=>r.status==="Not Done")?" · "+rows.filter(r=>r.status==="Not Done").length+" not done":""}</div></div>
+      </div>
+      <div class="v-stagger">${v4ObjGroups(rows,"objNum","objective").map(g=>`
+        <div class="v-card v-obj">
+          <div class="v-obj-h"><div class="v-obj-n">${esc(g.num||"•")}</div><div class="v-obj-t">${esc(g.text||"Objective")}</div>
+            <div class="v-obj-p">${g.rows.filter(r=>r.status==="Done").length}/${g.rows.length}</div></div>
+          ${g.rows.map(r=>v4KrRow(r, can)).join("")}
+        </div>`).join("")}</div>
+      <div class="v-only-m" style="margin-top:4px">${add}</div>`;
+  }
+  return krHtml + (bets.length ? v4Sec("Milestones", bets.length) + `<div class="v-grid c2 v-stagger">${bets.map(v4BetCard).join("")}</div>` : "");
+}
+function v4KrRow(r, can){
+  const due = v4KrDue(r);
+  return `<div class="v-kr">
+    <div class="v-kr-main">
+      <div class="v-kr-t">${esc(r.kr||"Key result")}</div>
+      <div class="v-kr-meta">
+        ${v4StatBtn(r.status, can ? `v4KrSheet('${v4Arg(r.id)}')` : "")}
+        ${r.status!=="Done" && due ? `<span class="v-due ${v4DueCls(due)}">${v4DueLabel(due)}</span>` : (r.timeline?`<span class="v-muted" style="font-size:12px">${esc(r.timeline)}</span>`:"")}
+        ${r.ref && /^https?:\/\//.test(r.ref) ? `<a class="v-link" href="${esc(r.ref)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${vi("link","xs")} Evidence</a>` : (r.ref?`<span class="v-muted" style="font-size:12px">${esc(r.ref)}</span>`:"")}
+        ${can ? `<button class="v-link" onclick="v4KrSheet('${v4Arg(r.id)}')">${vi("msg","xs")} ${r.comment?"Edit note":"Add note"}</button>` : ""}
+      </div>
+      ${r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}${r.editedBy?`<div class="v-muted" style="font-size:11px;margin-top:3px">${esc(r.editedBy)}${r.editedAt?" · "+esc(shortDate(r.editedAt)):""}</div>`:""}</div></div>` : ""}
+    </div>
+  </div>`;
+}
+function v4BetCard(b){
+  const h = betHealth(b), p = betProgress(b), cum = betCumulative(b, FY_END);
+  const cls = h.status==="green" ? "ok" : h.status==="amber" ? "warn" : h.status==="red" ? "bad" : "";
+  return `<div class="v-card v-bet">
+    <div class="v-bet-h"><div class="t">${esc(b.title)}</div><span class="v-badge ${cls}">${esc(h.label)}</span></div>
+    ${v4Meter(p, cls)}
+    <div class="v-bet-n"><span><b>${fmtCompact(cum,b.unit)}</b> of ${fmtCompact(b.annualTarget,b.unit)} ${b.unit&&b.unit!=="₹"?esc(b.unit):""}</span><span>${p}% of target</span></div>
+  </div>`;
+}
+function v4NgoActTab(n, can){
+  const all = (DB.tasks||[]).filter(t=>t && t.ngoId===n.id);
+  const open = all.filter(t=>t.status!=="Done").sort((a,b)=>(a.due||"9")<(b.due||"9")?-1:1);
+  const done = all.filter(t=>t.status==="Done");
+  const add = can ? `<button class="v-btn sm primary" onclick="v4AddTask('${v4Arg(n.id)}')">${vi("plus","sm")} Add action</button>` : "";
+  if(!all.length) return `<div class="v-card">${v4Empty("checksq","No action items", can ? "Track what you or the NGO must do next — with a due date." : "Nothing has been raised for this NGO yet.", add)}</div>`;
+  const showDone = !!V4.showDone[n.id];
+  return `<div style="display:flex;align-items:center;margin-bottom:12px"><div class="v-muted" style="font-size:13px;flex:1">${open.length} open · ${done.length} done</div>${add}</div>
+    ${open.length ? `<div class="v-list v-stagger">${open.map(t=>v4TaskRow(t,can)).join("")}</div>`
+      : `<div class="v-card">${v4Empty("check","All actions done","Every action item for "+esc(n.short)+" is closed.","",true)}</div>`}
+    ${done.length ? `<button class="v-btn ghost" style="margin-top:12px" onclick="V4.showDone['${v4Arg(n.id)}']=${!showDone};render()">${vi(showDone?"chevd":"chevr","sm")} ${showDone?"Hide":"Show"} ${done.length} done</button>
+      ${showDone ? `<div class="v-list" style="margin-top:8px">${done.map(t=>v4TaskRow(t,can)).join("")}</div>` : ""}` : ""}`;
+}
+function v4TaskRow(t, can){
+  const isDone = t.status==="Done";
+  return `<div class="v-row tap ${isDone?"done":""}" onclick="v4TaskSheet('${v4Arg(t.id)}')">
+    <button class="v-check ${isDone?"on":""}" ${can?"":"disabled"} aria-label="${isDone?"Reopen":"Mark done"}"
+      onclick="event.stopPropagation();v4ToggleTask('${v4Arg(t.id)}')">${vi("check")}</button>
+    <div class="v-row-main"><div class="v-row-t">${esc(t.title)}</div>
+      <div class="v-row-s">
+        ${!isDone && t.due ? `<span class="v-due ${v4DueCls(t.due)}">${v4DueLabel(t.due)}</span>` : (t.due?`<span>${esc(shortDate(t.due))}</span>`:"")}
+        ${t.priority ? `<span class="sep"></span><span>${esc(t.priority)} priority</span>` : ""}
+        ${isDone && t.doneBy ? `<span class="sep"></span><span>Done by ${esc(t.doneBy)}</span>` : ""}
+      </div></div>
+    ${vi("chevr","sm")}
+  </div>`;
+}
+function v4AddTask(ngoId){
+  openTaskForm();
+  setTimeout(()=>{ const s = el("tfNgo"); if(s && ngoId) s.value = ngoId;
+    const d = el("tfDue"); if(d && !d.dataset.v4){ d.value = TODAY_ISO; d.dataset.v4 = "1"; } }, 0);
+}
+function v4NgoMoneyTab(n, can, st){
+  const b = (DB.budgets && DB.budgets[n.id]) || null;
+  const cats = ngoSpendByCat(n.id, FY_END);
+  const dns = st.dns.slice().sort((a,b2)=>(b2.date||"").localeCompare(a.date||""));
+  const add = can ? `<button class="v-btn sm primary" onclick="openDebitForm('${v4Arg(n.id)}')">${vi("plus","sm")} Add debit note</button>` : "";
+  const budgetCard = st.total ? `<div class="v-card v-money">
+      <div class="v-money-top"><div><div class="big">${fmtRs(st.spent)}</div><div class="of">spent of ${fmtRsFull(st.total)} · FY budget</div></div>
+        <div style="margin-left:auto">${v4Ring(Math.min(st.spent,st.total), st.total, 64, "", "used")}</div></div>
+      ${v4Meter(st.used, st.used>100?"bad":"")}
+      <div style="margin-top:16px">${BUDGET_CATS.map(c=>{
+        const plan = (b && b.annual && +b.annual[c]) || 0, s = cats[c]||0;
+        if(!plan && !s) return "";
+        return `<div class="v-cat"><span>${esc(c)}</span>${v4Meter(plan?pct(s,plan):0, "thin "+(plan&&s>plan?"bad":""))}<em>${fmtRs(s)} / ${fmtRs(plan)}</em></div>`;
+      }).join("")}</div>
+    </div>` : `<div class="v-card">${v4Empty("wallet","No budget on file","Upload the budget book from Finance to see spend against plan.")}</div>`;
+  return budgetCard
+    + v4Sec("Debit notes", dns.length || null, add)
+    + (dns.length ? `<div class="v-list v-stagger">${dns.slice(0,40).map(d=>v4DnRow(d, can)).join("")}</div>`
+       : `<div class="v-card">${v4Empty("receipt","No debit notes yet", can ? "Add the NGO's first debit note — upload its Excel and the fields fill in." : "Debit notes will appear here.", add)}</div>`);
+}
+function v4DnRow(d, can, showNgo){
+  const st = d.status || DN_STATUS_DEFAULT;
+  const ngo = showNgo ? ngoById(d.ngoId) : null;
+  return `<div class="v-row ${can?"tap":""}" ${can?`onclick="openDebitForm('${v4Arg(d.ngoId)}','${v4Arg(d.id)}')"`:""}>
+    <div class="v-kind" style="background:var(--v-n100);color:var(--v-n600)">${vi("receipt","sm")}</div>
+    <div class="v-row-main"><div class="v-row-t">${esc(d.dnNo||"Debit note")}${ngo?` <span class="v-muted" style="font-weight:500">· ${esc(ngo.short)}</span>`:""}</div>
+      <div class="v-row-s"><span>${esc(shortDate(d.date))}</span>${d.category?`<span class="sep"></span><span>${esc(d.category)}</span>`:""}
+        <span class="v-badge ${v4DnCls(st)}">${esc(st)}</span></div></div>
+    <div class="v-row-end"><span class="v-amt">${fmtRsFull(d.amount)}</span></div>
+  </div>`;
+}
+
+/* =================================================================
+   MY OKRs
+   ================================================================= */
+function v4SetPerson(id){ V4.myPerson = id; V4.myMonth = null; render(); }
+function v4SetMyMonth(m){ V4.myMonth = m; render(); }
+function v4SetMyView(v){ V4.myView = v; render(); }
+function pageV4MyOkr(){
+  const people = v4People();
+  const pid = V4.myPerson && people.some(p=>p.id===V4.myPerson) ? V4.myPerson : ME.id;
+  const isMe = pid===ME.id, person = people.find(p=>p.id===pid) || ME;
+  const rows = v4RowsOf(pid);
+  const months = [...new Set(rows.map(r=>r.month).filter(Boolean))].sort().reverse();
+  const m = V4.myMonth && months.indexOf(V4.myMonth)>=0 ? V4.myMonth : v4DefaultMonth(rows);
+  const cur = rows.filter(r=>r.month===m);
+  const krs = cur.filter(r=>r.type==="kr"), acts = cur.filter(r=>r.type!=="kr");
+  const done = krs.filter(r=>r.status==="Done").length;
+  const view = V4.myView==="act" ? "act" : "kr";
+  const shown = view==="kr" ? krs : acts;
+  const canAdd = isMe;
+  const old = rows.filter(r=>r.status!=="Done" && r.month<m && r.deadline && v4DaysTo(r.deadline)<0)
+                  .sort((a,b)=>a.deadline<b.deadline?1:-1);
+  const add = canAdd ? `<button class="v-btn sm primary" onclick="v4AddActionForm()">${vi("plus","sm")} Add action item</button>` : "";
+  const counts = { prog: krs.filter(r=>r.status==="In Progress").length, not: krs.filter(r=>r.status==="Not Done").length,
+                   late: cur.filter(r=>r.status!=="Done" && r.deadline && v4DaysTo(r.deadline)<0).length };
+  return `
+  <div class="v-head"><div><h1>${isMe ? "My OKRs" : esc(person.name)}</h1>
+      <p>${isMe ? "Your monthly key results and action items" : esc(person.title||"")+" · view only"}</p></div>
+    <div class="v-head-act v-hide-m">${add}</div></div>
+  ${people.length>1 ? `<div class="v-chips" style="margin-bottom:10px">${people.map(p=>`<button class="v-chip ${p.id===pid?"on":""}" onclick="v4SetPerson('${v4Arg(p.id)}')">${p.id===ME.id?"Me":esc(v4First(p.name))}</button>`).join("")}</div>` : ""}
+  ${months.length ? `<div class="v-chips" style="margin-bottom:16px">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetMyMonth('${x}')">${esc(monthLabel(x))}</button>`).join("")}</div>` : ""}
+  ${!rows.length ? `<div class="v-card">${v4Empty("target", isMe ? "No OKRs yet" : "No OKRs for "+esc(v4First(person.name)),
+      isMe ? "Your monthly MBO sheet appears here once it's imported. You can add your own action items now." : "Nothing imported for this person yet.", add)}</div>` : `
+  <div class="v-card pad" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+    ${v4Ring(done, krs.length, 84, krs.length && done===krs.length ? "ok" : "")}
+    <div style="flex:1;min-width:180px"><div style="font-size:17px;font-weight:750;color:var(--v-n900);letter-spacing:-.01em">${done} of ${krs.length} key results done</div>
+      <div class="v-muted" style="font-size:13px;margin-top:2px">${esc(monthLong(m))}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        ${counts.prog?`<span class="v-badge warn">${counts.prog} in progress</span>`:""}
+        ${counts.not?`<span class="v-badge bad">${counts.not} not done</span>`:""}
+        ${counts.late?`<span class="v-badge bad">${counts.late} past deadline</span>`:""}
+        <span class="v-badge info">${(n=>n+" action"+(n===1?"":"s")+" open")(acts.filter(r=>r.status!=="Done").length)}</span>
+      </div></div>
+  </div>
+  <div class="v-tabs-sticky"><div class="v-seg">
+    <button class="${view==="kr"?"on":""}" onclick="v4SetMyView('kr')">${vi("target","sm")} Key results <span class="n">${krs.length}</span></button>
+    <button class="${view==="act"?"on":""}" onclick="v4SetMyView('act')">${vi("checksq","sm")} Action items <span class="n">${acts.length}</span></button>
+  </div></div>
+  ${shown.length ? `<div class="v-stagger">${v4ObjGroups(shown,"objNum","objective").map(g=>`
+    <div class="v-card v-obj">
+      ${g.text ? `<div class="v-obj-h"><div class="v-obj-n">${esc(g.num||"•")}</div><div class="v-obj-t">${esc(g.text)}</div>
+        <div class="v-obj-p">${g.rows.filter(r=>r.status==="Done").length}/${g.rows.length}</div></div>` : ""}
+      ${g.rows.map((r,i)=>v4MyRow(r, isMe || ME.role==="PM", !g.text && i===0)).join("")}
+    </div>`).join("")}</div>`
+    : `<div class="v-card">${v4Empty(view==="kr"?"target":"checksq", view==="kr"?"No key results this month":"No action items this month",
+        view==="act" && canAdd ? "Add the things you need to get done, with a deadline." : "Pick another month above.", view==="act"?add:"")}</div>`}
+  `}
+  <div class="v-only-m" style="margin-top:12px">${add}</div>
+  ${old.length ? v4Sec("Still open from earlier months", old.length) + `
+    <div class="v-list">${old.slice(0, V4.showOld?200:5).map(r=>v4MyRow(r, isMe || ME.role==="PM", false, true)).join("")}</div>
+    ${old.length>5 ? `<button class="v-btn ghost" style="margin-top:8px" onclick="V4.showOld=${!V4.showOld};render()">${V4.showOld?"Show fewer":"Show all "+old.length}</button>` : ""}` : ""}`;
+}
+function v4MyRow(r, can, first, showMonth){
+  const isDone = r.status==="Done";
+  return `<div class="v-kr" ${first?'style="border-top:none"':""}>
+    <div class="v-kr-main">
+      <div class="v-kr-t">${esc(r.title||"Untitled")}</div>
+      <div class="v-kr-meta">
+        ${v4StatBtn(r.status, can ? `v4MySheet('${v4Arg(r.id)}')` : "")}
+        ${!isDone && r.deadline ? `<span class="v-due ${v4DueCls(r.deadline)}">${v4DueLabel(r.deadline)}</span>` : (r.deadline?`<span class="v-muted" style="font-size:12px">${esc(shortDate(r.deadline))}</span>`:"")}
+        ${showMonth ? `<span class="v-badge nodot">${esc(monthLabel(r.month))}</span>` : ""}
+        ${tmPriLabel(r) ? `<span class="v-badge nodot">${esc(tmPriLabel(r))}</span>` : ""}
+        ${r.source==="app" ? `<span class="v-badge nodot brand">Added in app</span>` : ""}
+        ${can ? `<button class="v-link" onclick="v4MySheet('${v4Arg(r.id)}')">${vi("msg","xs")} ${r.comment?"Edit note":"Add note"}</button>` : ""}
+      </div>
+      ${r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}</div></div>` : ""}
+    </div>
+  </div>`;
+}
+
+/* ---------- item sheets ---------- */
+function v4StatusOpts(list, current, fn){
+  return `<div style="display:flex;flex-direction:column;gap:2px;margin:6px 0 16px">${list.map(([s,cls])=>`
+    <button class="v-opt ${s===(current||"")?"on":""}" onclick="${fn}('${esc(s)}')">
+      <span class="v-stat-btn ${cls}" style="pointer-events:none">${esc(v4StatLabel(s))}</span></button>`).join("")}</div>`;
+}
+function v4MySheet(id){
+  const r = (DB.teamMbo||[]).find(x=>x && x.id===id);
+  if(!r) return;
+  const can = !!(ME && (ME.role==="PM" || r.ownerId===ME.id));
+  const body = `
+    ${r.objective ? `<div class="v-muted" style="font-size:12.5px;margin-bottom:6px">${esc(r.objective)}</div>` : ""}
+    <div style="font-size:16px;font-weight:650;color:var(--v-n900);line-height:1.4">${esc(r.title||"Untitled")}</div>
+    <div class="v-kr-meta" style="margin-top:10px">
+      <span class="v-badge nodot brand">${r.type==="kr"?"Key result":"Action item"}</span>
+      <span class="v-badge nodot">${esc(monthLong(r.month))}</span>
+      ${r.deadline ? `<span class="v-due ${r.status==="Done"?"later":v4DueCls(r.deadline)}">${r.status==="Done"?shortDate(r.deadline):v4DueLabel(r.deadline)}</span>` : ""}
+      ${r.ownerId!==ME.id ? `<span class="v-badge nodot">${esc(tmOwnerName(r.ownerId))}</span>` : ""}
+    </div>
+    ${r.ref ? `<div class="v-muted" style="font-size:12.5px;margin-top:10px">${vi("link","xs")} ${/^https?:\/\//.test(r.ref)?`<a class="v-link" href="${esc(r.ref)}" target="_blank" rel="noopener">Reference</a>`:esc(r.ref)}</div>` : ""}
+    ${can ? `<div class="v-ngroup" style="margin-top:20px">Status</div>
+      ${v4StatusOpts(V4_MY_STATUS, r.status, "v4MyPick")}
+      <div class="v-ngroup">Note</div>
+      <textarea class="v-ta" id="v4Cmt" placeholder="What happened, what's next">${esc(r.comment||"")}</textarea>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        ${r.source==="app" && r.ownerId===ME.id ? `<button class="v-btn danger" onclick="v4DeleteAction('${v4Arg(r.id)}')">Delete</button>` : ""}
+        <button class="v-btn primary" style="margin-left:auto" onclick="v4SaveMyComment('${v4Arg(r.id)}')">Save note</button></div>`
+      : `<div style="margin-top:16px">${v4StatBtn(r.status)}</div>${r.comment?`<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}</div></div>`:""}`}`;
+  V4.sheetRow = id;
+  v4OpenSheet(r.type==="kr" ? "Key result" : "Action item", body);
+}
+function v4MyPick(status){ if(V4.sheetRow) v4SetMy(V4.sheetRow, status); }
+async function v4SetMy(id, status){
+  const r = (DB.teamMbo||[]).find(x=>x && x.id===id);
+  if(!r) return;
+  if(!(ME.role==="PM" || r.ownerId===ME.id)){ toast("You can update only your own OKRs"); return; }
+  r.status = status; stampEdit(r);
+  v4CloseSheet(); v4Rerender();
+  toast(status==="Done" ? "Marked done" : "Status: "+v4StatLabel(status));
+  await saveDB();
+}
+async function v4SaveMyComment(id){
+  const r = (DB.teamMbo||[]).find(x=>x && x.id===id);
+  if(!r) return;
+  if(!(ME.role==="PM" || r.ownerId===ME.id)){ toast("You can update only your own OKRs"); return; }
+  const box = el("v4Cmt"); if(!box) return;
+  r.comment = box.value.trim().slice(0,2000); stampEdit(r);
+  v4CloseSheet(); v4Rerender(); toast("Note saved");
+  await saveDB();
+}
+function v4AddActionForm(){
+  const rows = v4RowsOf(ME.id);
+  const m = V4.myMonth || v4DefaultMonth(rows);
+  const objs = [...new Set(rows.filter(r=>r.month===m && r.objective).map(r=>r.objective))];
+  const months = [...new Set([TODAY_MONTH, m].concat(rows.map(r=>r.month)))].filter(Boolean).sort().reverse().slice(0,8);
+  const body = `
+    <div class="field"><label>What needs doing?</label><textarea id="v4aTitle" class="v-ta" style="min-height:70px" placeholder="e.g. Share the Q3 field report with SeSTA"></textarea></div>
+    <div class="frow">
+      <div class="field"><label>Deadline</label><input type="date" id="v4aDue" value="${TODAY_ISO}"></div>
+      <div class="field"><label>Month</label><select id="v4aMonth">${months.map(x=>`<option value="${x}" ${x===m?"selected":""}>${esc(monthLong(x))}</option>`).join("")}</select></div>
+    </div>
+    ${objs.length ? `<div class="field"><label>Objective (optional)</label><select id="v4aObj"><option value="">None</option>${objs.map(o=>`<option value="${esc(o)}">${esc(o.slice(0,90))}</option>`).join("")}</select></div>` : ""}
+    <button class="v-btn primary" style="width:100%;height:46px;margin-top:4px" onclick="v4SaveAction()">${vi("plus","sm")} Add action item</button>`;
+  v4OpenSheet("New action item", body, true);
+  setTimeout(()=>{ const t = el("v4aTitle"); if(t) t.focus(); }, 280);
+}
+async function v4SaveAction(){
+  if(!ME || !(ME.role==="PM" || ME.role==="Programme" || ME.role==="APL")) return;
+  const title = (el("v4aTitle").value||"").trim();
+  if(!title){ toast("Describe the action item"); return; }
+  const objSel = el("v4aObj");
+  const objective = objSel ? objSel.value : "";
+  const same = objective ? (DB.teamMbo||[]).find(r=>r && r.ownerId===ME.id && r.objective===objective) : null;
+  DB.teamMbo = DB.teamMbo || [];
+  DB.teamMbo.push({ id:genId("tmbo"), ownerId:ME.id, type:"action", month:el("v4aMonth").value,
+    objNum: same ? (same.objNum||"") : "", objective, title: title.slice(0,500),
+    deadline: el("v4aDue").value || "", deadlineFixed:false, deadlineRaw:"", status:"", comment:"",
+    ref:"", band:"", timeEst:"", timeSpent:"", source:"app", importedAt:TODAY_ISO,
+    editedBy:ME.name, editedAt:TODAY_ISO });
+  V4.myView = "act"; V4.myMonth = el("v4aMonth").value; V4.myPerson = ME.id;
+  v4CloseSheet();
+  if(CUR_PAGE!=="myokr") go("myokr"); else render();
+  toast("Action item added");
+  await saveDB();
+}
+function v4DeleteAction(id){
+  const r = (DB.teamMbo||[]).find(x=>x && x.id===id);
+  if(!r || r.source!=="app" || r.ownerId!==ME.id) return;
+  v4CloseSheet();
+  confirmAction("Delete this action item?", `"${esc((r.title||"").slice(0,80))}" will be removed.`, async ()=>{
+    if(!(ME.role==="PM" || r.ownerId===ME.id)) return;
+    DB.teamMbo = DB.teamMbo.filter(x=>x!==r);
+    render(); toast("Action item deleted");
+    await saveDB();
+  });
+}
+function v4KrSheet(id){
+  const r = (DB.mbo||[]).find(x=>x && x.id===id);
+  if(!r) return;
+  const can = canEditNgo(r.ngoId), n = ngoById(r.ngoId) || {};
+  const due = v4KrDue(r);
+  const body = `
+    ${r.objective ? `<div class="v-muted" style="font-size:12.5px;margin-bottom:6px">${esc(r.objective)}</div>` : ""}
+    <div style="font-size:16px;font-weight:650;color:var(--v-n900);line-height:1.4">${esc(r.kr||"Key result")}</div>
+    <div class="v-kr-meta" style="margin-top:10px">
+      <span class="v-badge nodot brand">${esc(n.short||"NGO")}</span>
+      <span class="v-badge nodot">${esc(monthLong(r.month))}</span>
+      ${due && r.status!=="Done" ? `<span class="v-due ${v4DueCls(due)}">${v4DueLabel(due)}</span>` : ""}
+    </div>
+    ${can ? `<div class="v-ngroup" style="margin-top:20px">Status</div>
+      ${v4StatusOpts(V4_KR_STATUS, r.status, "v4KrPick")}
+      <div class="v-ngroup">Note</div>
+      <textarea class="v-ta" id="v4Cmt" placeholder="Progress, numbers, blockers">${esc(r.comment||"")}</textarea>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="v-btn" onclick="v4CloseSheet();go('ngo2','${v4Arg(r.ngoId)}')">Open NGO</button>
+        <button class="v-btn primary" style="margin-left:auto" onclick="v4SaveKrCmt('${v4Arg(r.id)}')">Save note</button></div>`
+      : `<div style="margin-top:16px">${v4StatBtn(r.status)}</div>${r.comment?`<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}</div></div>`:""}`}`;
+  V4.sheetRow = id;
+  v4OpenSheet("NGO key result", body);
+}
+function v4KrPick(status){ if(V4.sheetRow) v4SetKr(V4.sheetRow, status); }
+async function v4SetKr(id, status){
+  const r = (DB.mbo||[]).find(x=>x && x.id===id);
+  if(!r) return;
+  if(!canEditNgo(r.ngoId)){ toast("Only this NGO's lead can update it"); return; }
+  r.status = status; stampEdit(r);
+  v4CloseSheet(); v4Rerender();
+  toast(status==="Done" ? "Marked done" : "Status: "+status);
+  await saveDB();
+}
+async function v4SaveKrCmt(id){
+  const r = (DB.mbo||[]).find(x=>x && x.id===id);
+  if(!r) return;
+  if(!canEditNgo(r.ngoId)){ toast("Only this NGO's lead can update it"); return; }
+  const box = el("v4Cmt"); if(!box) return;
+  r.comment = box.value.trim().slice(0,2000); stampEdit(r);
+  v4CloseSheet(); v4Rerender(); toast("Note saved");
+  await saveDB();
+}
+function v4TaskSheet(id){
+  const t = (DB.tasks||[]).find(x=>x && x.id===id);
+  if(!t) return;
+  const can = canEditNgo(t.ngoId), n = ngoById(t.ngoId) || {}, isDone = t.status==="Done";
+  const body = `
+    <div style="font-size:16px;font-weight:650;color:var(--v-n900);line-height:1.4">${esc(t.title)}</div>
+    <div class="v-kr-meta" style="margin-top:10px">
+      <span class="v-badge nodot brand">${esc(n.short||"NGO")}</span>
+      ${t.due ? `<span class="v-due ${isDone?"later":v4DueCls(t.due)}">${isDone?shortDate(t.due):v4DueLabel(t.due)}</span>` : ""}
+      ${t.priority ? `<span class="v-badge nodot">${esc(t.priority)} priority</span>` : ""}
+      ${isDone ? `<span class="v-badge ok">Done${t.doneBy?" by "+esc(t.doneBy):""}</span>` : ""}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap">
+      ${can ? `<button class="v-btn" onclick="v4CloseSheet();openTaskForm('${v4Arg(t.id)}')">Edit</button>` : ""}
+      <button class="v-btn" onclick="v4CloseSheet();V4.ngoTab['${v4Arg(t.ngoId)}']='act';go('ngo2','${v4Arg(t.ngoId)}')">Open NGO</button>
+      ${can ? `<button class="v-btn primary" style="margin-left:auto" onclick="v4ToggleTask('${v4Arg(t.id)}')">${vi("check","sm")} ${isDone?"Reopen":"Mark done"}</button>` : ""}
+    </div>`;
+  v4OpenSheet("NGO action", body);
+}
+async function v4ToggleTask(id, forceDone){
+  const t = (DB.tasks||[]).find(x=>x && x.id===id);
+  if(!t) return;
+  if(!canEditNgo(t.ngoId)){ toast("Only this NGO's lead can update it"); return; }
+  const toDone = forceDone ? true : t.status!=="Done";
+  t.status = toDone ? "Done" : "Open";
+  if(toDone){ t.doneBy = ME.name; t.doneAt = TODAY_ISO; } else { delete t.doneBy; delete t.doneAt; }
+  v4CloseSheet(); v4Rerender();
+  toast(toDone ? "Action done" : "Action reopened");
+  await saveDB();
+}
+
+/* =================================================================
+   MONEY
+   ================================================================= */
+function v4SetStage(s){ V4.stage = V4.stage===s ? null : s; V4.moneyMore = false; render(); }
+function pageV4Money(){
+  const ngos = v4MyNgos(), ids = new Set(ngos.map(n=>n.id));
+  const stats = ngos.map(n=>({ n, st:v4NgoStats(n.id) }));
+  const budget = stats.reduce((s,x)=>s+x.st.total,0), spent = stats.reduce((s,x)=>s+x.st.spent,0);
+  const dns = (DB.debits||[]).filter(d=>d && ids.has(d.ngoId));
+  const by = {}; DN_STATUS.forEach(s=>{ by[s] = { n:0, amt:0 }; });
+  dns.forEach(d=>{ const s = d.status||DN_STATUS_DEFAULT; if(!by[s]) by[s]={n:0,amt:0}; by[s].n++; by[s].amt += (+d.amount||0); });
+  const pend = dns.filter(d=>(d.status||DN_STATUS_DEFAULT)!=="Payment released");
+  const pendAmt = pend.reduce((s,d)=>s+(+d.amount||0),0);
+  const list = dns.filter(d=> V4.stage ? (d.status||DN_STATUS_DEFAULT)===V4.stage : (d.status||DN_STATUS_DEFAULT)!=="Payment released")
+                  .sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const lim = V4.moneyMore ? 500 : 25;
+  return `
+  <div class="v-head"><div><h1>Budget &amp; debit notes</h1><p>${ngos.length} NGO${ngos.length===1?"":"s"} · FY ${esc(FY_MONTHS[0].slice(0,4))}–${esc(FY_END.slice(2,4))}</p></div></div>
+  <div class="v-grid c4 v-stagger">
+    <div class="v-card pad v-kpi"><b>${fmtRs(budget)}</b><span>FY budget</span></div>
+    <div class="v-card pad v-kpi"><b>${fmtRs(spent)}</b><span>Spent so far</span></div>
+    <div class="v-card pad v-kpi"><b>${budget?pct(spent,budget)+"%":"—"}</b><span>Budget used</span>${budget?`<div style="margin-top:10px">${v4Meter(pct(spent,budget))}</div>`:""}</div>
+    <div class="v-card pad v-kpi"><b>${pend.length}</b><span>Debit notes pending · ${fmtRs(pendAmt)}</span></div>
+  </div>
+  ${v4Sec("Debit notes by stage")}
+  <div class="v-stage">${DN_STATUS.map(s=>`<button class="v-stage-i ${V4.stage===s?"on":""}" onclick="v4SetStage('${esc(s)}')">
+      <b>${by[s].n}</b><span>${esc(s)}</span><span class="v-muted" style="margin-top:2px">${fmtRs(by[s].amt)}</span></button>`).join("")}</div>
+  ${v4Sec(V4.stage ? esc(V4.stage) : "Waiting on payment", list.length, V4.stage?`<button class="v-link" onclick="v4SetStage(null)">Clear filter</button>`:"")}
+  ${list.length ? `<div class="v-list">${list.slice(0,lim).map(d=>v4DnRow(d, canEditNgo(d.ngoId), true)).join("")}</div>
+      ${list.length>lim?`<button class="v-btn ghost" style="margin-top:8px" onclick="V4.moneyMore=true;render()">Show all ${list.length}</button>`:""}`
+    : `<div class="v-card">${v4Empty("check","Nothing here","No debit notes at this stage.","",true)}</div>`}
+  ${v4Sec("By NGO", ngos.length)}
+  <div class="v-list">${stats.sort((a,b)=>b.st.used-a.st.used).map(({n,st})=>`
+    <div class="v-row tap" onclick="V4.ngoTab['${v4Arg(n.id)}']='money';go('ngo2','${v4Arg(n.id)}')">
+      ${v4Mono(n)}
+      <div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px"><div style="flex:1;max-width:240px">${v4Meter(st.used, "thin "+(st.used>100?"bad":""))}</div>
+          <span class="v-muted" style="font-size:12px">${st.total?st.used+"% of "+fmtRs(st.total):"No budget"}</span></div></div>
+      <div class="v-row-end">${st.pending?`<span class="v-badge warn">${st.pending} pending</span>`:""}${vi("chevr","sm")}</div>
+    </div>`).join("")}</div>`;
+}
+
+/* =================================================================
+   MORE
+   ================================================================= */
+function pageV4More(){
+  const legacy = navItems().filter(i=>!i.primary && i.id!=="more");
+  let perm = "";
+  if("Notification" in window) perm = Notification.permission==="granted" ? "On" : Notification.permission==="denied" ? "Blocked" : "Off";
+  return `
+  <div class="v-head"><div><h1>More</h1></div></div>
+  <div class="v-card v-me">
+    <div class="v-avatar lg">${esc(ME.avatar||v4Initials(ME.name))}</div>
+    <div style="flex:1;min-width:0"><b>${esc(ME.name)}</b><small>${esc(ME.title||ME.role)}</small></div>
+    <button class="v-btn sm" onclick="doLogout()">${vi("logout","sm")} Sign out</button>
+  </div>
+  ${perm ? `<div class="v-list" style="margin-top:12px"><div class="v-row tap" onclick="v4OpenNotifs()">
+      <div class="v-kind" style="background:var(--v-info-subtle);color:var(--v-info)">${vi("bell","sm")}</div>
+      <div class="v-row-main"><div class="v-row-t">Deadline reminders</div><div class="v-row-s">${perm}</div></div>${vi("chevr","sm")}</div></div>` : ""}
+  ${v4Sec("Workspace")}
+  <div class="v-grid c2 v-stagger">${legacy.map(it=>`
+    <div class="v-card tap v-tile" role="button" tabindex="0" onclick="go('${it.id}')" onkeydown="if(event.key==='Enter')this.click()">
+      <div class="v-pillar-ic">${vi(it.ic)}</div>
+      <div style="min-width:0"><b>${esc(it.label)}</b><small>${esc((V4_LEGACY[it.id]||{}).sub||"")}</small></div>
+      ${it.count ? `<span class="ct">${it.count}</span>` : ""}
+    </div>`).join("")}</div>
+  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Sahkar · KRSF Partnership Program · V74</div>`;
 }
 
 /* =================================================================
@@ -6921,8 +8457,9 @@ function tmReadSheets(sheets, ownerId, batchId, todayIso){
 function tmReplaceMonths(existing, ownerId, months, incoming){
   const drop = {};
   (months||[]).forEach(m=>{ drop[m] = true; });
+  /* V74: an action item added in the app is not in the sheet — keep it */
   const kept = (existing || []).filter(r =>
-    !(r && r.ownerId === ownerId && drop[r.month]));
+    !(r && r.ownerId === ownerId && drop[r.month] && r.source !== "app"));
   return kept.concat(incoming || []);
 }
 

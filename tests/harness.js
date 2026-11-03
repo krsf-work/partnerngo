@@ -57,7 +57,9 @@ function stripComments(s){
 function extract(rawSrc, name){
   const src = stripComments(rawSrc);
   /* a function declaration */
-  const fnStart = src.search(new RegExp('function\\s+' + name + '\\s*\\('));
+  let fnStart = src.search(new RegExp('function\\s+' + name + '\\s*\\('));
+  /* keep `async` — without it an await inside the body is a syntax error */
+  if(fnStart >= 6 && src.slice(fnStart - 6, fnStart) === 'async ') fnStart -= 6;
   if(fnStart !== -1){
     const open = src.indexOf('{', fnStart);
     if(open !== -1){

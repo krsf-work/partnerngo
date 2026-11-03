@@ -1,6 +1,6 @@
 /* Sahkar service worker — network-first so the app is always fresh when online,
    and still opens (from cache) when offline. Bump CACHE on each release. */
-const CACHE = 'sahkar-v73';
+const CACHE = 'sahkar-v74';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -26,5 +26,17 @@ self.addEventListener('fetch', e => {
       caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
       return res;
     }).catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
+  );
+});
+
+/* V74: tapping a deadline reminder opens Sahkar (or brings it forward) */
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const target = (e.notification.data && e.notification.data.url) || './';
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) { if ('focus' in c) return c.focus(); }
+      return self.clients.openWindow ? self.clients.openWindow(target) : null;
+    })
   );
 });
