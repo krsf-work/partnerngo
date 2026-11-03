@@ -1,0 +1,70 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "tracker": {
+      ".read":  "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
+      ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true"
+    },
+
+    "ngoData": {
+      ".read":  "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
+      ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
+      "$ngoId": {
+        ".read": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId",
+        "mbo": {
+          "$row": {
+            "status": {
+              ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId && data.parent().exists()",
+              ".validate": "newData.isString() && (newData.val() === 'Done' || newData.val() === 'Not Done' || newData.val() === 'Pending')"
+            },
+            "comment": {
+              ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId && data.parent().exists()",
+              ".validate": "newData.isString() && newData.val().length <= 2000"
+            },
+            "editedBy": {
+              ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId && data.parent().exists()",
+              ".validate": "newData.isString() && newData.val().length <= 200"
+            },
+            "editedAt": {
+              ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId && data.parent().exists()",
+              ".validate": "newData.isString() && newData.val().length <= 30"
+            }
+          }
+        },
+        "tasks": {
+          "$row": {
+            "status": {
+              ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId && data.parent().exists()",
+              ".validate": "newData.isString() && (newData.val() === 'Open' || newData.val() === 'Done')"
+            },
+            "doneBy": {
+              ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId && data.parent().exists()",
+              ".validate": "newData.isString() && newData.val().length <= 200"
+            },
+            "doneAt": {
+              ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId && data.parent().exists()",
+              ".validate": "newData.isString() && newData.val().length <= 30"
+            }
+          }
+        }
+      }
+    },
+
+    "roles": {
+      ".read":  "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'PM'",
+      ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'PM'",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+
+    "logins": {
+      ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'PM'",
+      "$username": {
+        ".read": true
+      }
+    }
+  }
+}

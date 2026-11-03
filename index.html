@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V72</title>
+<title>Sahkar · KRSF Partnership Program · V73</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -16,6 +16,7 @@
 <!-- Firebase (compat build — exposes a global `firebase`, works without ES modules) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 /* ===== Firebase project configuration — KRSF Partnership Program ===== */
 window.FIREBASE_CONFIG = {
@@ -1280,7 +1281,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V72</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V73</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1290,7 +1291,7 @@ window.FIREBASE_CONFIG = {
       <input type="password" id="loginPass" class="login-inp" placeholder="password" autocomplete="current-password"
              onkeydown="if(event.key==='Enter')doLogin()">
       <div id="loginErr" class="login-err"></div>
-      <button class="login-btn" onclick="doLogin()">Sign in →</button>
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign in →</button>
       <div id="loginHint" style="font-size:11px;color:var(--ink-3);text-align:center;margin-top:14px;line-height:1.6"></div>
       <div style="text-align:center;margin-top:8px">
         <span onclick="loginRecovery()" style="font-size:11px;color:var(--ink-3);cursor:pointer;text-decoration:underline">Can't sign in?</span>
@@ -1305,7 +1306,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V72</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V73</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -1542,7 +1543,7 @@ function skeletonData(){
     users: [
       { id:"pm", name:"Program Manager", role:"PM",
         title:"Program Manager", avatar:"PM",
-        username:"admin", password:"krsf@2026", ngoIds:[] }
+        username:"admin", ngoIds:[] }
     ],
     ngos: [],
     bigBets: [],
@@ -1841,7 +1842,100 @@ const DB_PARTS = ["meta","users","ngos","bigBets","budgets","debits",
                   "documents","tasks","scorecards","mbo","refFiles","flagged",
                   "dailyLogs","teamMbo"];
 
-let fb = { app:null, db:null, storage:null, ready:false };
+let fb = { app:null, db:null, auth:null, storage:null, ready:false };
+
+/* =================================================================
+   V73 · SIGN-IN + STORAGE MODEL
+   Sign-in is Firebase Authentication. Each Sahkar login is a Firebase
+   account with a made-up address on the project's own domain; the
+   username a person types is looked up in logins/{username}. What a
+   signed-in account may touch is decided by roles/{uid}, enforced by
+   the database rules (database.rules.json in the deploy repo):
+     team logins  -> tracker/* and ngoData/*
+     NGO logins   -> only ngoData/{their ngoId}, and only the status /
+                     comment fields of rows that already exist
+   OKRs (mbo) and tasks live per NGO in ngoData/{ngoId}/{mbo|tasks}/{id}
+   so an NGO login can be given its own slice and nothing else. In the
+   browser they are still the flat DB.mbo / DB.tasks arrays.
+   No password is stored anywhere in the database.
+   ================================================================= */
+const LOGIN_DOMAIN = "ngo-partnership-program.firebaseapp.com";
+const ROLE_KEY = "npp_role_v4:";
+const NGO_SPLIT_PARTS = ["mbo","tasks"];
+let _lastRows = { mbo:{}, tasks:{} };   // team: server copy of each split row {path, json}
+let _ngoRows  = { mbo:{}, tasks:{} };   // NGO login: server copy of its own rows
+let _authUid  = null;
+
+function sahkarTimeout(p, ms){
+  return Promise.race([p, new Promise((_, rej)=>setTimeout(()=>{
+    const e = new Error("timeout"); e.code = "timeout"; rej(e); }, ms))]);
+}
+/* JSON with sorted keys, treating null / empty {} / empty [] as absent —
+   the same way the Realtime Database stores them — so a row read back
+   from Firebase compares equal to the one that was written. */
+function stableJson(v){
+  if(v===null || v===undefined) return "null";
+  if(typeof v!=="object") return JSON.stringify(v);
+  if(Array.isArray(v)) return "["+v.map(stableJson).join(",")+"]";
+  const keys = Object.keys(v).filter(k=>{
+    const x = v[k];
+    if(x===null || x===undefined) return false;
+    if(typeof x==="object" && Object.keys(x).length===0) return false;
+    return true;
+  }).sort();
+  return "{"+keys.map(k=>JSON.stringify(k)+":"+stableJson(v[k])).join(",")+"}";
+}
+/* a string usable as a database key ( . # $ [ ] / are not allowed ) */
+function fbKey(x){ return String(x==null || x==="" ? "_none" : x).replace(/[.#$\[\]\/]/g, "_"); }
+function byOrd(a, b){
+  const oa = (a && typeof a.ord==="number") ? a.ord : 1e9;
+  const ob = (b && typeof b.ord==="number") ? b.ord : 1e9;
+  return (oa-ob) || String(a && a.id).localeCompare(String(b && b.id));
+}
+/* ngoData snapshot -> flat arrays + a {id: {path, json}} map per part */
+function ngoDataFlatten(v){
+  const out = { mbo:[], tasks:[], rows:{ mbo:{}, tasks:{} } };
+  Object.keys(v || {}).forEach(nid=>{
+    const node = (v[nid] && typeof v[nid]==="object") ? v[nid] : {};
+    NGO_SPLIT_PARTS.forEach(part=>{
+      const m = (node[part] && typeof node[part]==="object") ? node[part] : {};
+      Object.keys(m).forEach(k=>{
+        const r = m[k];
+        if(!r || typeof r!=="object") return;
+        out[part].push(r);
+        out.rows[part][r.id || k] = { path:"ngoData/"+nid+"/"+part+"/"+k, json:stableJson(r) };
+      });
+    });
+  });
+  NGO_SPLIT_PARTS.forEach(p=>out[p].sort(byOrd));
+  return out;
+}
+/* team save: row-level writes for one split part. Adds to `updates` and
+   returns the map that becomes the new server copy once the write lands. */
+function splitRowUpdates(part, updates, rows, prev){
+  const now = {};
+  (rows || []).forEach((r, i)=>{
+    if(!r || r.id==null) return;
+    if(typeof r.ord!=="number") r.ord = i;   // keeps display order across reloads
+    const path = "ngoData/"+fbKey(r.ngoId)+"/"+part+"/"+fbKey(r.id);
+    now[r.id] = { path, json:stableJson(r) };
+  });
+  prev = prev || {};
+  Object.keys(now).forEach(id=>{
+    const p = prev[id], n = now[id];
+    if(!p || p.json!==n.json || p.path!==n.path){
+      updates[n.path] = JSON.parse(JSON.stringify(rows.find(r=>r && r.id==id)));
+      if(p && p.path!==n.path) updates[p.path] = null;
+    }
+  });
+  Object.keys(prev).forEach(id=>{ if(!now[id]) updates[prev[id].path] = null; });
+  return now;
+}
+function emptyDB(){
+  const db = {};
+  DB_PARTS.forEach(p=>{ db[p] = (["meta","budgets","scorecards","flagged"].indexOf(p)>=0) ? {} : []; });
+  return db;
+}
 let CLOUD_OK = false;            // is the live connection healthy?
 let SAVE_OK = true;
 let _lastSynced = {};            // JSON snapshot of each part, to diff on save
@@ -1851,9 +1945,10 @@ let _unsub = [];                 // active Firestore listener unsubscribe fns
 /* ---- connect to Firebase ---- */
 function cloudInit(){
   try{
-    if(!window.firebase || !window.FIREBASE_CONFIG) return false;
-    fb.app = firebase.apps.length ? firebase.app() : firebase.initializeApp(window.FIREBASE_CONFIG);
+    if(!window.firebase || !window.FIREBASE_CONFIG || !firebase.auth) return false;
+    fb.app = firebase.apps.some(a=>a.name==="[DEFAULT]") ? firebase.app() : firebase.initializeApp(window.FIREBASE_CONFIG);
     fb.db = firebase.database();
+    fb.auth = firebase.auth();
     fb.ready = true;
     return true;
   }catch(e){
@@ -1864,12 +1959,27 @@ function cloudInit(){
 }
 
 /* ---- offline cache (so the app still opens if the network is down) ---- */
+/* V73: the offline copy is kept per signed-in account and cleared on sign-out */
+function cacheKey(){
+  const u = fb.auth && fb.auth.currentUser;
+  return u ? STORE_KEY+":"+u.uid : null;
+}
 function cacheSave(){
-  try{ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }catch(e){}
+  const k = cacheKey(); if(!k || !DB) return;
+  try{ localStorage.setItem(k, JSON.stringify(DB)); }catch(e){}
 }
 function cacheLoad(){
-  try{ const s=localStorage.getItem(STORE_KEY); if(s) return JSON.parse(s); }catch(e){}
+  const k = cacheKey(); if(!k) return null;
+  try{ const s=localStorage.getItem(k); if(s) return JSON.parse(s); }catch(e){}
   return null;
+}
+function cacheClear(){
+  try{
+    Object.keys(localStorage).forEach(k=>{
+      if(k===STORE_KEY || k.indexOf(STORE_KEY+":")===0 || k.indexOf(ROLE_KEY)===0 || k===SESSION_KEY)
+        localStorage.removeItem(k);
+    });
+  }catch(e){}
 }
 
 /* ---- first-ever run: write a clean skeleton to RTDB ---- */
@@ -1885,23 +1995,26 @@ async function cloudSeedIfEmpty(){
 }
 
 /* ---- pull the whole DB once from RTDB ---- */
-async function cloudLoadAll(){
-  const out = {};
-  const snaps = await Promise.all(
-    DB_PARTS.map(p=>fb.db.ref("tracker/"+p).once("value"))
-  );
-  snaps.forEach((s,i)=>{
-    const part = DB_PARTS[i];
-    out[part] = s.exists() ? s.val() : skeletonData()[part];
+function cloudLoadAll(){
+  const parts = DB_PARTS.filter(p=>NGO_SPLIT_PARTS.indexOf(p)<0);
+  return Promise.all(parts.map(p=>fb.db.ref("tracker/"+p).once("value"))
+      .concat([fb.db.ref("ngoData").once("value")])).then(snaps=>{
+    const out = {};
+    parts.forEach((part, i)=>{
+      const sn = snaps[i];
+      out[part] = sn.exists() ? sn.val() : skeletonData()[part];
+    });
+    const flat = ngoDataFlatten(snaps[parts.length].val());
+    NGO_SPLIT_PARTS.forEach(p=>{ out[p] = flat[p]; _lastRows[p] = flat.rows[p]; });
+    return out;
   });
-  return out;
 }
 
 /* ---- live listeners: keep DB fresh as others make changes ---- */
 function cloudListen(){
   _unsub.forEach(fn=>{ try{fn();}catch(e){} });
   _unsub = [];
-  DB_PARTS.forEach(part=>{
+  DB_PARTS.filter(p=>NGO_SPLIT_PARTS.indexOf(p)<0).forEach(part=>{
     const ref = fb.db.ref("tracker/"+part);
     const handler = snap=>{
       if(!snap.exists()) return;
@@ -1954,6 +2067,23 @@ function cloudListen(){
     // store an unsubscribe function that turns off this listener
     _unsub.push(()=>ref.off("value", handler));
   });
+  /* V73: OKRs and tasks, stored per NGO */
+  const nref = fb.db.ref("ngoData");
+  const nh = snap=>{
+    if(!DB) return;
+    const flat = ngoDataFlatten(snap.val());
+    let changed = false;
+    NGO_SPLIT_PARTS.forEach(p=>{
+      _lastRows[p] = flat.rows[p];
+      if(stableJson(flat[p]) !== stableJson(DB[p] || [])){ DB[p] = flat[p]; changed = true; }
+    });
+    if(!changed) return;
+    cacheSave();
+    if(typeof ME!=="undefined" && ME && typeof CUR_PAGE!=="undefined" && CUR_PAGE) render();
+    setConnState(true);
+  };
+  nref.on("value", nh, err=>{ console.error("listener error (ngoData)", err); setConnState(false); });
+  _unsub.push(()=>nref.off("value", nh));
 }
 
 /* ---- main load path ---- */
@@ -1961,8 +2091,8 @@ async function loadDB(){
   if(cloudInit()){
     let data = null;
     try{
-      await cloudSeedIfEmpty();
-      data = await cloudLoadAll();
+      await sahkarTimeout(cloudSeedIfEmpty(), 15000);
+      data = await sahkarTimeout(cloudLoadAll(), 20000);
       CLOUD_OK = true;
     }catch(e){
       console.error("Cloud load failed, using offline cache", e);
@@ -2005,10 +2135,13 @@ async function saveDB(){
     SAVE_OK = false;
     return false;
   }
+  if(ME && ME.role==="NGO") return ngoPortalSave();
   let ok = true;
   const updates = {}, pending = {};   // pending = the new _lastSynced values, applied only on success
+  const pendingRows = {};
   try{
     DB_PARTS.forEach(part=>{
+      if(NGO_SPLIT_PARTS.indexOf(part)>=0) return;   // V73: stored per NGO, below
       const val = DB[part] ?? skeletonData()[part];
       const cur = JSON.stringify(val);
       if(cur !== _lastSynced[part]){
@@ -2016,11 +2149,17 @@ async function saveDB(){
         pending[part] = cur;
       }
     });
+    /* the NGO's name, readable by its own login */
+    if(updates["tracker/ngos"]) (DB.ngos||[]).forEach(n=>{
+      if(n && n.id) updates["ngoData/"+fbKey(n.id)+"/profile"] = { id:n.id, short:n.short||"", name:n.name||"" };
+    });
+    NGO_SPLIT_PARTS.forEach(p=>{ pendingRows[p] = splitRowUpdates(p, updates, DB[p], _lastRows[p]); });
     if(Object.keys(updates).length){
       await fb.db.ref().update(updates);
-      // write confirmed — NOW it is safe to mark these parts as synced
-      Object.keys(pending).forEach(p=>{ _lastSynced[p] = pending[p]; });
     }
+    // write confirmed — NOW it is safe to mark these parts as synced
+    Object.keys(pending).forEach(p=>{ _lastSynced[p] = pending[p]; });
+    NGO_SPLIT_PARTS.forEach(p=>{ _lastRows[p] = pendingRows[p]; });
   }catch(e){
     ok = false;
     console.error("save failed", e);
@@ -2182,16 +2321,16 @@ function migrateDB(db){
     pm = skeletonData().users[0];
     db.users.unshift(pm);
   }
-  if(!pm.username || !pm.password){
-    pm.username = pm.username || "admin";
-    pm.password = pm.password || "krsf@2026";
-  }
+  if(!pm.username) pm.username = "admin";
   /* ---- FDNMS: ensure KRSF debit-note staff logins exist (single sign-in) ---- */
   [["Accounts","Vadali Accounts Team","accounts"],["Finance","Ahmedabad Finance Authority","finance"],["Programme","Programme Team","programme"]].forEach(function(r){
     if(!db.users.some(function(u){return u.role===r[0];})){
-      db.users.push({ id:"u_"+r[0].toLowerCase(), role:r[0], name:r[1], username:r[2], password:"krsf@2026", ngoIds:[], title:r[1], avatar:r[1].split(/\s+/).map(function(w){return w[0];}).join("").slice(0,2).toUpperCase() });
+      db.users.push({ id:"u_"+r[0].toLowerCase(), role:r[0], name:r[1], username:r[2], ngoIds:[], title:r[1], avatar:r[1].split(/\s+/).map(function(w){return w[0];}).join("").slice(0,2).toUpperCase() });
     }
   });
+  /* V73: passwords live in Firebase Authentication only. Drop any left in
+     the data (pre-V73 records, old backups) so they are never written back. */
+  db.users.forEach(u=>{ if(u && typeof u==="object") delete u.password; });
   return db;
 }
 /* a safe zero budget — used when an NGO has no plan yet */
@@ -2661,64 +2800,134 @@ function setScoreCell(ngoId, key, val){
    LOGIN / BOOT
    ================================================================= */
 /* ---- authentication: username + password against the users collection ---- */
-function findUser(username, password){
-  const u = (username||"").trim().toLowerCase();
-  const p = password||"";
-  return (DB.users||[]).find(x=>
-    (x.username||"").trim().toLowerCase()===u && (x.password||"")===p);
+/* V73: sign-in goes through Firebase Authentication. The username a person
+   types is looked up in logins/{username}, which holds only the account's
+   sign-in address — readable one key at a time, never as a list. */
+function loginFail(msg){
+  const errEl = el("loginErr"), btn = el("loginBtn");
+  if(errEl) errEl.textContent = msg;
+  const p = el("loginPass"); if(p) p.value = "";
+  if(btn){ btn.disabled = false; btn.textContent = "Sign in →"; }
 }
 async function doLogin(){
   const errEl = el("loginErr");
   errEl.textContent = "";
-  const user = el("loginUser").value;
-  const pass = el("loginPass").value;
-  if(!user || !pass){ errEl.textContent = "Enter your username and password."; return; }
-  const found = findUser(user, pass);
-  if(!found){
-    errEl.textContent = "Incorrect username or password.";
-    el("loginPass").value = "";
-    return;
+  const uname = (el("loginUser").value || "").trim().toLowerCase();
+  const pass = el("loginPass").value || "";
+  if(!uname || !pass){ errEl.textContent = "Enter your username and password."; return; }
+  if(!fb.ready || !fb.auth){ errEl.textContent = "Not connected — check your connection and reload."; return; }
+  const btn = el("loginBtn");
+  if(btn){ btn.disabled = true; btn.textContent = "Signing in…"; }
+  try{
+    if(!/^[a-z0-9_-]+$/.test(uname)) return loginFail("Incorrect username or password.");
+    const snap = await sahkarTimeout(fb.db.ref("logins/"+uname).once("value"), 12000);
+    const email = snap.val();
+    if(typeof email!=="string" || !email) return loginFail("Incorrect username or password.");
+    await fb.auth.signInWithEmailAndPassword(email, pass);
+    /* onAuthStateChanged (in init) opens the app */
+  }catch(e){
+    const c = (e && e.code) || "";
+    if(c==="auth/too-many-requests") return loginFail("Too many attempts. Wait a few minutes and try again.");
+    if(c==="timeout" || c==="auth/network-request-failed") return loginFail("Can't reach the server — check your connection.");
+    return loginFail("Incorrect username or password.");
   }
-  ME = found;
-  await saveSession(ME.id);
-  el("login").style.display="none";
-  el("app").style.display="block";
-  bootApp();
 }
 async function doLogout(){
-  await saveSession(null);
-  ME=null;
-  document.body.classList.remove("ngo-mode");
-  el("app").style.display="none";
-  el("login").style.display="flex";
+  cacheClear();
+  teardownSession();
+  try{ if(fb.auth) await fb.auth.signOut(); }catch(e){}
   el("loginUser").value=""; el("loginPass").value=""; el("loginErr").textContent="";
+  showLoginForm();
+}
+function teardownSession(){
+  _unsub.forEach(fn=>{ try{fn();}catch(e){} });
+  _unsub = [];
+  ME = null; DB = null; _authUid = null;
+  _lastSynced = {}; _lastRows = { mbo:{}, tasks:{} }; _ngoRows = { mbo:{}, tasks:{} };
+  document.body.classList.remove("ngo-mode");
+  try{ closeModal(); }catch(e){}
+}
+function showLoginForm(bootMsg, errMsg){
+  el("app").style.display = "none";
+  el("login").style.display = "flex";
+  const bootEl = el("loginBoot"), formEl = el("loginForm");
+  if(bootEl){
+    bootEl.style.display = bootMsg ? "block" : "none";
+    if(bootMsg){ bootEl.style.color = "var(--amber)"; bootEl.textContent = bootMsg; }
+  }
+  if(formEl) formEl.style.display = "block";
+  const hint = el("loginHint");
+  if(hint) hint.textContent = "Sign in with the username and password KRSF gave you.";
+  const btn = el("loginBtn"); if(btn){ btn.disabled = false; btn.textContent = "Sign in →"; }
+  const errEl = el("loginErr"); if(errEl) errEl.textContent = errMsg || "";
+  const u = el("loginUser"); if(u && !u.value) try{ u.focus(); }catch(e){}
+}
+/* signed in to Firebase: find out who this is, load what they may see */
+async function enterApp(user){
+  let role = null, offline = false;
+  try{
+    const sn = await sahkarTimeout(fb.db.ref("roles/"+user.uid).once("value"), 12000);
+    role = sn.val();
+    try{ if(role) localStorage.setItem(ROLE_KEY+user.uid, JSON.stringify(role)); }catch(e){}
+  }catch(e){
+    offline = true;
+    try{ role = JSON.parse(localStorage.getItem(ROLE_KEY+user.uid) || "null"); }catch(_){}
+  }
+  if(_authUid!==user.uid) return;            // signed out / switched meanwhile
+  if(!role || !role.role){
+    if(offline){ showLoginForm("⚠ Can't reach the server — check your connection and reload."); return; }
+    _authUid = null;
+    try{ await fb.auth.signOut(); }catch(e){}
+    showLoginForm(null, "This login has no access yet. Please contact your KRSF admin.");
+    return;
+  }
+  if(role.role==="NGO"){
+    DB = emptyDB();
+    ME = { id:role.userId || user.uid, role:"NGO", name:role.name || "Partner NGO",
+           ngoIds:[role.ngoId], title:"Partner NGO", avatar:"N" };
+    try{
+      const sn = await sahkarTimeout(fb.db.ref("ngoData/"+fbKey(role.ngoId)).once("value"), 15000);
+      ngoPortalApply(role.ngoId, sn.val());
+      CLOUD_OK = true;
+    }catch(e){
+      CLOUD_OK = false;
+      const cached = cacheLoad();
+      if(cached) DB = Object.assign(emptyDB(), cached);
+    }
+    if(_authUid!==user.uid) return;
+    ngoPortalListen(role.ngoId);
+    const n = (DB.ngos || [])[0];
+    ME.avatar = String((n && n.short) || "N").replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase() || "N";
+  } else {
+    try{ DB = await loadDB(); }
+    catch(e){ console.error("loadDB failed", e); DB = migrateDB(cacheLoad() || skeletonData()); CLOUD_OK = false; }
+    if(_authUid!==user.uid) return;
+    ME = userById(role.userId);
+    if(!ME || ME.role!==role.role){
+      ME = null; DB = null; _authUid = null;
+      _unsub.forEach(fn=>{ try{fn();}catch(e){} }); _unsub = [];
+      try{ await fb.auth.signOut(); }catch(e){}
+      showLoginForm(null, "This login isn't set up correctly. Please contact your KRSF admin.");
+      return;
+    }
+  }
+  setConnState(CLOUD_OK);
+  el("login").style.display = "none";
+  el("app").style.display = "block";
+  bootApp();
 }
 
 /* recovery: show which logins exist in the connected database, and offer a
    guarded full reset for when an old/partial seed left bad credentials */
 function loginRecovery(){
-  const users = (DB && DB.users) || [];
-  const list = users.length
-    ? users.map(u=>`• ${esc(u.username||'(no username)')} — ${esc(u.name)} (${esc(u.role)})`).join("<br>")
-    : "(no accounts found in the database)";
-  const pm = users.find(u=>u.role==="PM");
-  const msg =
-    `<div style="font-size:12.5px;line-height:1.7;color:var(--ink-2)">
-      <b>Connection:</b> ${CLOUD_OK?'<span style="color:var(--green)">live — connected to Firebase</span>':'<span style="color:var(--amber)">offline — not connected</span>'}<br><br>
-      <b>Logins in this database:</b><br>${list}<br><br>
-      ${pm
-        ? `Sign in with the Program Manager username shown above.
-           If you don't know the password, the database must be reset.`
-        : `<b style="color:var(--red)">No Program Manager account exists.</b> The database needs to be reset.`}
-      <br><br>
-      <b>Reset</b> wipes all data in Firebase and recreates a clean database with
-      a single default Program Manager login. Use this only if you are locked
-      out and have no real data to lose — the credentials will be shown to you
-      once after the reset.
-     </div>`;
-  showModal(modalShell("Sign-in help", "Account Recovery", msg,
-    `<button class="btn" onclick="closeModal()">Close</button>
-     <button class="btn danger" onclick="confirmResetDatabase()">Reset database</button>`));
+  const msg = `<div style="font-size:12.5px;line-height:1.7;color:var(--ink-2)">
+      Your username and password come from KRSF. Usernames are lower-case with
+      no spaces — for example <b>sesta</b>, or your phone number for KRSF staff.<br><br>
+      If you've forgotten your password, ask the Program Manager to reset it from
+      <b>Admin</b>. You'll get a new one and the old one stops working.
+    </div>`;
+  showModal(modalShell("Sign-in help", "Can't sign in?", msg,
+    `<button class="btn" onclick="closeModal()">Close</button>`));
 }
 function confirmResetDatabase(){
   confirmAction("Reset the entire database?",
@@ -2795,47 +3004,32 @@ function __uiSmoke(){
 try{ setTimeout(__uiSmoke, 1200); }catch(e){}
 
 async function init(){
-  // connect + load data from Firebase — never let an error freeze the login screen
-  try{
-    DB = await loadDB();
-  }catch(e){
-    console.error("loadDB failed, falling back to skeleton", e);
-    DB = migrateDB(skeletonData());
-    CLOUD_OK = false;
+  /* pre-V73 copies of the whole database, passwords included, sat in
+     every browser that ever opened the app — remove them */
+  try{ localStorage.removeItem(STORE_KEY); localStorage.removeItem(SESSION_KEY); }catch(e){}
+  if(!cloudInit()){
+    showLoginForm("⚠ Couldn't load the sign-in service — check your connection and reload.");
+    return;
   }
-  setConnState(CLOUD_OK);
-  // reveal the login form (or skip straight in if a session is remembered)
-  const bootEl = el("loginBoot"), formEl = el("loginForm");
-  if(bootEl) bootEl.style.display = "none";
-  if(formEl) formEl.style.display = "block";
-  if(!CLOUD_OK && bootEl){
-    bootEl.style.display = "block";
-    bootEl.style.color = "var(--amber)";
-    bootEl.textContent = "⚠ Offline — working from this device's saved copy.";
-  }
-  const sess = await loadSession();
-  if(sess && userById(sess)){
-    ME = userById(sess);
-    el("login").style.display="none";
-    el("app").style.display="block";
-    bootApp();
-  } else {
-    const u = el("loginUser"); if(u) u.focus();
-    // a quiet hint so the owner can confirm the app reached the database
-    const hint = el("loginHint");
-    if(hint){
-      if(CLOUD_OK){
-        const pm = (DB.users||[]).find(x=>x.role==="PM");
-        /* V45: do NOT print the admin username here — it was visible to anyone
-           who opened the page. Just confirm the connection. */
-        hint.innerHTML = pm
-          ? "Connected to the live database. Sign in with your username and password."
-          : "Connected, but no admin account was found — use “Can't sign in?”.";
-      } else {
-        hint.textContent = "Not connected to Firebase — see “Can't sign in?”.";
+  await new Promise(resolve=>{
+    let first = true;
+    fb.auth.onAuthStateChanged(async user=>{
+      try{
+        if(user){
+          if(_authUid!==user.uid){ _authUid = user.uid; await enterApp(user); }
+        } else {
+          if(ME) teardownSession();
+          _authUid = null;
+          showLoginForm();
+        }
+      }catch(e){
+        console.error("sign-in flow failed", e);
+        showLoginForm("⚠ Something went wrong opening the app — please reload.");
+      }finally{
+        if(first){ first = false; resolve(); }
       }
-    }
-  }
+    });
+  });
 }
 
 /* =================================================================
@@ -2951,6 +3145,68 @@ function render(){
 let NGO_OKR_MONTH = null;   // month chip the NGO picked
 let NGO_CMT_OPEN  = null;   // key result whose comment box is open
 let NGO_CMT_DRAFT = {};     // unsaved comment text, survives a live re-render
+
+/* V73: an NGO login holds only ngoData/{its ngo}. Fields it may change: */
+const NGO_FIELDS = { mbo:["status","comment","editedBy","editedAt"], tasks:["status","doneBy","doneAt"] };
+function ngoPortalApply(ngoId, v){
+  v = (v && typeof v==="object") ? v : {};
+  NGO_SPLIT_PARTS.forEach(part=>{
+    const m = (v[part] && typeof v[part]==="object") ? v[part] : {};
+    const rows = [], map = {};
+    Object.keys(m).forEach(k=>{
+      const r = m[k];
+      if(!r || typeof r!=="object") return;
+      rows.push(r);
+      map[r.id || k] = Object.assign({}, r, { _path:"ngoData/"+fbKey(ngoId)+"/"+part+"/"+k });
+    });
+    rows.sort(byOrd);
+    DB[part] = rows; _ngoRows[part] = map;
+  });
+  const p = (v.profile && typeof v.profile==="object") ? v.profile : {};
+  DB.ngos = [{ id:ngoId, short:p.short || p.name || "Partner NGO", name:p.name || p.short || "" }];
+}
+function ngoPortalListen(ngoId){
+  _unsub.forEach(fn=>{ try{fn();}catch(e){} });
+  _unsub = [];
+  const ref = fb.db.ref("ngoData/"+fbKey(ngoId));
+  const h = snap=>{
+    if(!DB || !ME || ME.role!=="NGO") return;
+    ngoPortalApply(ngoId, snap.val());
+    cacheSave(); render(); setConnState(true);
+  };
+  ref.on("value", h, err=>{ console.error("listener error (ngo portal)", err); setConnState(false); });
+  _unsub.push(()=>ref.off("value", h));
+}
+/* write only the allowed fields that changed, on rows that already exist */
+async function ngoPortalSave(){
+  const ngoId = ngoUserNgoId();
+  if(!ngoId) return false;
+  const upd = {}, applied = [];
+  NGO_SPLIT_PARTS.forEach(part=>{
+    (DB[part] || []).forEach(r=>{
+      const prev = r && _ngoRows[part][r.id];
+      if(!prev || r.ngoId!==ngoId) return;
+      NGO_FIELDS[part].forEach(f=>{
+        const a = (r[f]===undefined) ? null : r[f];
+        const b = (prev[f]===undefined) ? null : prev[f];
+        if(a!==b){ upd[prev._path+"/"+f] = a; applied.push([prev, f, a]); }
+      });
+    });
+  });
+  if(!Object.keys(upd).length) return true;
+  try{
+    await fb.db.ref().update(upd);
+    applied.forEach(([prev, f, a])=>{ if(a===null) delete prev[f]; else prev[f] = a; });
+    SAVE_OK = true; setConnState(true);
+    return true;
+  }catch(e){
+    console.error("save failed", e);
+    if(SAVE_OK) toast("⚠ Couldn't sync — your last change will retry automatically");
+    SAVE_OK = false; setConnState(false);
+    scheduleSaveRetry();
+    return false;
+  }
+}
 
 /* the one NGO this login belongs to */
 function ngoUserNgoId(){
@@ -9002,7 +9258,7 @@ function pageAdmin(){
   <div class="panel" style="margin-bottom:16px">
     <div class="panel-h">
       <h3>User Logins</h3>
-      <span class="note">${apls.length} login${apls.length!==1?'s':''} · sign in with phone number (password = last 4 digits)</span>
+      <span class="note">${apls.length} login${apls.length!==1?'s':''} · username = phone number · passwords are set with “Reset password”</span>
     </div>
     ${apls.length? `<div class="tbl-wrap">
       <table>
@@ -9027,6 +9283,7 @@ function pageAdmin(){
                                  : '<span style="color:var(--ink-3)">none yet</span>')}</td>
             <td class="num" style="white-space:nowrap">
               <button class="btn ghost sm" onclick="openAplForm('${u.id}')">Edit</button>
+              <button class="btn ghost sm" onclick="resetLogin('${u.id}')">${u.authUid?'Reset password':'Set up login'}</button>
               <button class="btn ghost sm" style="color:var(--red)" onclick="deleteApl('${u.id}')">Remove</button>
             </td>
           </tr>`;
@@ -9082,8 +9339,8 @@ function aplPhoneHint(){
   const p = ((el('apPhone')&&el('apPhone').value)||"").replace(/\D/g,"");
   const h = el('apPhoneHint'); if(!h) return;
   h.innerHTML = p.length>=4
-    ? 'Login: <b>'+p+'</b> &nbsp;·&nbsp; Password: <b>'+p.slice(-4)+'</b>'
-    : 'Username = the phone number · Password = its last 4 digits.';
+    ? 'Login: <b>'+p+'</b> · a password is generated when you save'
+    : 'Username = the phone number. A password is generated when you save.';
 }
 /* ---- APL add / edit ---- */
 function openAplForm(editId){
@@ -9092,8 +9349,8 @@ function openAplForm(editId){
   const ngos = DB.ngos || [];
   const initPhone = u ? (u.phone || (/^\d{10,}$/.test(u.username||"") ? u.username : "")) : "";
   const initHint = initPhone
-    ? 'Login: <b>'+esc(initPhone)+'</b> &nbsp;·&nbsp; Password: <b>'+esc(String(initPhone).replace(/\D/g,'').slice(-4))+'</b>'
-    : 'Username = the phone number · Password = its last 4 digits.';
+    ? 'Login: <b>'+esc(initPhone)+'</b>'+(u&&u.authUid?' · use “Reset password” to give them a new password':' · a password is generated when you save')
+    : 'Username = the phone number. A password is generated when you save.';
   const body = `
     <div class="frow">
       <div class="field">
@@ -9146,14 +9403,13 @@ function openAplForm(editId){
   showModal(modalShell(editId?"Edit Partnership Lead":"New Partnership Lead", editId?"Edit Partnership Lead":"Add a Partnership Lead", body, foot));
 }
 async function saveApl(editId){
+  if(ME.role!=="PM") return;
   const name = el("apName").value.trim();
   const phone = ((el("apPhone")&&el("apPhone").value)||"").replace(/\D/g,"");
   const role = el("apRole") ? el("apRole").value : "APL";
   if(!name){ toast("Enter the person's name"); return; }
   if(phone.length < 10){ toast("Enter a valid phone number (at least 10 digits)"); return; }
-  // login is derived from the phone: username = phone, password = last 4 digits
   const username = phone;
-  const password = phone.slice(-4);
   const clash = (DB.users||[]).find(x=>x.id!==editId &&
     (x.username||"").trim().toLowerCase()===username);
   if(clash){ toast("That phone number is already used by another login"); return; }
@@ -9169,32 +9425,58 @@ async function saveApl(editId){
     return;
   }
   const initials = name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
-  if(editId){
-    const u = (DB.users||[]).find(x=>x.id===editId);
-    Object.assign(u, { name, phone, username, password, role, ngoIds, reportsTo,
-      title: el("apTitle").value.trim()||"Associate Partnership Lead", avatar:initials });
-    stampEdit(u);
-  } else {
-    const rec = { id:genId("u"), role, name, phone, username, password, ngoIds, reportsTo,
-      title: el("apTitle").value.trim()||"Associate Partnership Lead", avatar:initials };
-    stampEdit(rec);
-    if(!DB.users) DB.users=[];
-    DB.users.push(rec);
+  const title = el("apTitle").value.trim()||"Associate Partnership Lead";
+  try{
+    if(editId){
+      const u = (DB.users||[]).find(x=>x.id===editId);
+      const oldUsername = u.username, oldRole = u.role;
+      Object.assign(u, { name, phone, username, role, ngoIds, reportsTo, title, avatar:initials });
+      delete u.password;
+      stampEdit(u);
+      if(u.authUid){
+        const upd = {};
+        if(oldUsername!==username){
+          if(oldUsername) upd["logins/"+fbKey(oldUsername)] = null;
+          upd["logins/"+fbKey(username)] = u.loginEmail;
+        }
+        if(oldRole!==role) upd["roles/"+u.authUid] = roleRecordFor(u);
+        if(Object.keys(upd).length) await fb.db.ref().update(upd);
+        await saveDB();
+        closeModal(); render();
+        toast("Login updated");
+      } else {
+        const pw = ngoGenPassword();
+        await provisionLogin(u, pw);
+        await saveDB(); render();
+        showNewCredentials([{ who:name, username, password:pw }]);
+      }
+    } else {
+      const rec = { id:genId("u"), role, name, phone, username, ngoIds, reportsTo, title, avatar:initials };
+      stampEdit(rec);
+      const pw = ngoGenPassword();
+      await provisionLogin(rec, pw);
+      if(!DB.users) DB.users=[];
+      DB.users.push(rec);
+      await saveDB(); render();
+      showNewCredentials([{ who:name, username, password:pw }]);
+    }
+  }catch(e){
+    console.error("saveApl failed", e);
+    toast(loginErrorText(e));
   }
-  await saveDB();
-  closeModal(); render();
-  toast(editId?"Login updated":"User added — they sign in with their phone number");
 }
 function deleteApl(id){
+  if(ME.role!=="PM") return;
   const u = (DB.users||[]).find(x=>x.id===id);
-  if(!u) return;
-  confirmAction("Remove this Partnership Lead login?",
+  if(!u || u.id===ME.id) return;
+  confirmAction("Remove this login?",
     `<b>${esc(u.name)}</b> will no longer be able to sign in. Their NGOs and all
      recorded data stay intact — only the login is removed.`,
     async ()=>{
+      try{ await revokeLogin(u); }catch(e){ console.error(e); toast(loginErrorText(e)); return; }
       DB.users = (DB.users||[]).filter(x=>x.id!==id);
       await saveDB(); closeModal(); render();
-      toast("Partnership Lead login removed");
+      toast("Login removed");
     }, "Remove login", true);
 }
 /* ---- V72: NGO logins — username + password, one per partner NGO ---- */
@@ -9211,27 +9493,118 @@ function ngoGenPassword(){
 function ngoLoginFor(ngoId){
   return (DB.users||[]).find(u=>u && u.role==="NGO" && (u.ngoIds||[]).indexOf(ngoId)>=0);
 }
-function ngoUserRecord(n, username, password){
-  const rec = { id:genId("u"), role:"NGO", name:n.name, username, password, ngoIds:[n.id],
+function ngoUserRecord(n, username){
+  const rec = { id:genId("u"), role:"NGO", name:n.name, username, ngoIds:[n.id],
     title:"Partner NGO · "+(n.short||n.name), reportsTo:"",
     avatar:(String(n.short||n.name||"N").replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase() || "N") };
   return stampEdit(rec);
 }
+/* ---- V73: Firebase sign-in accounts, managed by the PM ---- */
+function newLoginEmail(userId){
+  return "u-"+String(userId).toLowerCase().replace(/[^a-z0-9]/g,"")+"-"+Date.now().toString(36)
+    +Math.random().toString(36).slice(2,6)+"@"+LOGIN_DOMAIN;
+}
+/* create the account on a second Firebase app, so the PM stays signed in */
+async function authCreateAccount(email, password){
+  if(!ME || ME.role!=="PM") throw new Error("PM only");
+  const helper = firebase.apps.find(a=>a.name==="sahkar-provision") || firebase.initializeApp(window.FIREBASE_CONFIG, "sahkar-provision");
+  const auth = helper.auth();
+  await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+  const cred = await auth.createUserWithEmailAndPassword(email, password);
+  const uid = cred.user.uid;
+  try{ await auth.signOut(); }catch(e){}
+  return uid;
+}
+function roleRecordFor(u){
+  return u.role==="NGO"
+    ? { team:false, role:"NGO", ngoId:(u.ngoIds||[])[0]||"", userId:u.id, name:u.name||"" }
+    : { team:true, role:u.role, userId:u.id };
+}
+/* Give a user a fresh sign-in with this password. Also how a password is
+   reset: the old account loses its role and stops working at once. */
+async function provisionLogin(u, password){
+  if(!ME || ME.role!=="PM") throw new Error("PM only");
+  const email = newLoginEmail(u.id);
+  const uid = await authCreateAccount(email, password);
+  const upd = {};
+  upd["roles/"+uid] = roleRecordFor(u);
+  upd["logins/"+fbKey(u.username)] = email;
+  if(u.authUid && u.authUid!==uid) upd["roles/"+u.authUid] = null;
+  await fb.db.ref().update(upd);
+  u.authUid = uid; u.loginEmail = email; delete u.password;
+  return uid;
+}
+async function revokeLogin(u){
+  if(!ME || ME.role!=="PM") return;
+  const upd = {};
+  if(u.authUid) upd["roles/"+u.authUid] = null;
+  if(u.username && u.loginEmail) upd["logins/"+fbKey(u.username)] = null;
+  if(Object.keys(upd).length) await fb.db.ref().update(upd);
+}
+function loginErrorText(e){
+  const c = (e && e.code) || "", m = (e && e.message) || "";
+  if(c==="auth/operation-not-allowed" || /CONFIGURATION_NOT_FOUND/.test(m)) return "Firebase sign-in isn't switched on for this project";
+  if(/permission/i.test(c+" "+m)) return "Only the Program Manager can manage logins";
+  if(c==="auth/network-request-failed") return "No connection — try again";
+  return "Couldn't save the login — try again";
+}
+function resetLogin(id){
+  if(ME.role!=="PM") return;
+  const u = (DB.users||[]).find(x=>x && x.id===id);
+  if(!u) return;
+  if(u.id===ME.id){ openPmForm(); return; }
+  const fresh = !u.authUid;
+  confirmAction(fresh ? "Set up this login?" : "Reset this password?",
+    fresh ? `<b>${esc(u.name)}</b> gets a username and password to sign in with.`
+          : `<b>${esc(u.name)}</b> gets a new password. The old one stops working straight away.`,
+    async ()=>{
+      try{
+        const pw = ngoGenPassword();
+        await provisionLogin(u, pw);
+        stampEdit(u);
+        await saveDB(); closeModal(); render();
+        showNewCredentials([{ who:u.name, username:u.username, password:pw }]);
+      }catch(e){ console.error(e); toast(loginErrorText(e)); }
+    }, fresh ? "Set up login" : "Reset password");
+}
+/* passwords are shown exactly once, here */
+let CRED_LAST = [];
+function showNewCredentials(list){
+  CRED_LAST = list.slice();
+  const rows = list.map(c=>`<tr><td><b>${esc(c.who)}</b></td><td class="mono">${esc(c.username)}</td><td class="mono">${esc(c.password)}</td></tr>`).join("");
+  const body = `<div class="hint" style="margin-bottom:10px;color:var(--amber)"><b>Copy these now.</b>
+      Passwords aren't stored anywhere in Sahkar, so they can't be shown again — only reset.</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Who</th><th>Username</th><th>Password</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  showModal(modalShell("New login details", list.length>1 ? list.length+" logins ready" : "Login ready", body,
+    `<button class="btn" onclick="downloadCredentials()">↓ Download list (.csv)</button>
+     <button class="btn primary" onclick="closeModal()">Done</button>`), true);
+}
+function downloadCredentials(){
+  const q = v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const csv = "\ufeff"+[["Who","Username","Password"]].concat(CRED_LAST.map(c=>[c.who,c.username,c.password]))
+    .map(r=>r.map(q).join(",")).join("\r\n")+"\r\n";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
+  a.download = "Sahkar logins "+TODAY_ISO+".csv";
+  document.body.appendChild(a); a.click(); a.remove();
+}
 function adminNgoLoginsPanel(){
   const ngos = DB.ngos || [];
-  const have = ngos.filter(n=>ngoLoginFor(n.id)).length;
+  const live = n=>{ const u = ngoLoginFor(n.id); return u && u.authUid; };
+  const have = ngos.filter(live).length;
   const missing = ngos.length - have;
   return `<div class="panel" style="margin-bottom:16px">
-    <div class="panel-h"><h3>NGO Logins</h3><span class="note">${have} of ${ngos.length} NGOs have a login · each sees only its own OKRs and tasks</span></div>
+    <div class="panel-h"><h3>NGO Logins</h3><span class="note">${have} of ${ngos.length} NGOs can sign in · each sees only its own OKRs and tasks</span></div>
     ${missing ? `<div class="panel-b" style="padding-bottom:4px"><button class="btn accent sm" onclick="createMissingNgoLogins()">+ Create logins for ${missing} NGO${missing!==1?'s':''} without one</button></div>` : ''}
     <div class="tbl-wrap"><table>
-      <thead><tr><th>NGO</th><th>Username</th><th>Password</th><th></th></tr></thead>
-      <tbody>${ngos.map(n=>{ const u = ngoLoginFor(n.id); return `<tr>
+      <thead><tr><th>NGO</th><th>Username</th><th>Status</th><th></th></tr></thead>
+      <tbody>${ngos.map(n=>{ const u = ngoLoginFor(n.id); const ok = u && u.authUid; return `<tr>
         <td><b>${esc(n.short)}</b>${n.name && n.name!==n.short ? ` <span style="color:var(--ink-3);font-size:11.5px">${esc(n.name)}</span>` : ''}</td>
         <td class="mono">${u ? esc(u.username) : '<span style="color:var(--ink-3)">—</span>'}</td>
-        <td class="mono">${u ? `<span class="pw-mask" data-pw="${esc(u.password)}">••••••••</span> <button class="btn ghost sm" onclick="togglePw(this)">show</button>` : ''}</td>
+        <td>${ok ? '<span class="badge green">active</span>' : '<span class="badge gray">no login</span>'}</td>
         <td class="num" style="white-space:nowrap">${u
           ? `<button class="btn ghost sm" onclick="openNgoLoginForm('${n.id}')">Edit</button>
+             <button class="btn ghost sm" onclick="resetLogin('${u.id}')">${ok?'Reset password':'Set up login'}</button>
              <button class="btn ghost sm" style="color:var(--red)" onclick="deleteNgoLogin('${u.id}')">Remove</button>`
           : `<button class="btn ghost sm" onclick="openNgoLoginForm('${n.id}')">+ Create</button>`}</td>
       </tr>`; }).join("")}</tbody>
@@ -9244,11 +9617,8 @@ function openNgoLoginForm(ngoId){
   const u = ngoLoginFor(ngoId);
   const body = `
     <div class="field"><label>Organisation</label><input type="text" value="${esc(n.name)}" disabled></div>
-    <div class="frow">
-      <div class="field"><label>Username</label><input type="text" id="nlUser" value="${esc(u ? u.username : ngoLoginSlug(n))}" autocomplete="off" autocapitalize="off"></div>
-      <div class="field"><label>Password</label><input type="text" id="nlPass" value="${esc(u ? u.password : ngoGenPassword())}" autocomplete="off" autocapitalize="off">
-        <div class="hint"><a href="#" onclick="el('nlPass').value=ngoGenPassword();return false">Generate a new one</a></div></div>
-    </div>
+    <div class="field"><label>Username</label><input type="text" id="nlUser" value="${esc(u ? u.username : ngoLoginSlug(n))}" autocomplete="off" autocapitalize="off">
+      <div class="hint">${u ? 'To give them a new password, use “Reset password”.' : 'A password is generated when you create the login.'}</div></div>
     <div class="hint">This login sees only ${esc(n.short)}'s OKRs and tasks, and can update their status and comments.</div>`;
   const foot = `<button class="btn" onclick="closeModal()">Cancel</button>
     <button class="btn primary" onclick="saveNgoLogin('${ngoId}')">${u ? 'Save changes' : 'Create login'}</button>`;
@@ -9258,38 +9628,61 @@ async function saveNgoLogin(ngoId){
   if(ME.role!=="PM") return;
   const n = ngoById(ngoId); if(!n) return;
   const username = el("nlUser").value.trim().toLowerCase();
-  const password = el("nlPass").value.trim();
-  if(!/^[a-z0-9][a-z0-9._-]{2,}$/.test(username)){ toast("Username: at least 3 letters or numbers, no spaces"); return; }
-  if(password.length < 6){ toast("Password must be at least 6 characters"); return; }
+  if(!/^[a-z0-9][a-z0-9_-]{2,}$/.test(username)){ toast("Username: at least 3 letters or numbers, no spaces"); return; }
   const u = ngoLoginFor(ngoId);
   const clash = (DB.users||[]).find(x=>x && x!==u && (x.username||"").trim().toLowerCase()===username);
   if(clash){ toast("That username is already taken"); return; }
-  if(u){ Object.assign(u, { username, password, name:n.name }); stampEdit(u); }
-  else { DB.users.push(ngoUserRecord(n, username, password)); }
-  await saveDB(); closeModal(); render();
-  toast(u ? "NGO login updated" : "Login created for "+n.short);
+  try{
+    if(u){
+      const old = u.username;
+      if(old!==username && u.loginEmail){
+        const upd = {}; upd["logins/"+fbKey(old)] = null; upd["logins/"+fbKey(username)] = u.loginEmail;
+        await fb.db.ref().update(upd);
+      }
+      Object.assign(u, { username, name:n.name }); delete u.password; stampEdit(u);
+      await saveDB(); closeModal(); render();
+      toast("NGO login updated");
+    } else {
+      const rec = ngoUserRecord(n, username);
+      const pw = ngoGenPassword();
+      await provisionLogin(rec, pw);
+      DB.users.push(rec);
+      await saveDB(); render();
+      showNewCredentials([{ who:n.short, username, password:pw }]);
+    }
+  }catch(e){ console.error(e); toast(loginErrorText(e)); }
 }
 async function createMissingNgoLogins(){
   if(ME.role!=="PM") return;
   const taken = new Set((DB.users||[]).map(u=>(u.username||"").trim().toLowerCase()));
-  let made = 0;
-  (DB.ngos||[]).forEach(n=>{
-    if(ngoLoginFor(n.id)) return;
-    const base = ngoLoginSlug(n); let name = base, i = 2;
-    while(taken.has(name)) name = base+"-"+(i++);
-    taken.add(name);
-    DB.users.push(ngoUserRecord(n, name, ngoGenPassword())); made++;
-  });
-  if(!made) return;
+  const made = [], fresh = [];
+  try{
+    for(const n of (DB.ngos||[])){
+      let u = ngoLoginFor(n.id);
+      if(u && u.authUid) continue;
+      if(!u){
+        const base = ngoLoginSlug(n); let name = base, i = 2;
+        while(taken.has(name)) name = base+"-"+(i++);
+        taken.add(name);
+        u = ngoUserRecord(n, name);
+        DB.users.push(u); fresh.push(u);
+      }
+      const pw = ngoGenPassword();
+      await provisionLogin(u, pw);
+      made.push({ who:n.short, username:u.username, password:pw });
+    }
+  }catch(e){ console.error(e); toast(loginErrorText(e)); }
+  /* a record added above whose sign-in never got created is dropped again */
+  DB.users = DB.users.filter(u=>!(fresh.indexOf(u)>=0 && !u.authUid));
   await saveDB(); render();
-  toast(made+" NGO login"+(made!==1?"s":"")+" created — click “show” to see each password");
+  if(made.length) showNewCredentials(made);
 }
 function deleteNgoLogin(id){
   if(ME.role!=="PM") return;
   const u = (DB.users||[]).find(x=>x && x.id===id && x.role==="NGO"); if(!u) return;
-  confirmAction("Remove this NGO login?",
-    `<b>${esc(u.name)}</b> will no longer be able to sign in. Their OKRs and tasks stay intact.`,
+  confirmAction("Remove this NGO login?", `<b>${esc(u.name)}</b> will no longer be able to sign in. Their OKRs and tasks stay intact.`,
     async ()=>{
+      try{ await revokeLogin(u); }catch(e){ console.error(e); toast(loginErrorText(e)); return; }
       DB.users = (DB.users||[]).filter(x=>x.id!==id);
       await saveDB(); closeModal(); render();
       toast("NGO login removed");
@@ -9307,35 +9700,50 @@ function openPmForm(){
     <div class="frow">
       <div class="field">
         <label>Username</label>
-        <input type="text" id="pmUser" value="${esc(pm.username||'')}">
+        <input type="text" id="pmUser" value="${esc(pm.username||'')}" autocapitalize="off">
       </div>
       <div class="field">
-        <label>Password</label>
-        <input type="text" id="pmPass" value="${esc(pm.password||'')}">
+        <label>New password</label>
+        <input type="password" id="pmPass" value="" placeholder="leave blank to keep" autocomplete="new-password">
       </div>
     </div>
-    <div class="hint">Choose a strong password — this login has full access to everything.</div>`;
+    <div class="hint">Use at least 8 characters — this login has full access to everything.</div>`;
   const foot = `
     <button class="btn" onclick="closeModal()">Cancel</button>
     <button class="btn primary" onclick="savePm()">Save changes</button>`;
   showModal(modalShell("Program Manager","Edit Your Login", body, foot));
 }
 async function savePm(){
+  if(ME.role!=="PM") return;
   const pm = (DB.users||[]).find(u=>u.role==="PM");
   const name = el("pmName").value.trim();
   const username = el("pmUser").value.trim().toLowerCase();
   const password = el("pmPass").value;
-  if(!name || !username || !password){ toast("All fields are required"); return; }
+  if(!name || !username){ toast("Name and username are required"); return; }
+  if(!/^[a-z0-9][a-z0-9_-]{2,}$/.test(username)){ toast("Username: at least 3 letters or numbers, no spaces"); return; }
+  if(password && password.length < 8){ toast("Use at least 8 characters for the password"); return; }
   const clash = (DB.users||[]).find(x=>x.id!==pm.id &&
     (x.username||"").trim().toLowerCase()===username);
   if(clash){ toast("That username is already taken"); return; }
-  pm.name=name; pm.username=username; pm.password=password;
+  try{
+    if(password) await fb.auth.currentUser.updatePassword(password);
+    if(username!==pm.username && pm.loginEmail){
+      const upd = {};
+      if(pm.username) upd["logins/"+fbKey(pm.username)] = null;
+      upd["logins/"+fbKey(username)] = pm.loginEmail;
+      await fb.db.ref().update(upd);
+    }
+  }catch(e){
+    if(e && e.code==="auth/requires-recent-login"){ toast("For safety, sign out and back in, then change your password"); return; }
+    console.error(e); toast(loginErrorText(e)); return;
+  }
+  pm.name=name; pm.username=username; delete pm.password;
   pm.avatar = name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
   stampEdit(pm);
   await saveDB();
   closeModal(); render();
   bootApp();   // refresh the sidebar chip
-  toast("Your login was updated");
+  toast(password ? "Your login and password were updated" : "Your login was updated");
 }
 
 /* ---- backup / restore ---- */
