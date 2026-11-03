@@ -59,7 +59,9 @@ assert.strictEqual(ALL.length, declCount,
 const byName = {};
 ALL.forEach(f => { byName[f.name] = f; });
 
-const NGO_GUARD = /canEditNgo\s*\(|blockIfCantEditNgo\s*\(/;
+/* V72: blockIfNotMyNgo is the NGO-login equivalent: own NGO only, NGO role
+   only. ngo-role.test.js proves that. */
+const NGO_GUARD = /canEditNgo\s*\(|blockIfCantEditNgo\s*\(|blockIfNotMyNgo\s*\(/;
 const PM_GUARD  = /canManageNgos\s*\(|blockIfNotPM\s*\(|ME\.role\s*!==\s*"PM"|ME\.role\s*===\s*"PM"/;
 const SELF_ONLY = /ME\.id/;
 

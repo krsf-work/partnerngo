@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sahkar · KRSF Partnership Program · V71</title>
+<title>Sahkar · KRSF Partnership Program · V72</title>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
@@ -192,6 +192,54 @@ window.FIREBASE_CONFIG = {
      The cap is now high enough never to bind on a normal monitor, while
      still stopping table rows becoming unreadably wide on an ultrawide. */
   .content{padding:18px 22px 48px;max-width:1800px;width:100%}
+
+  /* ===== V72: NGO login — phone-first OKR + task view ===== */
+  body.ngo-mode .side, body.ngo-mode .topbar, body.ngo-mode .side-scrim{display:none!important}
+  body.ngo-mode .content{max-width:680px;margin:0 auto;padding:16px 16px calc(92px + env(safe-area-inset-bottom))}
+  body.ngo-mode .toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+  .nm-head{display:flex;align-items:center;gap:12px;margin:2px 0 14px}
+  .nm-head .lg{width:38px;height:38px;border-radius:10px;background:var(--logo) center/cover no-repeat;flex:none}
+  .nm-head .org{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  .nm-head h1{font-family:var(--display);font-size:21px;font-weight:600;line-height:1.15;letter-spacing:-.015em}
+  .nm-months{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:6px;scrollbar-width:none}
+  .nm-months::-webkit-scrollbar{display:none}
+  .nm-chip{flex:none;padding:7px 13px;border-radius:20px;border:1px solid var(--rule-2);background:var(--card);font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .nm-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .nm-sum{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+  .nm-sum .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+  .nm-sum .big{font-family:var(--display);font-size:24px;font-weight:700;color:var(--ink)}
+  .nm-bar{height:8px;border-radius:6px;background:var(--paper-2);overflow:hidden;display:flex;margin-top:10px}
+  .nm-bar i{display:block;height:100%}
+  .nm-obj{background:var(--card);border:1px solid var(--rule);border-radius:14px;margin-bottom:12px;overflow:hidden}
+  .nm-obj-h{display:flex;gap:10px;padding:13px 15px;border-bottom:1px solid var(--rule);align-items:flex-start}
+  .nm-obj-h .n{width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+  .nm-obj-h .t{font-weight:600;font-size:14px;line-height:1.35}
+  .nm-kr{padding:13px 15px;border-bottom:1px solid var(--rule)}
+  .nm-kr:last-child{border-bottom:0}
+  .nm-kr .t{font-size:13.5px;line-height:1.45;color:var(--ink)}
+  .nm-kr .m{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+  .nm-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+  .nm-seg button{min-height:42px;border-radius:10px;border:1px solid var(--rule-2);background:var(--card);font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .nm-seg button.on.s-done{background:var(--green);border-color:var(--green);color:#fff}
+  .nm-seg button.on.s-prog{background:var(--amber);border-color:var(--amber);color:#fff}
+  .nm-seg button.on.s-not{background:var(--red);border-color:var(--red);color:#fff}
+  .nm-cmt{margin-top:9px;font-size:12.5px;color:var(--ink-2);background:var(--paper);border-radius:9px;padding:8px 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+  .nm-link{margin-top:8px;font-size:12.5px;font-weight:600;color:var(--accent);background:none;border:0;padding:6px 0}
+  .nm-kr textarea{width:100%;margin-top:9px;min-height:78px;border:1px solid var(--rule-2);border-radius:10px;padding:9px 10px;font:inherit;font-size:16px;background:var(--card);color:var(--ink)}
+  .nm-act{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+  .nm-task{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:13px 15px;margin-bottom:10px}
+  .nm-tick{width:30px;height:30px;border-radius:50%;border:2px solid var(--rule-2);background:transparent;color:#fff;font-size:14px;flex:none;display:flex;align-items:center;justify-content:center}
+  .nm-tick.on{background:var(--green);border-color:var(--green)}
+  .nm-task .t{font-size:14px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+  .nm-task.done .t{text-decoration:line-through;color:var(--ink-3)}
+  .nm-task .m{font-size:12px;color:var(--ink-3);margin-top:3px}
+  .nm-sec{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:18px 2px 8px}
+  .nm-empty{text-align:center;color:var(--ink-3);font-size:13px;padding:34px 18px;background:var(--card);border:1px dashed var(--rule-2);border-radius:14px;line-height:1.6}
+  .nm-tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:center;background:var(--card);border-top:1px solid var(--rule);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .nm-tabs button{flex:1;max-width:220px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:10px;font-size:11px;font-weight:600;color:var(--ink-3);background:none;border:0;position:relative}
+  .nm-tabs button .ic{font-size:18px;line-height:1.1}
+  .nm-tabs button.on{color:var(--accent)}
+  .nm-tabs .ct{position:absolute;top:2px;left:calc(50% + 8px);background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:0 5px;min-width:16px;line-height:16px}
 
   /* ===== PAGE HEAD ===== */
   .phead{margin-bottom:14px}
@@ -1232,7 +1280,7 @@ window.FIREBASE_CONFIG = {
     <div class="logo-tile" style="width:64px;height:64px;margin:0 auto 14px;box-shadow:0 8px 24px rgba(91,63,192,.28)"></div>
     <h1 class="serif">Sahkar</h1>
     <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin-top:2px;text-align:center">KRSF Partnership Program</div>
-    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V71</span></div>
+    <div class="sub">Milestones, Budget and Monthly Delivery <span style="opacity:.5">· V72</span></div>
     <div id="loginBoot" style="font-size:12.5px;color:var(--ink-3);text-align:center;padding:8px 0">Connecting…</div>
     <div id="loginForm" style="display:none">
       <label>Username</label>
@@ -1257,7 +1305,7 @@ window.FIREBASE_CONFIG = {
     <aside class="side" id="side">
       <div class="brand">
         <div class="mk"><i></i>Sahkar<span class="conn"><span class="conn-dot off" id="connDot" title="Connecting…"></span></span></div>
-        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V71</span></div>
+        <div class="tg">KRSF Partnership Program <span style="opacity:.6">· V72</span></div>
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="side-foot">
@@ -2640,6 +2688,7 @@ async function doLogin(){
 async function doLogout(){
   await saveSession(null);
   ME=null;
+  document.body.classList.remove("ngo-mode");
   el("app").style.display="none";
   el("login").style.display="flex";
   el("loginUser").value=""; el("loginPass").value=""; el("loginErr").textContent="";
@@ -2718,8 +2767,11 @@ function bootApp(){
   el("meRole").textContent = ME.title;
   // reporting month defaults to the most recent month with real data
   CUR_MONTH = latestDataMonth();
+  /* V72: an NGO login gets its own phone-first shell */
+  document.body.classList.toggle("ngo-mode", ME.role==="NGO");
+  NGO_OKR_MONTH = null; NGO_CMT_OPEN = null; NGO_CMT_DRAFT = {};
   buildNav();
-  CUR_PAGE="dash"; PAGE_ARG=null;
+  CUR_PAGE = (ME.role==="NGO") ? "nokr" : "dash"; PAGE_ARG=null;
   render();
   maybeWeeklyBackup();   // V49: silent weekly backup for the PM
 }
@@ -2794,6 +2846,11 @@ async function init(){
 const SHOW_FDNMS = false;
 function navItems(){
   if(!ME) return [];
+  /* V72: an NGO login reaches only its own OKRs and tasks */
+  if(ME.role==="NGO") return [
+    { id:"nokr",  label:"My OKRs", ic:"◎", sec:"My work", count: ngoPendingCount() },
+    { id:"ntask", label:"Tasks",   ic:"✓", sec:"My work", count: ngoOpenTaskCount() }
+  ];
   const items = [
     { id:"dash",    label:"Dashboard",     ic:"◆", sec:"Overview" },
     { id:"bets",    label:"Milestones",      ic:"◎", sec:"Overview", count:visibleBets().length },
@@ -2861,7 +2918,7 @@ function go(page, arg){
 }
 function render(){
   if(!ME) return;
-  { const _al=navItems().map(i=>i.id); if(_al.length && !_al.includes(CUR_PAGE) && CUR_PAGE!=="ngo") CUR_PAGE=_al.includes("fdnms")?"fdnms":_al[0]; }
+  { const _al=navItems().map(i=>i.id); if(_al.length && !_al.includes(CUR_PAGE) && (CUR_PAGE!=="ngo" || ME.role==="NGO")) CUR_PAGE=_al.includes("fdnms")?"fdnms":_al[0]; }
   buildNav();
   const c = el("content");
   switch(CUR_PAGE){
@@ -2877,8 +2934,166 @@ function render(){
     case "okrupload": c.innerHTML = pageTeamMbo(); break;
     case "docs":   c.innerHTML = pageDocs(); break;
     case "admin":  c.innerHTML = (ME.role==="PM") ? pageAdmin() : pageDash(); break;
+    case "nokr":   c.innerHTML = (ME.role==="NGO") ? pageNgoOkr()   : pageDash(); break;
+    case "ntask":  c.innerHTML = (ME.role==="NGO") ? pageNgoTasks() : pageDash(); break;
     default: c.innerHTML = pageDash();
   }
+}
+
+/* =================================================================
+   V72 · NGO LOGINS — a phone-first OKR + task view
+   A partner NGO signs in and sees only its own key results and the tasks
+   KRSF has raised for it. It can mark a key result Done / In progress /
+   Not done, add a comment, and tick a task off. Nothing else is reachable:
+   canEdit() stays false for this role and visibleNgos() returns nothing,
+   so every existing page and write path stays closed to it.
+   ================================================================= */
+let NGO_OKR_MONTH = null;   // month chip the NGO picked
+let NGO_CMT_OPEN  = null;   // key result whose comment box is open
+let NGO_CMT_DRAFT = {};     // unsaved comment text, survives a live re-render
+
+/* the one NGO this login belongs to */
+function ngoUserNgoId(){
+  if(!ME || ME.role!=="NGO") return null;
+  const ids = myNgoIds();
+  return ids.length ? ids[0] : null;
+}
+/* true only for an NGO login acting on its own NGO */
+function ngoOwns(ngoId){
+  return !!ME && ME.role==="NGO" && !!ngoId && myNgoIds().indexOf(ngoId) >= 0;
+}
+function blockIfNotMyNgo(ngoId){
+  if(!ngoOwns(ngoId)){ toast("You can only update your own organisation's records"); return true; }
+  return false;
+}
+function ngoMboRows(){ const id=ngoUserNgoId(); return id ? (DB.mbo||[]).filter(r=>r && r.ngoId===id) : []; }
+function ngoTaskRows(){ const id=ngoUserNgoId(); return id ? (DB.tasks||[]).filter(t=>t && t.ngoId===id) : []; }
+function ngoOkrMonths(){ return [...new Set(ngoMboRows().map(r=>r.month).filter(Boolean))].sort().reverse(); }
+/* default month: this month if it has key results, else the latest earlier one */
+function ngoSelMonth(){
+  const ms = ngoOkrMonths();
+  if(NGO_OKR_MONTH && ms.indexOf(NGO_OKR_MONTH)>=0) return NGO_OKR_MONTH;
+  const cur = TODAY_ISO.slice(0,7);
+  return ms.indexOf(cur)>=0 ? cur : (ms.find(m=>m<cur) || ms[0] || "");
+}
+function ngoPendingCount(){
+  const m = ngoSelMonth();
+  const n = ngoMboRows().filter(r=>r.month===m && r.status!=="Done" && r.status!=="Not Done").length;
+  return n || null;
+}
+function ngoOpenTaskCount(){ const n = ngoTaskRows().filter(t=>t.status!=="Done").length; return n || null; }
+
+function ngoHead(title){
+  const n = ngoById(ngoUserNgoId());
+  return `<div class="nm-head"><div class="lg"></div><div style="min-width:0">
+    <div class="org">${esc(n ? (n.short||n.name) : "Partner NGO")}</div>
+    <h1>${esc(title)}</h1></div></div>`;
+}
+function ngoTabs(){
+  const tabs = [["nokr","◎","OKRs",ngoPendingCount()],["ntask","✓","Tasks",ngoOpenTaskCount()]];
+  return `<nav class="nm-tabs" aria-label="Sections">
+    ${tabs.map(([id,ic,lb,ct])=>`<button class="${CUR_PAGE===id?'on':''}" onclick="go('${id}')" ${CUR_PAGE===id?'aria-current="page"':''}>
+      <span class="ic">${ic}</span>${lb}${ct?`<span class="ct">${ct}</span>`:''}</button>`).join("")}
+    <button onclick="doLogout()"><span class="ic">⎋</span>Sign out</button>
+  </nav>`;
+}
+function ngoNoOrg(){
+  return `<div class="nm-empty">This login isn't linked to an organisation yet.<br>Please contact your KRSF partnership lead.</div>`;
+}
+
+function pageNgoOkr(){
+  const ngoId = ngoUserNgoId();
+  if(!ngoId || !ngoById(ngoId)) return ngoHead("My OKRs") + ngoNoOrg() + ngoTabs();
+  const months = ngoOkrMonths();
+  const sel = ngoSelMonth();
+  let html = ngoHead("My OKRs");
+  if(!months.length){
+    return html + `<div class="nm-empty">No key results have been set for your organisation yet.<br>KRSF will add them here each month.</div>` + ngoTabs();
+  }
+  html += `<div class="nm-months">${months.map(m=>`<button class="nm-chip ${m===sel?'on':''}" onclick="NGO_OKR_MONTH='${m}';NGO_CMT_OPEN=null;render()">${monthLong(m)}</button>`).join("")}</div>`;
+  const rows = ngoMboRows().filter(r=>r.month===sel);
+  const done = rows.filter(r=>r.status==="Done").length;
+  const notDone = rows.filter(r=>r.status==="Not Done").length;
+  const prog = rows.length - done - notDone;
+  const pct = x => rows.length ? (x/rows.length*100).toFixed(1) : 0;
+  html += `<div class="nm-sum"><div class="row"><span><span class="big">${done}</span> / ${rows.length} done</span>
+     <span>${prog} in progress · ${notDone} not done</span></div>
+     <div class="nm-bar"><i style="width:${pct(done)}%;background:var(--green)"></i><i style="width:${pct(prog)}%;background:var(--amber)"></i><i style="width:${pct(notDone)}%;background:var(--red)"></i></div></div>`;
+  /* group by objective, main objectives first */
+  const groups = {};
+  rows.forEach(r=>{
+    const k = (r.isOther?1:0)+"|"+(r.objNum||0)+"|"+(r.objective||"");
+    (groups[k] = groups[k] || { objNum:r.objNum, objective:r.objective, isOther:!!r.isOther, krs:[] }).krs.push(r);
+  });
+  const list = Object.values(groups).sort((a,b)=>(a.isOther-b.isOther) || ((a.objNum||0)-(b.objNum||0)));
+  let shownOther = false;
+  list.forEach(g=>{
+    if(g.isOther && !shownOther){ html += `<div class="nm-sec">Other objectives</div>`; shownOther = true; }
+    html += `<div class="nm-obj"><div class="nm-obj-h"><div class="n">${esc(g.objNum||"•")}</div><div class="t">${esc(g.objective||"Objective")}</div></div>
+      ${g.krs.map(ngoKrCard).join("")}</div>`;
+  });
+  return html + ngoTabs();
+}
+function ngoKrCard(k){
+  const st = k.status==="Done" ? "Done" : k.status==="Not Done" ? "Not Done" : "Pending";
+  const btn = (val,cls,lb)=>`<button class="${cls} ${st===val?'on':''}" aria-pressed="${st===val}" onclick="ngoSetKr('${k.id}','${val}')">${lb}</button>`;
+  const open = NGO_CMT_OPEN===k.id;
+  const draft = (NGO_CMT_DRAFT[k.id]!=null) ? NGO_CMT_DRAFT[k.id] : (k.comment||"");
+  return `<div class="nm-kr">
+    <div class="t">${esc(k.kr)}</div>
+    ${k.timeline?`<div class="m">Target: ${esc(fmtDMY(k.timeline))}</div>`:''}
+    <div class="nm-seg">${btn("Done","s-done","Done")}${btn("Pending","s-prog","In progress")}${btn("Not Done","s-not","Not done")}</div>
+    ${open ? `<textarea id="nmc_${k.id}" maxlength="2000" placeholder="What happened? Numbers, links or blockers" oninput="NGO_CMT_DRAFT['${k.id}']=this.value">${esc(draft)}</textarea>
+      <div class="nm-act"><button class="btn ghost sm" onclick="delete NGO_CMT_DRAFT['${k.id}'];NGO_CMT_OPEN=null;render()">Cancel</button>
+      <button class="btn accent sm" onclick="ngoSaveKrComment('${k.id}')">Save comment</button></div>`
+    : `${k.comment?`<div class="nm-cmt">${esc(k.comment)}</div>`:''}
+       <button class="nm-link" onclick="NGO_CMT_OPEN='${k.id}';render()">${k.comment?'Edit comment':'+ Add comment'}</button>`}
+  </div>`;
+}
+function ngoSetKr(id, status){
+  const r = (DB.mbo||[]).find(x=>x && x.id===id);
+  if(!r || blockIfNotMyNgo(r.ngoId)) return;
+  if(["Done","Not Done","Pending"].indexOf(status)<0 || r.status===status) return;
+  r.status = status; stampEdit(r);
+  saveDB(); render(); toast("Status saved");
+}
+function ngoSaveKrComment(id){
+  const r = (DB.mbo||[]).find(x=>x && x.id===id);
+  if(!r || blockIfNotMyNgo(r.ngoId)) return;
+  const box = el("nmc_"+id);
+  r.comment = (box ? box.value : "").trim().slice(0,2000);
+  stampEdit(r);
+  delete NGO_CMT_DRAFT[id]; NGO_CMT_OPEN = null;
+  saveDB(); render(); toast("Comment saved");
+}
+
+function pageNgoTasks(){
+  const ngoId = ngoUserNgoId();
+  if(!ngoId || !ngoById(ngoId)) return ngoHead("Tasks") + ngoNoOrg() + ngoTabs();
+  const all = ngoTaskRows();
+  const open = all.filter(t=>t.status!=="Done").sort((a,b)=>String(a.due||"9").localeCompare(String(b.due||"9")));
+  const done = all.filter(t=>t.status==="Done").sort((a,b)=>String(b.doneAt||b.due||"").localeCompare(String(a.doneAt||a.due||"")));
+  const row = t=>{
+    const isDone = t.status==="Done";
+    const overdue = !isDone && t.due && t.due<TODAY_ISO;
+    return `<div class="nm-task ${isDone?'done':''}">
+      <button class="nm-tick ${isDone?'on':''}" aria-label="${isDone?'Mark as not done':'Mark as done'}" onclick="ngoToggleTask('${t.id}')">${isDone?'✓':''}</button>
+      <div style="min-width:0;flex:1"><div class="t">${esc(t.title)}</div>
+      <div class="m">${t.due?'Due '+esc(fmtDMY(t.due)):'No due date'}${overdue?' · <b style="color:var(--red)">overdue</b>':''}${t.priority?' · '+esc(t.priority)+' priority':''}</div></div></div>`;
+  };
+  let html = ngoHead("Tasks from KRSF");
+  html += `<div class="nm-sec">To do · ${open.length}</div>`;
+  html += open.length ? open.map(row).join("") : `<div class="nm-empty">Nothing pending — all caught up.</div>`;
+  if(done.length) html += `<div class="nm-sec">Completed · ${done.length}</div>` + done.slice(0,30).map(row).join("");
+  return html + ngoTabs();
+}
+function ngoToggleTask(id){
+  const t = (DB.tasks||[]).find(x=>x && x.id===id);
+  if(!t || blockIfNotMyNgo(t.ngoId)) return;
+  if(t.status==="Done"){ t.status="Open"; delete t.doneBy; delete t.doneAt; }
+  else { t.status="Done"; t.doneBy=ME.name; t.doneAt=TODAY_ISO; }
+  saveDB(); render();
+  toast(t.status==="Done" ? "Marked done" : "Moved back to to-do");
 }
 
 /* =================================================================
@@ -8752,7 +8967,7 @@ function pageDocs(){
    ================================================================= */
 function pageAdmin(){
   const users = DB.users || [];
-  const apls = users.filter(u=>u.role!=="PM");
+  const apls = users.filter(u=>u.role!=="PM" && u.role!=="NGO");   // V72: NGO logins have their own panel
   const pm   = users.find(u=>u.role==="PM");
   const ngos = DB.ngos || [];
 
@@ -8821,6 +9036,8 @@ function pageAdmin(){
     </div>` : `<div class="empty"><div class="mk">⚙</div>
       <p>No user logins yet. Click <b>+ Add user</b> to create one.</p></div>`}
   </div>
+
+  ${adminNgoLoginsPanel()}
 
   <div class="panel">
     <div class="panel-h"><h3>Data backup</h3><span class="note">auto-downloads once a week · or grab one anytime</span></div>
@@ -8978,6 +9195,104 @@ function deleteApl(id){
       DB.users = (DB.users||[]).filter(x=>x.id!==id);
       await saveDB(); closeModal(); render();
       toast("Partnership Lead login removed");
+    }, "Remove login", true);
+}
+/* ---- V72: NGO logins — username + password, one per partner NGO ---- */
+function ngoLoginSlug(n){
+  return String((n && (n.short||n.name)) || "ngo").toLowerCase()
+    .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"") || "ngo";
+}
+/* 8 characters, no look-alikes (0/o, 1/l/i) so it can be read out on a call */
+function ngoGenPassword(){
+  const A = "abcdefghjkmnpqrstuvwxyz23456789";
+  const b = new Uint32Array(8); crypto.getRandomValues(b);
+  return Array.from(b, x=>A[x % A.length]).join("");
+}
+function ngoLoginFor(ngoId){
+  return (DB.users||[]).find(u=>u && u.role==="NGO" && (u.ngoIds||[]).indexOf(ngoId)>=0);
+}
+function ngoUserRecord(n, username, password){
+  const rec = { id:genId("u"), role:"NGO", name:n.name, username, password, ngoIds:[n.id],
+    title:"Partner NGO · "+(n.short||n.name), reportsTo:"",
+    avatar:(String(n.short||n.name||"N").replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase() || "N") };
+  return stampEdit(rec);
+}
+function adminNgoLoginsPanel(){
+  const ngos = DB.ngos || [];
+  const have = ngos.filter(n=>ngoLoginFor(n.id)).length;
+  const missing = ngos.length - have;
+  return `<div class="panel" style="margin-bottom:16px">
+    <div class="panel-h"><h3>NGO Logins</h3><span class="note">${have} of ${ngos.length} NGOs have a login · each sees only its own OKRs and tasks</span></div>
+    ${missing ? `<div class="panel-b" style="padding-bottom:4px"><button class="btn accent sm" onclick="createMissingNgoLogins()">+ Create logins for ${missing} NGO${missing!==1?'s':''} without one</button></div>` : ''}
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>NGO</th><th>Username</th><th>Password</th><th></th></tr></thead>
+      <tbody>${ngos.map(n=>{ const u = ngoLoginFor(n.id); return `<tr>
+        <td><b>${esc(n.short)}</b>${n.name && n.name!==n.short ? ` <span style="color:var(--ink-3);font-size:11.5px">${esc(n.name)}</span>` : ''}</td>
+        <td class="mono">${u ? esc(u.username) : '<span style="color:var(--ink-3)">—</span>'}</td>
+        <td class="mono">${u ? `<span class="pw-mask" data-pw="${esc(u.password)}">••••••••</span> <button class="btn ghost sm" onclick="togglePw(this)">show</button>` : ''}</td>
+        <td class="num" style="white-space:nowrap">${u
+          ? `<button class="btn ghost sm" onclick="openNgoLoginForm('${n.id}')">Edit</button>
+             <button class="btn ghost sm" style="color:var(--red)" onclick="deleteNgoLogin('${u.id}')">Remove</button>`
+          : `<button class="btn ghost sm" onclick="openNgoLoginForm('${n.id}')">+ Create</button>`}</td>
+      </tr>`; }).join("")}</tbody>
+    </table></div>
+  </div>`;
+}
+function openNgoLoginForm(ngoId){
+  if(ME.role!=="PM") return;
+  const n = ngoById(ngoId); if(!n) return;
+  const u = ngoLoginFor(ngoId);
+  const body = `
+    <div class="field"><label>Organisation</label><input type="text" value="${esc(n.name)}" disabled></div>
+    <div class="frow">
+      <div class="field"><label>Username</label><input type="text" id="nlUser" value="${esc(u ? u.username : ngoLoginSlug(n))}" autocomplete="off" autocapitalize="off"></div>
+      <div class="field"><label>Password</label><input type="text" id="nlPass" value="${esc(u ? u.password : ngoGenPassword())}" autocomplete="off" autocapitalize="off">
+        <div class="hint"><a href="#" onclick="el('nlPass').value=ngoGenPassword();return false">Generate a new one</a></div></div>
+    </div>
+    <div class="hint">This login sees only ${esc(n.short)}'s OKRs and tasks, and can update their status and comments.</div>`;
+  const foot = `<button class="btn" onclick="closeModal()">Cancel</button>
+    <button class="btn primary" onclick="saveNgoLogin('${ngoId}')">${u ? 'Save changes' : 'Create login'}</button>`;
+  showModal(modalShell(u ? "Edit NGO login" : "New NGO login", n.short+" login", body, foot));
+}
+async function saveNgoLogin(ngoId){
+  if(ME.role!=="PM") return;
+  const n = ngoById(ngoId); if(!n) return;
+  const username = el("nlUser").value.trim().toLowerCase();
+  const password = el("nlPass").value.trim();
+  if(!/^[a-z0-9][a-z0-9._-]{2,}$/.test(username)){ toast("Username: at least 3 letters or numbers, no spaces"); return; }
+  if(password.length < 6){ toast("Password must be at least 6 characters"); return; }
+  const u = ngoLoginFor(ngoId);
+  const clash = (DB.users||[]).find(x=>x && x!==u && (x.username||"").trim().toLowerCase()===username);
+  if(clash){ toast("That username is already taken"); return; }
+  if(u){ Object.assign(u, { username, password, name:n.name }); stampEdit(u); }
+  else { DB.users.push(ngoUserRecord(n, username, password)); }
+  await saveDB(); closeModal(); render();
+  toast(u ? "NGO login updated" : "Login created for "+n.short);
+}
+async function createMissingNgoLogins(){
+  if(ME.role!=="PM") return;
+  const taken = new Set((DB.users||[]).map(u=>(u.username||"").trim().toLowerCase()));
+  let made = 0;
+  (DB.ngos||[]).forEach(n=>{
+    if(ngoLoginFor(n.id)) return;
+    const base = ngoLoginSlug(n); let name = base, i = 2;
+    while(taken.has(name)) name = base+"-"+(i++);
+    taken.add(name);
+    DB.users.push(ngoUserRecord(n, name, ngoGenPassword())); made++;
+  });
+  if(!made) return;
+  await saveDB(); render();
+  toast(made+" NGO login"+(made!==1?"s":"")+" created — click “show” to see each password");
+}
+function deleteNgoLogin(id){
+  if(ME.role!=="PM") return;
+  const u = (DB.users||[]).find(x=>x && x.id===id && x.role==="NGO"); if(!u) return;
+  confirmAction("Remove this NGO login?",
+    `<b>${esc(u.name)}</b> will no longer be able to sign in. Their OKRs and tasks stay intact.`,
+    async ()=>{
+      DB.users = (DB.users||[]).filter(x=>x.id!==id);
+      await saveDB(); closeModal(); render();
+      toast("NGO login removed");
     }, "Remove login", true);
 }
 /* ---- edit the PM's own credentials ---- */
