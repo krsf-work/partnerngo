@@ -1695,7 +1695,7 @@ body.ngo-mode .v-tabbar, body.ngo-mode .topbar.v-appbar{display:none!important}
 .v-cat{grid-template-columns:84px 1fr auto}
 .v-cat em{font-size:12px;white-space:nowrap}
 .v-hstat span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:767px){.v-hstat span{font-size:10px}}
+@media (max-width:767px){.v-hero-stats{gap:6px} .v-hstat{padding:9px 8px} .v-hstat span{font-size:10.5px}}
 
 </style>
 </head>
@@ -4024,7 +4024,7 @@ function pageV4Home(){
     <h2>${esc(headline)}</h2>
     <div class="v-hero-stats">
       <button class="v-hstat ${c.late?"hot":""}" onclick="v4OpenNotifs('late')"><b>${c.late}</b><span>Overdue</span></button>
-      <button class="v-hstat" onclick="v4OpenNotifs('today')"><b>${c.today}</b><span>Due today</span></button>
+      <button class="v-hstat" onclick="v4OpenNotifs('today')"><b>${c.today}</b><span>Today</span></button>
       <button class="v-hstat" onclick="v4OpenNotifs('week')"><b>${c.week}</b><span>This week</span></button>
       <button class="v-hstat" onclick="v4OpenNotifs('later')"><b>${c.later}</b><span>Later</span></button>
     </div>
