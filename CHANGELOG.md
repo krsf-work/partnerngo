@@ -1,5 +1,22 @@
 # Changelog
 
+## V74.1 — 2026-11-04
+Simpler screens, one-tap ticks.
+
+### Changed
+- Home is a plain checklist: Overdue, Today, This week. Tick the circle on a
+  line to mark it done; Undo appears for a few seconds. The purple deadline
+  box and the sideways "Up next" cards are gone.
+- Ticking works on the line everywhere: NGO actions, NGO key results, my key
+  results and my action items. Tapping the text still opens details and notes.
+- NGO cards are now simple rows; Money shows one summary and the debit note
+  stages as a list.
+- Flatter look: no card shadows, month and person chips wrap instead of
+  scrolling sideways. No page scrolls sideways on a phone.
+
+### Added
+- demo.html: the app with made-up data and a role switcher; nothing is saved.
+
 ## V74 — 2026-11-03
 A new interface built around the three jobs a team member does in Sahkar:
 their NGOs' OKRs and action items, their own OKRs and action items, and each

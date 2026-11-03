@@ -1696,6 +1696,60 @@ body.ngo-mode .v-tabbar, body.ngo-mode .topbar.v-appbar{display:none!important}
 .v-cat em{font-size:12px;white-space:nowrap}
 .v-hstat span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:767px){.v-hero-stats{gap:6px} .v-hstat{padding:9px 8px} .v-hstat span{font-size:10.5px}}
+/* ---- V74.1 · simple, flat, tick on the line ---- */
+.v-card,.v-list{box-shadow:none}
+.v-card.tap:hover{box-shadow:none}
+.v-chips{flex-wrap:wrap;overflow:visible;scroll-snap-type:none}
+.v-page{overflow-x:clip}
+.v-hello{margin:var(--s3) 0 var(--s5)}
+.v-hello-line{margin-top:10px!important;font-size:15px!important;color:var(--v-n700)!important}
+.v-hello-line b{font-weight:700;color:var(--v-n900)}
+.v-hello-line b.late{color:var(--v-error)}
+.v-grp{margin-bottom:var(--s5)}
+.v-grp-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--v-n700);margin:0 0 4px 2px}
+.v-grp-h span{font-weight:600;color:var(--v-n400)}
+.v-grp.g-late .v-grp-h{color:var(--v-error)}
+.v-items{border-top:1px solid var(--v-line)}
+.v-list .v-items,.v-obj .v-items{border-top:none}
+.v-item{display:flex;align-items:flex-start;gap:12px;padding:12px 2px;border-bottom:1px solid var(--v-line)}
+.v-card .v-item,.v-list .v-item{padding:12px var(--s4)}
+.v-obj .v-item{border-bottom:none;border-top:1px solid var(--v-line)}
+.v-item-main{flex:1;min-width:0;cursor:pointer}
+.v-item-t{font-size:15px;color:var(--v-n900);line-height:1.4;overflow-wrap:anywhere;transition:color .25s}
+.v-item-s{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin-top:4px;font-size:12.5px;color:var(--v-n500)}
+.v-item-s .v-link{font-size:12.5px}
+.v-item.done .v-item-t{color:var(--v-n400);text-decoration:line-through;text-decoration-color:var(--v-n300)}
+.v-tick{flex:none;width:24px;height:24px;margin-top:0;border-radius:50%;border:2px solid var(--v-n400);background:transparent;color:transparent;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:background .2s,border-color .2s,color .2s}
+.v-tick::before{content:"";position:absolute;inset:-10px}
+.v-tick .i{width:14px;height:14px;stroke-width:3}
+@media (hover:hover){.v-tick:not(:disabled):hover{border-color:var(--v-success)} .v-tick:not(:disabled):hover .i{color:var(--v-success)}}
+.v-tick.on{background:var(--v-success);border-color:var(--v-success);color:#fff;animation:v-pop .35s var(--ease-out)}
+.v-tick.on .i{color:#fff}
+.v-tick:disabled{opacity:.35;cursor:default}
+.v-more{display:inline-flex;align-items:center;gap:4px;background:none;border:0;padding:10px 2px;font-size:13px;font-weight:600;color:var(--v-primary);cursor:pointer}
+.v-calm{display:flex;align-items:center;gap:10px;padding:14px 2px;color:var(--v-n600);font-size:14px}
+.v-calm .i{color:var(--v-success)}
+.v-navic{width:36px;height:36px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--v-n600);background:var(--v-n100);border-radius:10px}
+.v-row .i.sm:last-child{color:var(--v-n400)}
+.v-sumblock{padding:4px 2px 8px}
+.v-sumblock .big{font-size:32px;font-weight:780;letter-spacing:-.03em;color:var(--v-n900);line-height:1.05}
+.v-sumblock .of{font-size:13.5px;color:var(--v-n600);margin:6px 0 12px}
+.v-sumblock .of b{color:var(--v-n900)}
+.v-stage-r.on{background:var(--v-primary-subtle)}
+.v-cnt{font-size:16px;font-weight:750;color:var(--v-n900);min-width:24px;text-align:right}
+.v-snack{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + var(--safe-b) + 58px);transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:120;
+  display:flex;align-items:center;gap:16px;background:var(--v-n900);color:#fff;font-size:13.5px;padding:10px 10px 10px 16px;border-radius:12px;box-shadow:var(--e3);
+  transition:opacity .2s,transform .25s var(--ease-out);white-space:nowrap}
+.v-snack.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.v-snack button{background:none;border:0;color:#a5b4fc;font-weight:700;font-size:13.5px;padding:4px 8px;cursor:pointer}
+@media (min-width:768px){.v-snack{bottom:28px}}
+body.ngo-mode .v-snack{bottom:calc(140px + var(--safe-b))}
+.v-sumline{margin:0 2px 16px;font-size:14px;color:var(--v-n600)}
+.v-sumline b{color:var(--v-n900)}
+.v-sumline .late{color:var(--v-error);font-weight:600}
+.v-sumline .v-meter{margin-top:8px}
+.v-obj-n{background:var(--v-n100);color:var(--v-n700)}
 
 </style>
 </head>
@@ -3992,89 +4046,137 @@ function v4RemindCard(){
 }
 function v4HideRemind(){ try{ localStorage.setItem(V4_REMIND_HIDE+ME.id, "1"); }catch(e){} render(); }
 
+function v4TickBtn(kind, id, done, can){
+  return `<button class="v-tick ${done?"on":""}" ${can?"":"disabled"} aria-label="${done?"Mark not done":"Mark done"}"
+    onclick="event.stopPropagation();v4Tick(this,'${kind}','${v4Arg(id)}')">${vi("check")}</button>`;
+}
+function v4ItemRow(o){
+  return `<div class="v-item ${o.done?"done":""}">
+    ${v4TickBtn(o.kind, o.id, o.done, o.can)}
+    <div class="v-item-main" ${o.open?`role="button" tabindex="0" onclick="${o.open}" onkeydown="if(event.key==='Enter')this.click()"`:""}>
+      <div class="v-item-t">${esc(o.title)}</div>
+      ${o.meta ? `<div class="v-item-s">${o.meta}</div>` : ""}
+      ${o.extra || ""}
+    </div>
+  </div>`;
+}
+function v4HomeItem(x){
+  const k = V4_KIND[x.kind];
+  return v4ItemRow({ kind:x.kind, id:x.id, done:false, can:v4CanComplete(x), title:x.title,
+    open:`v4OpenItem('${x.kind}','${v4Arg(x.id)}')`,
+    meta:`<span class="v-due ${v4DueCls(x.due)}">${v4DueLabel(x.due)}</span><span>${esc(x.sub)}</span><span>${k.label}</span>` });
+}
+function v4FindItem(kind, id){
+  const src = kind==="mykr"||kind==="myact" ? DB.teamMbo : kind==="task" ? DB.tasks : DB.mbo;
+  return (src||[]).find(x=>x && x.id===id) || null;
+}
+function v4ApplyStatus(kind, id, status){
+  V4.quiet = true;
+  try{
+    if(kind==="mykr" || kind==="myact") v4SetMy(id, status);
+    else if(kind==="task") v4SetTask(id, status);
+    else v4SetKr(id, status);
+  } finally { V4.quiet = false; }
+}
+function v4Tick(btn, kind, id){
+  const rec = v4FindItem(kind, id);
+  if(!rec) return;
+  const my = kind==="mykr" || kind==="myact";
+  const ok = my ? (ME.role==="PM" || rec.ownerId===ME.id) : canEditNgo(rec.ngoId);
+  if(!ok){ toast(my ? "You can update only your own OKRs" : "Only this NGO's lead can update it"); return; }
+  V4.prev = V4.prev || {};
+  const was = rec.status || (kind==="task" ? "Open" : "");
+  const back = kind==="task" ? "Open" : kind==="ngokr" ? "Pending" : "";
+  const to = was==="Done" ? (V4.prev[kind+id] && V4.prev[kind+id]!=="Done" ? V4.prev[kind+id] : back) : "Done";
+  if(was!=="Done") V4.prev[kind+id] = was;
+  const row = btn.closest(".v-item");
+  btn.classList.toggle("on", to==="Done"); btn.disabled = true;
+  if(row) row.classList.toggle("done", to==="Done");
+  try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+  setTimeout(()=>{
+    v4ApplyStatus(kind, id, to);
+    v4Snack(to==="Done" ? "Marked done" : "Marked not done", ()=>v4ApplyStatus(kind, id, was));
+  }, 380);
+}
+function v4Snack(msg, undo){
+  let s = el("v4Snack");
+  if(!s){ s = document.createElement("div"); s.id = "v4Snack"; s.className = "v-snack"; s.setAttribute("role","status"); document.body.appendChild(s); }
+  V4.undo = undo || null;
+  s.innerHTML = `<span>${esc(msg)}</span>${undo?`<button onclick="v4DoUndo()">Undo</button>`:""}`;
+  s.classList.add("show");
+  clearTimeout(s._t); s._t = setTimeout(()=>{ s.classList.remove("show"); V4.undo = null; }, 4500);
+}
+function v4DoUndo(){
+  const f = V4.undo; V4.undo = null;
+  const s = el("v4Snack"); if(s) s.classList.remove("show");
+  if(f) f();
+}
+async function v4SetTask(id, status){
+  const t = (DB.tasks||[]).find(x=>x && x.id===id);
+  if(!t) return;
+  if(!canEditNgo(t.ngoId)){ toast("Only this NGO's lead can update it"); return; }
+  const toDone = status==="Done";
+  t.status = toDone ? "Done" : (status || "Open");
+  if(toDone){ t.doneBy = ME.name; t.doneAt = TODAY_ISO; } else { delete t.doneBy; delete t.doneAt; }
+  if(!V4.quiet) v4CloseSheet();
+  v4Rerender();
+  if(!V4.quiet) toast(toDone ? "Action done" : "Action reopened");
+  await saveDB();
+}
+function v4NavRow(ic, title, sub, onclick){
+  return `<div class="v-row tap" role="button" tabindex="0" onclick="${onclick}" onkeydown="if(event.key==='Enter')this.click()">
+    <div class="v-navic">${vi(ic)}</div>
+    <div class="v-row-main"><div class="v-row-t">${title}</div><div class="v-row-s">${sub}</div></div>
+    ${vi("chevr","sm")}
+  </div>`;
+}
 function pageV4Home(){
+  V4.homeAll = V4.homeAll || {};
   const list = v4Deadlines(), c = v4Count(list);
-  const soon = list.filter(x=>x.bucket==="late"||x.bucket==="today"||x.bucket==="week");
-  const need = c.late + c.today + c.week;
   const date = new Date().toLocaleDateString("en-IN",{ weekday:"long", day:"numeric", month:"long" });
-  const headline = need===0 ? "You're all caught up this week"
-    : c.late ? `${c.late} overdue${c.today?`, ${c.today} due today`:""} — let's clear ${c.late+c.today>1?"them":"it"}`
-    : c.today ? `${c.today} due today, ${c.week} more this week`
-    : `${c.week} deadline${c.week>1?"s":""} coming up this week`;
+  const line = c.late || c.today
+    ? [c.late ? `<b class="late">${c.late} overdue</b>` : "", c.today ? `<b>${c.today} due today</b>` : ""].filter(Boolean).join(" · ")
+    : c.week ? `${c.week} due this week` : "Nothing due this week";
 
-  /* pillar numbers */
+  const groups = [["late","Overdue"],["today","Today"],["week","This week"]];
+  const lim = 5;
+  const todo = groups.map(([b,label])=>{
+    const rows = list.filter(x=>x.bucket===b);
+    if(!rows.length) return "";
+    const all = !!V4.homeAll[b];
+    return `<div class="v-grp g-${b}"><div class="v-grp-h">${label}<span>${rows.length}</span></div>
+      <div class="v-items">${rows.slice(0, all ? 999 : lim).map(v4HomeItem).join("")}</div>
+      ${rows.length>lim ? `<button class="v-more" onclick="V4.homeAll['${b}']=${!all};render()">${all ? "Show less" : "Show "+(rows.length-lim)+" more"}</button>` : ""}
+    </div>`;
+  }).join("");
+  const rest = [c.later ? c.later+" later" : "", c.old ? c.old+" older, still open" : ""].filter(Boolean).join(" · ");
+
   const ngos = v4MyNgos();
   const stats = ngos.map(n=>v4NgoStats(n.id));
   const krD = stats.reduce((s,x)=>s+x.krDone,0), krT = stats.reduce((s,x)=>s+x.krTotal,0);
   const openActs = stats.reduce((s,x)=>s+x.open,0);
   const myRows = v4RowsOf(ME.id), mm = v4DefaultMonth(myRows);
   const mine = myRows.filter(r=>r.month===mm);
-  const myKr = mine.filter(r=>r.type==="kr"), myAct = mine.filter(r=>r.type!=="kr");
-  const myDone = myKr.filter(r=>r.status==="Done").length;
+  const myKr = mine.filter(r=>r.type==="kr"), myDone = myKr.filter(r=>r.status==="Done").length;
+  const myOpen = mine.filter(r=>r.type!=="kr" && r.status!=="Done").length;
   const budget = stats.reduce((s,x)=>s+x.total,0), spent = stats.reduce((s,x)=>s+x.spent,0);
-  const pend = stats.reduce((s,x)=>s+x.pending,0), pendAmt = stats.reduce((s,x)=>s+x.pendingAmt,0);
+  const pend = stats.reduce((s,x)=>s+x.pending,0);
 
   return `
   <div class="v-hello">
-    <div style="flex:1;min-width:0"><h1>${v4Greeting()}, ${esc(v4First(ME.name))}</h1><p>${esc(date)}</p></div>
-  </div>
-
-  <div class="v-hero">
-    <div class="v-hero-top">${vi("clock","sm")} Deadlines</div>
-    <h2>${esc(headline)}</h2>
-    <div class="v-hero-stats">
-      <button class="v-hstat ${c.late?"hot":""}" onclick="v4OpenNotifs('late')"><b>${c.late}</b><span>Overdue</span></button>
-      <button class="v-hstat" onclick="v4OpenNotifs('today')"><b>${c.today}</b><span>Today</span></button>
-      <button class="v-hstat" onclick="v4OpenNotifs('week')"><b>${c.week}</b><span>This week</span></button>
-      <button class="v-hstat" onclick="v4OpenNotifs('later')"><b>${c.later}</b><span>Later</span></button>
-    </div>
+    <div style="flex:1;min-width:0"><h1>${v4Greeting()}, ${esc(v4First(ME.name))}</h1>
+      <p>${esc(date)}</p><p class="v-hello-line">${line}</p></div>
   </div>
   ${v4RemindCard()}
-
-  ${v4Sec("Up next", soon.length || null, soon.length || c.old ? `<button class="v-link" onclick="v4OpenNotifs()">See all ${vi("chevr","sm")}</button>` : "")}
-  ${soon.length ? `<div class="v-dl-strip v-stagger">${soon.slice(0,12).map(v4DlCard).join("")}</div>`
-    : `<div class="v-card">${v4Empty("check","Nothing due this week",
-        c.old ? `${c.old} older item${c.old>1?"s are":" is"} still open from earlier months.` : "New deadlines from your OKRs and NGO actions will show up here.",
-        c.old ? `<button class="v-btn" onclick="go('myokr')">Review older items</button>` : "", true)}</div>`}
+  ${todo || `<div class="v-calm">${vi("check")} You're all caught up this week.</div>`}
+  ${rest ? `<button class="v-more" style="margin-top:4px" onclick="v4OpenNotifs('later')">${esc(rest)} ${vi("chevr","sm")}</button>` : ""}
 
   ${v4Sec("Your work")}
-  <div class="v-grid c3 v-stagger">
-    <div class="v-card tap v-pillar" role="button" tabindex="0" onclick="go('myngos')" onkeydown="if(event.key==='Enter')this.click()">
-      <div class="v-pillar-h"><div class="v-pillar-ic p1">${vi("building")}</div>
-        <div><h3>My NGOs</h3><p>OKRs and action items</p></div>${vi("chevr","chev")}</div>
-      <div class="v-pillar-body"><div class="v-kpis">
-        <div class="v-kpi"><b>${ngos.length}</b><span>Partners</span></div>
-        <div class="v-kpi"><b>${krT ? pct(krD,krT)+"%" : "—"}</b><span>KRs done</span></div>
-        <div class="v-kpi"><b>${openActs}</b><span>Open actions</span></div>
-      </div></div>
-    </div>
-    <div class="v-card tap v-pillar" role="button" tabindex="0" onclick="go('myokr')" onkeydown="if(event.key==='Enter')this.click()">
-      <div class="v-pillar-h"><div class="v-pillar-ic p2">${vi("target")}</div>
-        <div><h3>My OKRs</h3><p>${esc(monthLong(mm))}</p></div>${vi("chevr","chev")}</div>
-      <div class="v-pillar-body">
-        ${v4Ring(myDone, myKr.length, 76, myKr.length && myDone===myKr.length ? "ok" : "")}
-        <div class="v-kpis">
-          <div class="v-kpi"><b>${myKr.length - myDone}</b><span>KRs open</span></div>
-          <div class="v-kpi"><b>${myAct.filter(r=>r.status!=="Done").length}</b><span>Actions open</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="v-card tap v-pillar" role="button" tabindex="0" onclick="go('money')" onkeydown="if(event.key==='Enter')this.click()">
-      <div class="v-pillar-h"><div class="v-pillar-ic p3">${vi("wallet")}</div>
-        <div><h3>Budget &amp; debit notes</h3><p>FY ${esc(FY_MONTHS[0].slice(0,4))}–${esc(FY_END.slice(2,4))}</p></div>${vi("chevr","chev")}</div>
-      <div style="margin-top:auto">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
-          <div class="v-kpi"><b>${budget ? pct(spent,budget)+"%" : "—"}</b><span>of ${fmtRs(budget)} used</span></div>
-          <div class="v-kpi" style="text-align:right"><b>${pend}</b><span>DNs pending · ${fmtRs(pendAmt)}</span></div>
-        </div>
-        ${v4Meter(budget ? pct(spent,budget) : 0, pct(spent,budget)>100 ? "bad" : "")}
-      </div>
-    </div>
-  </div>
-
-  ${ngos.length ? v4Sec("My NGOs", ngos.length, `<button class="v-link" onclick="go('myngos')">All NGOs ${vi("chevr","sm")}</button>`) +
-    `<div class="v-grid c3 v-stagger">${ngos.slice(0,6).map((n,i)=>v4NgoCard(n, stats[i])).join("")}</div>` : ""}
-  `;
+  <div class="v-list">
+    ${v4NavRow("building","My NGOs", `${ngos.length} NGO${ngos.length===1?"":"s"} · ${krT ? krD+"/"+krT+" KRs done" : "no KRs yet"} · ${openActs} open action${openActs===1?"":"s"}`, "go('myngos')")}
+    ${v4NavRow("target","My OKRs", `${esc(monthLabel(mm))} · ${myDone}/${myKr.length} KRs done · ${myOpen} action${myOpen===1?"":"s"} open`, "go('myokr')")}
+    ${v4NavRow("wallet","Budget &amp; debit notes", `${budget ? pct(spent,budget)+"% of "+fmtRs(budget)+" used" : "No budget yet"} · ${pend} DN${pend===1?"":"s"} pending`, "go('money')")}
+  </div>`;
 }
 
 /* ---------- notifications panel ---------- */
@@ -4103,13 +4205,17 @@ function v4OpenNotifs(focus){
   v4OpenSheet("Notifications", body);
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
-function v4DlRow(x){
-  const k = V4_KIND[x.kind];
-  return `<div class="v-row tap" onclick="v4OpenItem('${x.kind}','${v4Arg(x.id)}')">
-    <div class="v-kind k-${x.kind}">${vi(k.ic,"sm")}</div>
-    <div class="v-row-main"><div class="v-row-t">${esc(x.title)}</div>
-      <div class="v-row-s"><span>${k.label}</span><span class="sep"></span><span>${esc(x.sub)}</span></div></div>
-    <div class="v-row-end"><span class="v-due ${v4DueCls(x.due)}">${v4DueLabel(x.due)}</span></div>
+function v4DlRow(x){ return v4HomeItem(x); }
+
+function v4NgoCard(n, st){
+  st = st || v4NgoStats(n.id);
+  const act = (n.partnership||"Active")==="Active";
+  const bits = [st.krTotal ? `${st.krDone}/${st.krTotal} KRs` : "No KRs", `${st.open} open`, st.total ? `${st.used}% budget` : ""].filter(Boolean);
+  return `<div class="v-row tap" role="button" tabindex="0" onclick="go('ngo2','${v4Arg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
+    ${v4Mono(n)}
+    <div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}${act ? "" : ` <span class="v-muted" style="font-weight:500">· ${esc(n.partnership)}</span>`}</div>
+      <div class="v-row-s">${bits.join(" · ")}${st.pending ? ` · ${st.pending} DN pending` : ""}</div></div>
+    <div class="v-row-end">${st.late ? `<span class="v-badge bad">${st.late} late</span>` : ""}${vi("chevr","sm")}</div>
   </div>`;
 }
 
@@ -4157,19 +4263,12 @@ async function v4DailyReminder(force){
 function v4NgoCard(n, st){
   st = st || v4NgoStats(n.id);
   const act = (n.partnership||"Active")==="Active";
-  return `<div class="v-card tap v-ngo" role="button" tabindex="0" onclick="go('ngo2','${v4Arg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
-    <div class="v-ngo-h">${v4Mono(n)}
-      <div style="flex:1;min-width:0"><h3>${esc(n.short||n.name)}</h3>
-        <p>${esc([n.state,n.vertical].filter(Boolean).join(" · ") || n.name || "")}</p></div>
-      ${act ? "" : `<span class="v-badge">${esc(n.partnership)}</span>`}
-    </div>
-    <div class="v-ngo-stats">
-      <div class="v-ngo-stat"><b>${st.krTotal ? st.krDone+"/"+st.krTotal : "—"}</b><span>KRs ${st.month ? esc(monthLabel(st.month)) : ""}</span></div>
-      <div class="v-ngo-stat ${st.late?"bad":""}"><b>${st.open}</b><span>${st.late ? st.late+" late" : "Open actions"}</span></div>
-      <div class="v-ngo-stat"><b>${st.total ? st.used+"%" : "—"}</b><span>Budget used</span></div>
-    </div>
-    ${st.total ? v4Meter(st.used, "thin " + (st.used>100?"bad":"")) : ""}
-    ${st.pending ? `<div style="display:flex;gap:6px;flex-wrap:wrap"><span class="v-badge warn">${st.pending} debit note${st.pending>1?"s":""} pending</span></div>` : ""}
+  const bits = [st.krTotal ? `${st.krDone}/${st.krTotal} KRs` : "No KRs", `${st.open} open`, st.total ? `${st.used}% budget` : ""].filter(Boolean);
+  return `<div class="v-row tap" role="button" tabindex="0" onclick="go('ngo2','${v4Arg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
+    ${v4Mono(n)}
+    <div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}${act ? "" : ` <span class="v-muted" style="font-weight:500">· ${esc(n.partnership)}</span>`}</div>
+      <div class="v-row-s">${bits.join(" · ")}${st.pending ? ` · ${st.pending} DN pending` : ""}</div></div>
+    <div class="v-row-end">${st.late ? `<span class="v-badge bad">${st.late} late</span>` : ""}${vi("chevr","sm")}</div>
   </div>`;
 }
 function v4NgoFilter(list){
@@ -4185,8 +4284,8 @@ function v4NgoListHtml(){
   const mine = v4NgoFilter(v4MyNgos()), team = v4NgoFilter(v4TeamNgos());
   if(!mine.length && !team.length) return `<div class="v-card">${v4Empty("search", V4.q ? "No NGO matches" : "No NGOs assigned yet",
       V4.q ? "Try a different name or state." : "Ask the Program Manager to assign partners to you in Admin.")}</div>`;
-  return (mine.length ? `<div class="v-grid c3 v-stagger">${mine.map(n=>v4NgoCard(n)).join("")}</div>` : "")
-    + (team.length ? v4Sec("My team's NGOs", team.length) + `<div class="v-grid c3 v-stagger">${team.map(n=>v4NgoCard(n)).join("")}</div>` : "");
+  return (mine.length ? `<div class="v-list">${mine.map(n=>v4NgoCard(n)).join("")}</div>` : "")
+    + (team.length ? v4Sec("My team's NGOs", team.length) + `<div class="v-list">${team.map(n=>v4NgoCard(n)).join("")}</div>` : "");
 }
 function pageV4Ngos(){
   const mine = v4MyNgos();
@@ -4249,10 +4348,9 @@ function v4NgoOkrTab(n, can){
     krHtml = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
         <div class="v-chips" style="flex:1">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetNgoMonth('${v4Arg(n.id)}','${x}')">${esc(monthLabel(x))}</button>`).join("")}</div>
         <span class="v-hide-m">${add}</span></div>
-      <div class="v-card pad" style="display:flex;align-items:center;gap:18px;margin-bottom:16px">
-        ${v4Ring(done, rows.length, 72, rows.length && done===rows.length ? "ok" : "")}
-        <div><div style="font-size:16px;font-weight:700;color:var(--v-n900)">${done} of ${rows.length} key results done</div>
-          <div class="v-muted" style="font-size:13px;margin-top:2px">${esc(monthLong(m))}${rows.some(r=>r.status==="Not Done")?" · "+rows.filter(r=>r.status==="Not Done").length+" not done":""}</div></div>
+      <div class="v-sumline">
+        <div><b>${done} of ${rows.length}</b> key results done${rows.some(r=>r.status==="Not Done")?` · <span class="late">${rows.filter(r=>r.status==="Not Done").length} not done</span>`:""}</div>
+        ${v4Meter(rows.length ? pct(done, rows.length) : 0, "thin")}
       </div>
       <div class="v-stagger">${v4ObjGroups(rows,"objNum","objective").map(g=>`
         <div class="v-card v-obj">
@@ -4265,19 +4363,16 @@ function v4NgoOkrTab(n, can){
   return krHtml + (bets.length ? v4Sec("Milestones", bets.length) + `<div class="v-grid c2 v-stagger">${bets.map(v4BetCard).join("")}</div>` : "");
 }
 function v4KrRow(r, can){
-  const due = v4KrDue(r);
-  return `<div class="v-kr">
-    <div class="v-kr-main">
-      <div class="v-kr-t">${esc(r.kr||"Key result")}</div>
-      <div class="v-kr-meta">
-        ${v4StatBtn(r.status, can ? `v4KrSheet('${v4Arg(r.id)}')` : "")}
-        ${r.status!=="Done" && due ? `<span class="v-due ${v4DueCls(due)}">${v4DueLabel(due)}</span>` : (r.timeline?`<span class="v-muted" style="font-size:12px">${esc(r.timeline)}</span>`:"")}
-        ${r.ref && /^https?:\/\//.test(r.ref) ? `<a class="v-link" href="${esc(r.ref)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${vi("link","xs")} Evidence</a>` : (r.ref?`<span class="v-muted" style="font-size:12px">${esc(r.ref)}</span>`:"")}
-        ${can ? `<button class="v-link" onclick="v4KrSheet('${v4Arg(r.id)}')">${vi("msg","xs")} ${r.comment?"Edit note":"Add note"}</button>` : ""}
-      </div>
-      ${r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}${r.editedBy?`<div class="v-muted" style="font-size:11px;margin-top:3px">${esc(r.editedBy)}${r.editedAt?" · "+esc(shortDate(r.editedAt)):""}</div>`:""}</div></div>` : ""}
-    </div>
-  </div>`;
+  const due = v4KrDue(r), done = r.status==="Done";
+  const meta = [
+    !done && r.status && r.status!=="Pending" ? v4StatBtn(r.status, can ? `v4KrSheet('${v4Arg(r.id)}')` : "") : "",
+    !done && due ? `<span class="v-due ${v4DueCls(due)}">${v4DueLabel(due)}</span>` : (r.timeline ? `<span>${esc(r.timeline)}</span>` : ""),
+    r.ref && /^https?:\/\//.test(r.ref) ? `<a class="v-link" href="${esc(r.ref)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${vi("link","xs")} Evidence</a>` : (r.ref ? `<span>${esc(r.ref)}</span>` : ""),
+    can ? `<button class="v-link" onclick="event.stopPropagation();v4KrSheet('${v4Arg(r.id)}')">${r.comment ? "Edit note" : "Add note"}</button>` : ""
+  ].filter(Boolean).join("");
+  return v4ItemRow({ kind:"ngokr", id:r.id, done, can, title:r.kr || "Key result", meta,
+    open: can ? `v4KrSheet('${v4Arg(r.id)}')` : "",
+    extra: r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}${r.editedBy?`<div class="v-muted" style="font-size:11px;margin-top:3px">${esc(r.editedBy)}${r.editedAt?" · "+esc(shortDate(r.editedAt)):""}</div>`:""}</div></div>` : "" });
 }
 function v4BetCard(b){
   const h = betHealth(b), p = betProgress(b), cum = betCumulative(b, FY_END);
@@ -4303,17 +4398,13 @@ function v4NgoActTab(n, can){
 }
 function v4TaskRow(t, can){
   const isDone = t.status==="Done";
-  return `<div class="v-row tap ${isDone?"done":""}" onclick="v4TaskSheet('${v4Arg(t.id)}')">
-    <button class="v-check ${isDone?"on":""}" ${can?"":"disabled"} aria-label="${isDone?"Reopen":"Mark done"}"
-      onclick="event.stopPropagation();v4ToggleTask('${v4Arg(t.id)}')">${vi("check")}</button>
-    <div class="v-row-main"><div class="v-row-t">${esc(t.title)}</div>
-      <div class="v-row-s">
-        ${!isDone && t.due ? `<span class="v-due ${v4DueCls(t.due)}">${v4DueLabel(t.due)}</span>` : (t.due?`<span>${esc(shortDate(t.due))}</span>`:"")}
-        ${t.priority ? `<span class="sep"></span><span>${esc(t.priority)} priority</span>` : ""}
-        ${isDone && t.doneBy ? `<span class="sep"></span><span>Done by ${esc(t.doneBy)}</span>` : ""}
-      </div></div>
-    ${vi("chevr","sm")}
-  </div>`;
+  const meta = [
+    !isDone && t.due ? `<span class="v-due ${v4DueCls(t.due)}">${v4DueLabel(t.due)}</span>` : (t.due ? `<span>${esc(shortDate(t.due))}</span>` : ""),
+    t.priority ? `<span>${esc(t.priority)} priority</span>` : "",
+    isDone && t.doneBy ? `<span>Done by ${esc(t.doneBy)}</span>` : ""
+  ].filter(Boolean).join("");
+  return v4ItemRow({ kind:"task", id:t.id, done:isDone, can, title:t.title || "Action", meta,
+    open:`v4TaskSheet('${v4Arg(t.id)}')` });
 }
 function v4AddTask(ngoId){
   openTaskForm();
@@ -4384,16 +4475,9 @@ function pageV4MyOkr(){
   ${months.length ? `<div class="v-chips" style="margin-bottom:16px">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetMyMonth('${x}')">${esc(monthLabel(x))}</button>`).join("")}</div>` : ""}
   ${!rows.length ? `<div class="v-card">${v4Empty("target", isMe ? "No OKRs yet" : "No OKRs for "+esc(v4First(person.name)),
       isMe ? "Your monthly MBO sheet appears here once it's imported. You can add your own action items now." : "Nothing imported for this person yet.", add)}</div>` : `
-  <div class="v-card pad" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px">
-    ${v4Ring(done, krs.length, 84, krs.length && done===krs.length ? "ok" : "")}
-    <div style="flex:1;min-width:180px"><div style="font-size:17px;font-weight:750;color:var(--v-n900);letter-spacing:-.01em">${done} of ${krs.length} key results done</div>
-      <div class="v-muted" style="font-size:13px;margin-top:2px">${esc(monthLong(m))}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
-        ${counts.prog?`<span class="v-badge warn">${counts.prog} in progress</span>`:""}
-        ${counts.not?`<span class="v-badge bad">${counts.not} not done</span>`:""}
-        ${counts.late?`<span class="v-badge bad">${counts.late} past deadline</span>`:""}
-        <span class="v-badge info">${(n=>n+" action"+(n===1?"":"s")+" open")(acts.filter(r=>r.status!=="Done").length)}</span>
-      </div></div>
+  <div class="v-sumline">
+    <div><b>${done} of ${krs.length}</b> key results done${counts.late?` · <span class="late">${counts.late} past deadline</span>`:""}</div>
+    ${v4Meter(krs.length ? pct(done, krs.length) : 0, "thin")}
   </div>
   <div class="v-tabs-sticky"><div class="v-seg">
     <button class="${view==="kr"?"on":""}" onclick="v4SetMyView('kr')">${vi("target","sm")} Key results <span class="n">${krs.length}</span></button>
@@ -4415,20 +4499,16 @@ function pageV4MyOkr(){
 }
 function v4MyRow(r, can, first, showMonth){
   const isDone = r.status==="Done";
-  return `<div class="v-kr" ${first?'style="border-top:none"':""}>
-    <div class="v-kr-main">
-      <div class="v-kr-t">${esc(r.title||"Untitled")}</div>
-      <div class="v-kr-meta">
-        ${v4StatBtn(r.status, can ? `v4MySheet('${v4Arg(r.id)}')` : "")}
-        ${!isDone && r.deadline ? `<span class="v-due ${v4DueCls(r.deadline)}">${v4DueLabel(r.deadline)}</span>` : (r.deadline?`<span class="v-muted" style="font-size:12px">${esc(shortDate(r.deadline))}</span>`:"")}
-        ${showMonth ? `<span class="v-badge nodot">${esc(monthLabel(r.month))}</span>` : ""}
-        ${tmPriLabel(r) ? `<span class="v-badge nodot">${esc(tmPriLabel(r))}</span>` : ""}
-        ${r.source==="app" ? `<span class="v-badge nodot brand">Added in app</span>` : ""}
-        ${can ? `<button class="v-link" onclick="v4MySheet('${v4Arg(r.id)}')">${vi("msg","xs")} ${r.comment?"Edit note":"Add note"}</button>` : ""}
-      </div>
-      ${r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}</div></div>` : ""}
-    </div>
-  </div>`;
+  const meta = [
+    !isDone && r.status ? v4StatBtn(r.status, can ? `v4MySheet('${v4Arg(r.id)}')` : "") : "",
+    !isDone && r.deadline ? `<span class="v-due ${v4DueCls(r.deadline)}">${v4DueLabel(r.deadline)}</span>` : (r.deadline ? `<span>${esc(shortDate(r.deadline))}</span>` : ""),
+    showMonth ? `<span>${esc(monthLabel(r.month))}</span>` : "",
+    tmPriLabel(r) ? `<span>${esc(tmPriLabel(r))}</span>` : "",
+    can ? `<button class="v-link" onclick="event.stopPropagation();v4MySheet('${v4Arg(r.id)}')">${r.comment ? "Edit note" : "Add note"}</button>` : ""
+  ].filter(Boolean).join("");
+  return v4ItemRow({ kind: r.type==="kr" ? "mykr" : "myact", id:r.id, done:isDone, can, title:r.title || "Untitled", meta,
+    open:`v4MySheet('${v4Arg(r.id)}')`,
+    extra: r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}</div></div>` : "" });
 }
 
 /* ---------- item sheets ---------- */
@@ -4468,8 +4548,9 @@ async function v4SetMy(id, status){
   if(!r) return;
   if(!(ME.role==="PM" || r.ownerId===ME.id)){ toast("You can update only your own OKRs"); return; }
   r.status = status; stampEdit(r);
-  v4CloseSheet(); v4Rerender();
-  toast(status==="Done" ? "Marked done" : "Status: "+v4StatLabel(status));
+  if(!V4.quiet) v4CloseSheet();
+  v4Rerender();
+  if(!V4.quiet) toast(status==="Done" ? "Marked done" : "Status: "+v4StatLabel(status));
   await saveDB();
 }
 async function v4SaveMyComment(id){
@@ -4557,8 +4638,9 @@ async function v4SetKr(id, status){
   if(!r) return;
   if(!canEditNgo(r.ngoId)){ toast("Only this NGO's lead can update it"); return; }
   r.status = status; stampEdit(r);
-  v4CloseSheet(); v4Rerender();
-  toast(status==="Done" ? "Marked done" : "Status: "+status);
+  if(!V4.quiet) v4CloseSheet();
+  v4Rerender();
+  if(!V4.quiet) toast(status==="Done" ? "Marked done" : "Status: "+status);
   await saveDB();
 }
 async function v4SaveKrCmt(id){
@@ -4619,27 +4701,28 @@ function pageV4Money(){
   const lim = V4.moneyMore ? 500 : 25;
   return `
   <div class="v-head"><div><h1>Budget &amp; debit notes</h1><p>${ngos.length} NGO${ngos.length===1?"":"s"} · FY ${esc(FY_MONTHS[0].slice(0,4))}–${esc(FY_END.slice(2,4))}</p></div></div>
-  <div class="v-grid c4 v-stagger">
-    <div class="v-card pad v-kpi"><b>${fmtRs(budget)}</b><span>FY budget</span></div>
-    <div class="v-card pad v-kpi"><b>${fmtRs(spent)}</b><span>Spent so far</span></div>
-    <div class="v-card pad v-kpi"><b>${budget?pct(spent,budget)+"%":"—"}</b><span>Budget used</span>${budget?`<div style="margin-top:10px">${v4Meter(pct(spent,budget))}</div>`:""}</div>
-    <div class="v-card pad v-kpi"><b>${pend.length}</b><span>Debit notes pending · ${fmtRs(pendAmt)}</span></div>
+  <div class="v-sumblock">
+    <div class="big">${fmtRs(spent)}</div>
+    <div class="of">spent of ${fmtRs(budget)} · ${budget ? pct(spent,budget)+"% used" : "no budget yet"}</div>
+    ${budget ? v4Meter(pct(spent,budget), pct(spent,budget)>100 ? "bad" : "") : ""}
+    <div class="of" style="margin-top:10px"><b>${pend.length}</b> debit note${pend.length===1?"":"s"} waiting on payment · ${fmtRs(pendAmt)}</div>
   </div>
   ${v4Sec("Debit notes by stage")}
-  <div class="v-stage">${DN_STATUS.map(s=>`<button class="v-stage-i ${V4.stage===s?"on":""}" onclick="v4SetStage('${esc(s)}')">
-      <b>${by[s].n}</b><span>${esc(s)}</span><span class="v-muted" style="margin-top:2px">${fmtRs(by[s].amt)}</span></button>`).join("")}</div>
+  <div class="v-list">${DN_STATUS.map(s=>`<div class="v-row tap v-stage-r ${V4.stage===s?"on":""}" role="button" tabindex="0" onclick="v4SetStage('${esc(s)}')">
+      <div class="v-row-main"><div class="v-row-t">${esc(s)}</div><div class="v-row-s">${fmtRs(by[s].amt)}</div></div>
+      <div class="v-row-end"><span class="v-cnt">${by[s].n}</span></div></div>`).join("")}</div>
   ${v4Sec(V4.stage ? esc(V4.stage) : "Waiting on payment", list.length, V4.stage?`<button class="v-link" onclick="v4SetStage(null)">Clear filter</button>`:"")}
   ${list.length ? `<div class="v-list">${list.slice(0,lim).map(d=>v4DnRow(d, canEditNgo(d.ngoId), true)).join("")}</div>
       ${list.length>lim?`<button class="v-btn ghost" style="margin-top:8px" onclick="V4.moneyMore=true;render()">Show all ${list.length}</button>`:""}`
-    : `<div class="v-card">${v4Empty("check","Nothing here","No debit notes at this stage.","",true)}</div>`}
+    : `<div class="v-calm">${vi("check")} No debit notes at this stage.</div>`}
   ${v4Sec("By NGO", ngos.length)}
   <div class="v-list">${stats.sort((a,b)=>b.st.used-a.st.used).map(({n,st})=>`
     <div class="v-row tap" onclick="V4.ngoTab['${v4Arg(n.id)}']='money';go('ngo2','${v4Arg(n.id)}')">
       ${v4Mono(n)}
       <div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}</div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:6px"><div style="flex:1;max-width:240px">${v4Meter(st.used, "thin "+(st.used>100?"bad":""))}</div>
-          <span class="v-muted" style="font-size:12px">${st.total?st.used+"% of "+fmtRs(st.total):"No budget"}</span></div></div>
-      <div class="v-row-end">${st.pending?`<span class="v-badge warn">${st.pending} pending</span>`:""}${vi("chevr","sm")}</div>
+          <span class="v-muted" style="font-size:12px;white-space:nowrap">${st.total?st.used+"% of "+fmtRs(st.total):"No budget"}</span></div></div>
+      <div class="v-row-end">${st.pending?`<span class="v-badge warn">${st.pending}</span>`:""}${vi("chevr","sm")}</div>
     </div>`).join("")}</div>`;
 }
 
