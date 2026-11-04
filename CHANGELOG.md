@@ -1,5 +1,11 @@
 # Changelog
 
+## V74.7 — 2026-11-04
+### Fixed
+- 9 am reminder sign-up now saves and checks the phone's record with a direct
+  HTTPS request to the database. The database library could show the record
+  as saved from its local copy while the server never got it.
+
 ## V74.6 — 2026-11-04
 ### Fixed
 - 9 am reminder sign-up reads its record back from the server before showing

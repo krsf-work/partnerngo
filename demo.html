@@ -4181,12 +4181,14 @@ async function v4PushRegister(){
     try{ token = await firebase.messaging().getToken({ vapidKey:v4Vapid(), serviceWorkerRegistration:reg }); }
     catch(e){ return fail("Couldn't register with Google: "+((e&&e.code)||"")+" "+((e&&e.message)||"").slice(0,140)); }
     if(!token) return fail("Google returned no token.");
-    try{ await fb.db.ref("push/"+_authUid+"/"+v4Hash(token)).set({ token, at:new Date().toISOString() }); }
-    catch(e){ return fail("Couldn't save to Sahkar: "+((e&&e.code)||(e&&e.message)||"permission denied")); }
-    try{
-      const back = await sahkarTimeout(fb.db.ref("push/"+_authUid+"/"+v4Hash(token)).once("value"), 10000);
-      if(!back.exists()) return fail("Saved, but the server doesn't have it. Uid ends "+String(_authUid).slice(-4)+".");
-    }catch(e){ return fail("Couldn't confirm with the server: "+((e&&e.code)||(e&&e.message)||e)); }
+    /* straight to the server over HTTPS: the database library can report a
+       write as saved from its local copy before the server has it */
+    const path = "push/"+_authUid+"/"+v4Hash(token);
+    const put = await v4Rest("PUT", path, { token, at:new Date().toISOString() });
+    if(!put.ok) return fail("Couldn't save to Sahkar: "+put.why);
+    const back = await v4Rest("GET", path);
+    if(!back.ok) return fail("Couldn't confirm with the server: "+back.why);
+    if(!back.data || back.data.token!==token) return fail("Saved, but the server doesn't have it. Uid ends "+String(_authUid).slice(-4)+".");
     V4.pushErr = "";
     try{ localStorage.setItem("sahkar_push_ok:"+ME.id, TODAY_ISO); localStorage.removeItem("sahkar_push_err:"+ME.id); }catch(e){}
     return true;
@@ -4213,12 +4215,27 @@ async function v4PushRetry(){
   v4CloseSheet(); setTimeout(()=>v4OpenNotifs(), 300);
 }
 
+/* one request to the database over HTTPS, signed with this login */
+async function v4Rest(method, path, body, query){
+  try{
+    const u = fb.auth && fb.auth.currentUser;
+    if(!u) return { ok:false, why:"not signed in to the server" };
+    const idt = await u.getIdToken();
+    const base = String((window.FIREBASE_CONFIG||{}).databaseURL||"").replace(/[/]+$/,"");
+    const res = await sahkarTimeout(fetch(base+"/"+path+".json?auth="+encodeURIComponent(idt)+(query?"&"+query:""), {
+      method, headers:{ "Content-Type":"application/json" }, body: body ? JSON.stringify(body) : undefined, cache:"no-store" }), 12000);
+    let data = null; try{ data = await res.json(); }catch(e){}
+    if(!res.ok) return { ok:false, why:"HTTP "+res.status+" "+((data&&data.error)||"") };
+    return { ok:true, data };
+  }catch(e){ return { ok:false, why:(e&&e.code)||(e&&e.message)||String(e) }; }
+}
 async function v4PushCheck(){
   const out = el("v4PushChk"); if(!out) return;
   try{
     if(!_authUid || !fb || !fb.db){ out.textContent = "Server check: not signed in to the server."; return; }
-    const snap = await sahkarTimeout(fb.db.ref("push/"+_authUid).once("value"), 10000);
-    const n = snap.exists() ? snap.numChildren() : 0;
+    const r = await v4Rest("GET", "push/"+_authUid, null, "shallow=true");
+    if(!r.ok){ out.textContent = "Server check failed: " + r.why; return; }
+    const n = r.data ? Object.keys(r.data).length : 0;
     if(n){ out.textContent = "Server check: " + n + " phone" + (n>1?"s":"") + " registered ✓"; return; }
     out.textContent = "Server check: this phone is NOT registered. Tap Re-check.";
     try{ localStorage.removeItem("sahkar_push_ok:"+ME.id); }catch(e){}
@@ -4322,7 +4339,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V74.6</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V74.7</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
