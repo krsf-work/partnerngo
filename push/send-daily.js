@@ -47,7 +47,7 @@ function call(fn, ...args) {
   for (let i = 0; i < 60; i++) {
     try { return ctx[fn](...args); }
     catch (e) {
-      const m = e instanceof Error && /^(\w+) is not defined$/.exec(e.message || '');
+      const m = e && e.name === 'ReferenceError' && /^(\w+) is not defined$/.exec(e.message || '');
       if (!m || !need(m[1])) throw e;
     }
   }
