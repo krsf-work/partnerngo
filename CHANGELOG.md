@@ -1,5 +1,18 @@
 # Changelog
 
+## V74.3 — 2026-11-04
+### Added
+- 9 am deadline reminder on phones, even when Sahkar is closed. "Turn on"
+  registers the phone with Firebase Cloud Messaging (token under
+  push/{auth uid}); a GitHub Actions job (.github/workflows/daily-reminders.yml,
+  push/send-daily.js) works out each person's deadlines with the app's own
+  functions and sends one notification: e.g. "3 overdue · 2 due today".
+- Service worker shows the push and sets the app-icon badge.
+- Database rule for push/{uid}: only that team login can write its tokens.
+
+### Changed
+- The on-open reminder no longer fires when the 9 am push is set up.
+
 ## V74.2 — 2026-11-04
 ### Added
 - Home: "Done today" list. Items you tick stay visible there, ticked and

@@ -1,6 +1,6 @@
 /* Sahkar service worker — network-first so the app is always fresh when online,
    and still opens (from cache) when offline. Bump CACHE on each release. */
-const CACHE = 'sahkar-v74-4';
+const CACHE = 'sahkar-v74-5';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -37,6 +37,19 @@ self.addEventListener('notificationclick', e => {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const c of list) { if ('focus' in c) return c.focus(); }
       return self.clients.openWindow ? self.clients.openWindow(target) : null;
+    })
+  );
+});
+
+/* V74.3: the 9 am deadline reminder, sent by .github/workflows/daily-reminders.yml */
+self.addEventListener('push', e => {
+  let d = {};
+  try { const j = e.data ? e.data.json() : {}; d = j.data || j.notification || j || {}; } catch (_) {}
+  const opts = { body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png',
+                 tag: d.tag || 'sahkar-daily', renotify: true, data: { url: d.url || './' } };
+  e.waitUntil(
+    self.registration.showNotification(d.title || 'Sahkar', opts).then(() => {
+      if (d.count && self.navigator && self.navigator.setAppBadge) return self.navigator.setAppBadge(+d.count).catch(() => {});
     })
   );
 });

@@ -1,0 +1,37 @@
+name: Daily reminders
+
+# 9:00 am India time (03:30 UTC). GitHub may start it a few minutes late.
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only count, send nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-reminders
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install firebase-admin
+        working-directory: push
+        run: npm install --no-save --no-audit --no-fund firebase-admin@12.7.0
+      - name: Send reminders
+        run: node push/send-daily.js
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}

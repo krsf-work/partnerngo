@@ -2,14 +2,12 @@
   "rules": {
     ".read": false,
     ".write": false,
-
     "tracker": {
-      ".read":  "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
+      ".read": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
       ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true"
     },
-
     "ngoData": {
-      ".read":  "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
+      ".read": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
       ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
       "$ngoId": {
         ".read": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId",
@@ -51,19 +49,26 @@
         }
       }
     },
-
     "roles": {
-      ".read":  "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'PM'",
+      ".read": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'PM'",
       ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'PM'",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid"
       }
     },
-
     "logins": {
       ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'PM'",
       "$username": {
         ".read": true
+      }
+    },
+    "push": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && root.child('roles').child(auth.uid).child('team').val() === true",
+        "$key": {
+          ".validate": "newData.hasChildren(['token','at']) && newData.child('token').isString() && newData.child('token').val().length <= 600 && newData.child('at').isString() && newData.child('at').val().length <= 40"
+        }
       }
     }
   }

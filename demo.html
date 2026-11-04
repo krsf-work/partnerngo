@@ -4171,6 +4171,71 @@ function v4DoneItem(x){
     open:`v4OpenItem('${x.kind}','${v4Arg(x.id)}')`,
     meta:`<span>Done today</span><span>${esc(x.sub)}</span><span>${k.label}</span>` });
 }
+function v4Vapid(){ return "BBoyQn9rwqVp_glB77mDVeg7zw0UmtX_Nkd0Y7PTuC5cS0BFLI36LmBZp9XQtoIzKCNPq6S-8HPa6MUVkSCFzIQ"; }
+function v4Hash(s){ let h = 5381; for(let i=0;i<s.length;i++) h = ((h<<5)+h+s.charCodeAt(i))>>>0; return "t"+h.toString(36)+s.length.toString(36); }
+/* register this phone/browser for the 9 am reminder; the token is stored
+   under push/{auth uid}, which only that login can write */
+async function v4PushRegister(){
+  try{
+    if(!ME || !v4IsTeam() || !_authUid || !fb || !fb.db) return false;
+    if(typeof firebase==="undefined" || !firebase.messaging) return false;
+    if(!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+    if(!("Notification" in window) || Notification.permission!=="granted") return false;
+    if(firebase.messaging.isSupported && !(await Promise.resolve(firebase.messaging.isSupported()))) return false;
+    const reg = await navigator.serviceWorker.ready;
+    const token = await firebase.messaging().getToken({ vapidKey:v4Vapid(), serviceWorkerRegistration:reg });
+    if(!token) return false;
+    await fb.db.ref("push/"+_authUid+"/"+v4Hash(token)).set({ token, at:new Date().toISOString() });
+    try{ localStorage.setItem("sahkar_push_ok:"+ME.id, TODAY_ISO); }catch(e){}
+    return true;
+  }catch(e){ console.warn("push", e); return false; }
+}
+function v4Hash(s){ let h = 5381; for(let i=0;i<s.length;i++) h = ((h<<5)+h+s.charCodeAt(i))>>>0; return "t"+h.toString(36)+s.length.toString(36); }
+/* register this phone/browser for the 9 am reminder; the token is stored
+   under push/{auth uid}, which only that login can write */
+async function v4PushRegister(){
+  try{
+    if(!ME || !v4IsTeam() || !_authUid || !fb || !fb.db) return false;
+    if(typeof firebase==="undefined" || !firebase.messaging) return false;
+    if(!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+    if(!("Notification" in window) || Notification.permission!=="granted") return false;
+    if(firebase.messaging.isSupported && !(await Promise.resolve(firebase.messaging.isSupported()))) return false;
+    const reg = await navigator.serviceWorker.ready;
+    const token = await firebase.messaging().getToken({ vapidKey:v4Vapid(), serviceWorkerRegistration:reg });
+    if(!token) return false;
+    await fb.db.ref("push/"+_authUid+"/"+v4Hash(token)).set({ token, at:new Date().toISOString() });
+    try{ localStorage.setItem("sahkar_push_ok:"+ME.id, TODAY_ISO); }catch(e){}
+    return true;
+  }catch(e){ console.warn("push", e); return false; }
+}
+async function v4PushRegister(){
+  try{
+    if(!ME || !v4IsTeam() || !_authUid || !fb || !fb.db) return false;
+    if(typeof firebase==="undefined" || !firebase.messaging) return false;
+    if(!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+    if(!("Notification" in window) || Notification.permission!=="granted") return false;
+    if(firebase.messaging.isSupported && !(await Promise.resolve(firebase.messaging.isSupported()))) return false;
+    const reg = await navigator.serviceWorker.ready;
+    const token = await firebase.messaging().getToken({ vapidKey:v4Vapid(), serviceWorkerRegistration:reg });
+    if(!token) return false;
+    await fb.db.ref("push/"+_authUid+"/"+v4Hash(token)).set({ token, at:new Date().toISOString() });
+    try{ localStorage.setItem("sahkar_push_ok:"+ME.id, TODAY_ISO); }catch(e){}
+    return true;
+  }catch(e){ console.warn("push", e); return false; }
+}
+function v4PushOn(){ try{ return !!localStorage.getItem("sahkar_push_ok:"+ME.id); }catch(e){ return false; } }
+async function v4EnableReminders(){
+  if(!("Notification" in window)){ toast("This browser can't show reminders"); return; }
+  let p = "denied";
+  try{ p = await Notification.requestPermission(); }catch(e){}
+  if(p==="granted"){
+    const ok = await v4PushRegister();
+    toast(ok ? "Reminders on · every morning at 9" : "Reminders on");
+    try{ localStorage.removeItem(V4_NOTIF_KEY+ME.id); }catch(e){}
+    if(!ok) v4DailyReminder(true);
+  } else toast("Reminders not allowed");
+  v4CloseSheet(); render();
+}
 function pageV4Home(){
   V4.homeAll = V4.homeAll || {};
   const ngos = v4MyNgos();
@@ -4250,7 +4315,7 @@ function v4OpenNotifs(focus){
   let perm = "";
   if("Notification" in window){
     perm = Notification.permission==="granted"
-      ? `<div class="v-remind" style="margin:0 0 16px;background:var(--v-success-subtle)">${vi("check")}<div><b>Reminders are on</b>One summary a day when you open Sahkar.</div>
+      ? `<div class="v-remind" style="margin:0 0 16px;background:var(--v-success-subtle)">${vi("check")}<div><b>Reminders are on</b>${v4PushOn() ? "Every morning at 9, even when Sahkar is closed." : "One summary a day when you open Sahkar."}</div>
            <button class="v-btn sm" onclick="v4DailyReminder(true)">Test</button></div>`
       : Notification.permission==="default"
       ? `<div class="v-remind" style="margin:0 0 16px">${vi("bell")}<div><b>Turn on reminders</b>A daily summary of what's due.</div>
@@ -4289,9 +4354,10 @@ async function v4EnableReminders(){
   let p = "denied";
   try{ p = await Notification.requestPermission(); }catch(e){}
   if(p==="granted"){
-    toast("Reminders on");
+    const ok = await v4PushRegister();
+    toast(ok ? "Reminders on · every morning at 9" : "Reminders on");
     try{ localStorage.removeItem(V4_NOTIF_KEY+ME.id); }catch(e){}
-    v4DailyReminder(true);
+    if(!ok) v4DailyReminder(true);
   } else toast("Reminders not allowed");
   v4CloseSheet(); render();
 }
@@ -4302,6 +4368,9 @@ async function v4DailyReminder(force){
     const urgent = c.late + c.today;
     if(navigator.setAppBadge){ urgent ? navigator.setAppBadge(urgent) : (navigator.clearAppBadge && navigator.clearAppBadge()); }
     if(!("Notification" in window) || Notification.permission!=="granted") return;
+    let pushDay = null; try{ pushDay = localStorage.getItem("sahkar_push_ok:"+ME.id); }catch(e){}
+    if(pushDay!==TODAY_ISO) v4PushRegister();
+    if(pushDay && !force) return;   /* the 9 am push covers it */
     const key = V4_NOTIF_KEY + ME.id;
     let last = null; try{ last = localStorage.getItem(key); }catch(e){}
     const n = c.late + c.today + c.week;
