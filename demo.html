@@ -1772,6 +1772,158 @@ button.v-obj-h{width:100%;border:0;background:transparent;text-align:left;font:i
 .v-obj-n .i{width:14px;height:14px;stroke-width:3}
 .v-hint{font-size:12.5px;color:var(--v-n500);margin:-4px 0 12px}
 
+/* =================================================================
+   V75 · LIVING SKIN
+   Colour carries meaning (red overdue, amber today, blue this week,
+   green done), soft layered cards, one day bar instead of stat boxes,
+   and a tick that feels good.
+   ================================================================= */
+:root{
+  --v-bg:#f3f2f8; --paper:#f3f2f8;
+  --v-line:#ebe9f2;
+  --c-late:#e5484d; --c-late-s:#fff0f0; --c-today:#f59e0b; --c-today-s:#fff6e5;
+  --c-week:#3b82f6; --c-week-s:#ebf3ff; --c-done:#12a150; --c-done-s:#e6f7ee; --c-later:#a1a6b8;
+  --e-card:0 1px 1px rgba(30,22,70,.03),0 2px 4px rgba(30,22,70,.03),0 10px 28px -6px rgba(30,22,70,.08);
+  --e-float:0 2px 6px rgba(30,22,70,.06),0 18px 40px -8px rgba(30,22,70,.22);
+  --r-card:22px;
+}
+body,.main{background:var(--v-bg)}
+body{-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01","ss03"}
+
+/* soft aurora behind the top of every page */
+.content{position:relative;isolation:isolate}
+.content::before{content:"";position:absolute;left:0;right:0;top:-120px;height:420px;z-index:-1;pointer-events:none;
+  background:radial-gradient(60% 55% at 12% 30%,rgba(124,92,240,.16),transparent 70%),
+             radial-gradient(45% 50% at 92% 10%,rgba(255,149,92,.16),transparent 70%),
+             radial-gradient(50% 50% at 60% 70%,rgba(59,130,246,.08),transparent 70%)}
+.topbar.v-appbar{background:color-mix(in srgb,var(--v-bg) 72%,transparent);backdrop-filter:saturate(1.8) blur(18px);-webkit-backdrop-filter:saturate(1.8) blur(18px);border-bottom:1px solid transparent;transition:border-color .2s,background .2s}
+.topbar.v-appbar.scrolled{border-bottom-color:var(--v-line)}
+
+/* ---------- Home hero ---------- */
+.v5-hero{margin:6px 0 22px}
+body.v5-anim .v5-hero{animation:v5-up .5s var(--ease-out) both}
+.v5-eyebrow{font-size:12px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--v-n500)}
+.v5-hero h1{font-size:31px;line-height:1.08;font-weight:800;letter-spacing:-.035em;color:var(--v-n900);margin:8px 0 18px}
+.v5-hero h1 span{background:linear-gradient(100deg,#5b3fc0 10%,#a35bf0 55%,#f0715a 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.v5-bar{display:flex;gap:4px;height:12px;border-radius:99px;overflow:hidden}
+.v5-bar i{display:block;min-width:12px;border-radius:99px;transform-origin:left;transition:flex .5s var(--ease-out)}
+body.v5-anim .v5-bar i{animation:v5-grow .8s var(--ease-out) both}
+body.v5-anim .v5-bar i:nth-child(2){animation-delay:.08s}.v5-bar i:nth-child(3){animation-delay:.16s}.v5-bar i:nth-child(4){animation-delay:.24s}
+.v5-bar .b-late{background:linear-gradient(90deg,#f0625f,var(--c-late))}
+.v5-bar .b-today{background:linear-gradient(90deg,#fbbf24,var(--c-today))}
+.v5-bar .b-week{background:linear-gradient(90deg,#60a5fa,var(--c-week))}
+.v5-bar .b-done{background:linear-gradient(90deg,#34d399,var(--c-done))}
+.v5-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:13px;color:var(--v-n600)}
+.v5-legend span{display:inline-flex;align-items:center;gap:6px}
+.v5-legend span::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+.v5-legend b{font-weight:750;color:var(--v-n900);font-variant-numeric:tabular-nums}
+.v5-legend .l-late{color:var(--c-late)}.v5-legend .l-today{color:#b26b00}.v5-legend .l-week{color:#1d5fd1}.v5-legend .l-done{color:#0b7a3b}
+.v5-legend .l-late b{color:var(--c-late)}
+.v5-day.clear{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:16px;background:var(--c-done-s);color:#0b7a3b;font-weight:600;font-size:14px}
+
+/* filter: a soft pill */
+.v-filter{height:46px;border-radius:16px;border:0;background:var(--v-surface);box-shadow:var(--e-card);padding:0 16px;margin-bottom:20px}
+.v-filter select{font-size:15px}
+
+/* ---------- groups as soft cards ---------- */
+.v-grp{background:var(--v-surface);border-radius:var(--r-card);box-shadow:var(--e-card);padding:14px 0 4px;margin-bottom:16px}
+body.v5-anim .v-grp{animation:v5-up .5s var(--ease-out) both}
+body.v5-anim .v-grp:nth-of-type(2){animation-delay:.05s}body.v5-anim .v-grp:nth-of-type(3){animation-delay:.1s}body.v5-anim .v-grp:nth-of-type(4){animation-delay:.15s}
+.v-grp-h{margin:0 16px 4px;font-size:13.5px;font-weight:750;color:var(--v-n800);letter-spacing:-.005em;gap:10px}
+.v-grp-h span{margin-left:auto;min-width:24px;height:22px;padding:0 8px;border-radius:99px;background:var(--v-n100);color:var(--v-n600);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.v5-gi{width:26px;height:26px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-style:normal;background:var(--v-n100);color:var(--v-n600)}
+.v5-gi .i{width:15px;height:15px;stroke-width:2.2}
+.v-grp.g-late .v-grp-h{color:var(--c-late)} .v-grp.g-late .v5-gi{background:var(--c-late-s);color:var(--c-late)} .v-grp.g-late .v-grp-h span{background:var(--c-late-s);color:var(--c-late)}
+.v-grp.g-today .v5-gi{background:var(--c-today-s);color:var(--c-today)} .v-grp.g-today .v-grp-h span{background:var(--c-today-s);color:#b26b00}
+.v-grp.g-week .v5-gi{background:var(--c-week-s);color:var(--c-week)} .v-grp.g-week .v-grp-h span{background:var(--c-week-s);color:#1d5fd1}
+.v-grp.g-donetoday{background:linear-gradient(180deg,#f2fbf6,var(--v-surface) 60%)}
+.v-grp.g-donetoday .v-grp-h{color:#0b7a3b} .v-grp.g-donetoday .v5-gi{background:var(--c-done);color:#fff} .v-grp.g-donetoday .v-grp-h span{background:var(--c-done-s);color:#0b7a3b}
+.v-grp .v-items{border-top:0}
+.v-grp .v-item{padding:13px 16px;border-bottom:0;position:relative}
+.v-grp .v-item + .v-item::after,.v-obj .v-item + .v-item::after{content:"";position:absolute;top:0;left:56px;right:16px;height:1px;background:var(--v-line)}
+.v-grp .v-more{margin:0 16px 8px;padding:8px 0}
+.v-calm{background:var(--v-surface);border-radius:var(--r-card);box-shadow:var(--e-card);padding:18px}
+
+/* ---------- rows ---------- */
+.v-item{gap:14px}
+.v-item.tap:active{background:color-mix(in srgb,var(--v-primary) 5%,transparent)}
+.v-item-t{font-size:15.5px;font-weight:550;letter-spacing:-.01em;color:var(--v-n900)}
+.v-item-t span{background:linear-gradient(currentColor,currentColor) 0 58%/0 1.5px no-repeat;transition:background-size .35s var(--ease-out),color .3s}
+.v-item.done .v-item-t{text-decoration:none;color:var(--v-n400)}
+.v-item.done .v-item-t span{background-size:100% 1.5px}
+.v-item-s{gap:6px 10px;margin-top:6px}
+.v-due{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:99px;font-size:12px;font-weight:700;background:var(--v-n100);color:var(--v-n600)}
+.v-due.late{background:var(--c-late-s);color:var(--c-late)}
+.v-due.today{background:var(--c-today-s);color:#b26b00}
+.v-due.week{background:var(--c-week-s);color:#1d5fd1}
+.v-due.later{background:var(--v-n100);color:var(--v-n600)}
+.v5-ngo{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:hsl(var(--h) 55% 32%)}
+.v5-ngo::before{content:"";width:8px;height:8px;border-radius:3px;background:hsl(var(--h) 72% 50%);flex:none}
+.v5-me{display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--v-primary)}
+.v5-kind{color:var(--v-n400);display:inline-flex;align-items:center}
+.v5-kind .i{width:15px;height:15px}
+
+/* the tick: ring tinted by urgency, pops and draws on done */
+.v-tick{width:26px;height:26px;margin-top:-1px;border-width:2px;border-color:#c9cdd8;transition:border-color .2s,background .2s,transform .2s var(--ease-out)}
+.v-item.u-late .v-tick:not(.on){border-color:color-mix(in srgb,var(--c-late) 65%,#fff)}
+.v-item.u-today .v-tick:not(.on){border-color:color-mix(in srgb,var(--c-today) 70%,#fff)}
+.v-item.u-week .v-tick:not(.on){border-color:color-mix(in srgb,var(--c-week) 55%,#fff)}
+.v-item.tap:active .v-tick{transform:scale(.88)}
+.v-tick.on{background:var(--c-done);border-color:var(--c-done);box-shadow:0 4px 12px -2px rgba(18,161,80,.45)}
+.v-tick .i path,.v-tick .i polyline{stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset .35s var(--ease-out) .05s}
+.v-tick.on .i path,.v-tick.on .i polyline{stroke-dashoffset:0}
+.v-item.ticking .v-tick::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--c-done);animation:v5-ripple .6s var(--ease-out) forwards}
+.v-item.leave{transition:height .3s var(--ease-out),opacity .25s,padding .3s var(--ease-out),transform .3s var(--ease-out);height:0!important;opacity:0;padding-top:0!important;padding-bottom:0!important;transform:translateX(24px);overflow:hidden}
+.v-item-go{color:#c3c7d2}
+
+/* ---------- objectives ---------- */
+.v-obj{border:0;border-radius:var(--r-card);box-shadow:var(--e-card);overflow:hidden}
+.v-obj .v-item{border-top:0;padding:13px 16px;position:relative}
+.v-obj-b{border-top:1px solid var(--v-line);background:linear-gradient(180deg,#fbfaff,var(--v-surface) 40px)}
+button.v-obj-h{padding:16px;gap:14px}
+.v-obj-t{font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--v-n900)}
+.v-obj-p{font-size:12.5px;font-weight:700;color:var(--v-n500);font-variant-numeric:tabular-nums}
+.v5-ring{--p:0;width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--v-primary) calc(var(--p)*1%),var(--v-n200) 0);transition:background .4s}
+.v5-ring b{width:26px;height:26px;border-radius:50%;background:var(--v-surface);display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--v-n800)}
+.v5-ring.ok{background:var(--c-done)} .v5-ring.ok b{background:var(--c-done);color:#fff}
+.v5-ring.ok b .i{stroke-width:3}
+.v-sumline{background:var(--v-surface);border-radius:var(--r-card);box-shadow:var(--e-card);padding:16px 18px;margin-bottom:16px}
+.v-sumline b{font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--v-n900)}
+.v-hint{color:var(--v-n500)}
+
+/* chips and tabs */
+.v-chip{border-radius:99px;height:36px;padding:0 16px;font-weight:650;border:0;background:var(--v-surface);box-shadow:0 1px 2px rgba(30,22,70,.06);color:var(--v-n700)}
+.v-chip.on{background:var(--v-n900);color:#fff;box-shadow:0 6px 14px -4px rgba(18,23,38,.4)}
+.v-seg{border-radius:16px;padding:4px;background:color-mix(in srgb,var(--v-n200) 70%,transparent)}
+.v-seg button{border-radius:12px}
+.v-seg button.on{box-shadow:0 2px 8px -2px rgba(30,22,70,.18)}
+
+/* cards and lists elsewhere pick up the same depth */
+.v-card,.v-list{border:0;border-radius:var(--r-card);box-shadow:var(--e-card)}
+
+/* ---------- floating tab bar ---------- */
+@media (max-width:767px){
+  .content{padding-bottom:calc(var(--tabbar-h) + var(--safe-b) + 44px)}
+  .v-tabbar{left:12px;right:12px;bottom:calc(10px + var(--safe-b));height:var(--tabbar-h);padding:6px;border-radius:24px;border:1px solid rgba(255,255,255,.7);
+    background:color-mix(in srgb,#fff 80%,transparent);box-shadow:var(--e-float)}
+  .v-tab.on{color:var(--v-primary-ink)}
+  .v-tab.on::before{top:5px;width:52px;height:32px;border-radius:12px;background:linear-gradient(135deg,#efeafd,#f6e9ff)}
+  .v-snack{bottom:calc(var(--tabbar-h) + var(--safe-b) + 26px)}
+  .toast{bottom:calc(var(--tabbar-h) + var(--safe-b) + 26px)!important}
+}
+.v-snack{border-radius:16px;padding:10px 10px 10px 18px;background:#17142b;box-shadow:var(--e-float)}
+
+/* sheets */
+.v-sheet{border-radius:28px 28px 0 0}
+.v-sheet.center{border-radius:24px}
+.v-sheet-h h3{font-size:19px;font-weight:800;letter-spacing:-.025em}
+
+@keyframes v5-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes v5-grow{from{transform:scaleX(0)}to{transform:none}}
+@keyframes v5-ripple{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.9)}}
+@media (prefers-reduced-motion:reduce){.v5-hero,.v-grp,.v5-bar i{animation:none}.v-item.leave{transition:none}}
+
 </style>
 </head>
 <body>
@@ -3717,6 +3869,8 @@ const V4_IC = {
   sparkle:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/>',
   users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
   ext:'<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  flame:'<path d="M12 22c4 0 7-2.7 7-6.8 0-3.2-2-5.6-3.6-7.3-.4 1.8-1.4 3-2.6 3.6.3-3.3-1.2-6.4-4.3-8.5.2 3.1-1.3 5-2.8 6.8C4.6 11.1 5 12.6 5 15.2 5 19.3 8 22 12 22z"/>',
   dot:'<circle cx="12" cy="12" r="3"/>'
 };
 function vi(n, cls){ return `<svg class="i ${cls||""}" viewBox="0 0 24 24" aria-hidden="true">${V4_IC[n]||V4_IC.dot}</svg>`; }
@@ -4075,10 +4229,10 @@ function v4TickBtn(kind, id, done, can){
    details (status, note). Without edit rights the row just opens details. */
 function v4ItemRow(o){
   const tap = o.can ? `v4RowTick(event,this,'${o.kind}','${v4Arg(o.id)}')` : (o.open || "");
-  return `<div class="v-item ${o.done?"done":""} ${tap?"tap":""}" ${tap?`onclick="${tap}"`:""}>
+  return `<div class="v-item ${o.done?"done":""} ${tap?"tap":""} ${o.urg?"u-"+o.urg:""}" ${tap?`onclick="${tap}"`:""}>
     ${v4TickBtn(o.kind, o.id, o.done, o.can)}
     <div class="v-item-main">
-      <div class="v-item-t">${esc(o.title)}</div>
+      <div class="v-item-t"><span>${esc(o.title)}</span></div>
       ${o.meta ? `<div class="v-item-s">${o.meta}</div>` : ""}
       ${o.extra || ""}
     </div>
@@ -4093,10 +4247,22 @@ function v4RowTick(ev, row, kind, id){
 }
 function v4HomeItem(x){
   const k = V4_KIND[x.kind];
-  return v4ItemRow({ kind:x.kind, id:x.id, done:false, can:v4CanComplete(x), title:x.title,
+  return v4ItemRow({ kind:x.kind, id:x.id, done:false, can:v4CanComplete(x), title:x.title, urg:x.bucket,
     open:`v4OpenItem('${x.kind}','${v4Arg(x.id)}')`,
-    meta:`<span class="v-due ${v4DueCls(x.due)}">${v4DueLabel(x.due)}</span><span>${esc(x.sub)}</span><span>${k.label}</span>` });
+    meta:`<span class="v-due ${v4DueCls(x.due)}">${v4DueLabel(x.due)}</span>${x.ngoId ? v4NgoTag(x.ngoId, x.sub) : `<span class="v5-me">${vi(k.ic,"xs")}${esc(x.sub)}</span>`}${v5KindIc(x.kind)}` });
 }
+/* each NGO gets its own steady colour, so rows are easy to scan */
+const V5_NGO_HUES = [172, 24, 214, 330, 140, 265, 42, 192, 0, 290];
+function v4NgoHue(id){
+  /* NGOs in list order get clearly different colours; unknown ids fall back to a hash */
+  const i = (DB && DB.ngos ? DB.ngos.findIndex(n=>n && n.id===id) : -1);
+  if(i>=0) return V5_NGO_HUES[i % V5_NGO_HUES.length];
+  let h = 0; String(id||"").split("").forEach(c=>{ h = (h*31 + c.charCodeAt(0)) % 997; }); return V5_NGO_HUES[h % V5_NGO_HUES.length];
+}
+function v5KindIc(kind){ const kr = kind==="mykr"||kind==="ngokr";
+  return `<span class="v5-kind" title="${kr?"Key result":"Action"}" aria-label="${kr?"Key result":"Action"}">${vi(kr?"target":"checksq","xs")}</span>`; }
+function v4NgoTag(id, name){ return `<span class="v5-ngo" style="--h:${v4NgoHue(id)}">${esc(name)}</span>`; }
+const V5_KIND_SHORT = { mykr:"My key result", myact:"My action", task:"Action", ngokr:"Key result" };
 function v4FindItem(kind, id){
   const src = kind==="mykr"||kind==="myact" ? DB.teamMbo : kind==="task" ? DB.tasks : DB.mbo;
   return (src||[]).find(x=>x && x.id===id) || null;
@@ -4122,12 +4288,14 @@ function v4Tick(btn, kind, id){
   if(was!=="Done") V4.prev[kind+id] = was;
   const row = btn.closest(".v-item");
   btn.classList.toggle("on", to==="Done"); btn.disabled = true;
-  if(row) row.classList.toggle("done", to==="Done");
-  try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){}
+  if(row){ row.classList.toggle("done", to==="Done"); if(to==="Done") row.classList.add("ticking"); }
+  try{ if(navigator.vibrate) navigator.vibrate(to==="Done" ? [8,40,14] : 10); }catch(e){}
+  const leaving = row && to==="Done" && row.closest(".v-grp:not(.g-donetoday)");
+  if(leaving) setTimeout(()=>{ row.style.height = row.offsetHeight+"px"; requestAnimationFrame(()=>row.classList.add("leave")); }, 420);
   setTimeout(()=>{
     v4ApplyStatus(kind, id, to);
     v4Snack(to==="Done" ? "Marked done" : "Marked not done", ()=>v4ApplyStatus(kind, id, was));
-  }, 380);
+  }, leaving ? 720 : 420);
 }
 function v4Snack(msg, undo){
   let s = el("v4Snack");
@@ -4185,12 +4353,21 @@ function v4HomeFilter(x){
   if(f==="me") return x.kind==="mykr" || x.kind==="myact";
   return x.ngoId===f;
 }
+/* one bar for the day: how much is overdue, due today, this week, done */
+function v4DayBar(c, doneN){
+  const parts = [["late",c.late,"overdue"],["today",c.today,"today"],["week",c.week,"this week"],["done",doneN,"done today"]];
+  const total = parts.reduce((s,p)=>s+p[1],0);
+  if(!total) return `<div class="v5-day clear">${vi("check","sm")} Nothing due this week. Enjoy the calm.</div>`;
+  return `<div class="v5-bar" role="img" aria-label="${parts.filter(p=>p[1]).map(p=>p[1]+" "+p[2]).join(", ")}">
+      ${parts.filter(p=>p[1]).map(p=>`<i class="b-${p[0]}" style="flex:${p[1]}"></i>`).join("")}</div>
+    <div class="v5-legend">${parts.filter(p=>p[1]).map(p=>`<span class="l-${p[0]}"><b>${p[1]}</b> ${p[2]}</span>`).join("")}</div>`;
+}
 function v4SetHomeNgo(v){ V4.homeNgo = v; V4.homeAll = {}; render(); }
 function v4DoneItem(x){
   const k = V4_KIND[x.kind];
   return v4ItemRow({ kind:x.kind, id:x.id, done:true, can:v4CanComplete(x), title:x.title,
     open:`v4OpenItem('${x.kind}','${v4Arg(x.id)}')`,
-    meta:`<span>Done today</span><span>${esc(x.sub)}</span><span>${k.label}</span>` });
+    meta:`${x.ngoId ? v4NgoTag(x.ngoId, x.sub) : `<span>${esc(x.sub)}</span>`}${v5KindIc(x.kind)}` });
 }
 function v4Vapid(){ return "BBoyQn9rwqVp_glB77mDVeg7zw0UmtX_Nkd0Y7PTuC5cS0BFLI36LmBZp9XQtoIzKCNPq6S-8HPa6MUVkSCFzIQ"; }
 function v4Hash(s){ let h = 5381; for(let i=0;i<s.length;i++) h = ((h<<5)+h+s.charCodeAt(i))>>>0; return "t"+h.toString(36)+s.length.toString(36); }
@@ -4285,10 +4462,11 @@ function pageV4Home(){
     : f==="me" ? [["late","Overdue"],["today","Today"],["week","This week"],["later","Later"]]
     : [["late","Overdue"],["today","Today"],["week","This week"]];
   const lim = 5;
+  const GI = { late:"flame", today:"sun", week:"cal", later:"clock", old:"clock", none:"list", donetoday:"check" };
   const grp = (b, label, rows, render) => {
     if(!rows.length) return "";
     const all = !!V4.homeAll[b];
-    return `<div class="v-grp g-${b}"><div class="v-grp-h">${label}<span>${rows.length}</span></div>
+    return `<div class="v-grp g-${b}"><div class="v-grp-h"><i class="v5-gi">${vi(GI[b]||"dot","xs")}</i>${label}<span>${rows.length}</span></div>
       <div class="v-items">${rows.slice(0, all ? 999 : lim).map(render).join("")}</div>
       ${rows.length>lim ? `<button class="v-more" onclick="V4.homeAll['${b}']=${!all};render()">${all ? "Show less" : "Show "+(rows.length-lim)+" more"}</button>` : ""}
     </div>`;
@@ -4321,10 +4499,12 @@ function pageV4Home(){
       ${ngos.map(n=>`<option value="${v4Arg(n.id)}" ${f===n.id?"selected":""}>${esc(n.short||n.name)}</option>`).join("")}
     </select>${vi("chevd","sm")}</label>`;
 
+  const doneN = v4DoneToday().filter(v4HomeFilter).length;
   return `
-  <div class="v-hello">
-    <div style="flex:1;min-width:0"><h1>${v4Greeting()}, ${esc(v4First(ME.name))}</h1>
-      <p>${esc(date)}</p><p class="v-hello-line">${line}</p></div>
+  <div class="v5-hero">
+    <div class="v5-eyebrow">${esc(date)}</div>
+    <h1>${v4Greeting()}, <span>${esc(v4First(ME.name))}</span></h1>
+    ${v4DayBar(c, doneN)}
   </div>
   ${v4RemindCard()}
   ${filter}
@@ -4366,7 +4546,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V74.8</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -4478,7 +4658,7 @@ function v4ObjCard(scope, g, rowsHtml){
   const d = g.rows.filter(r=>r.status==="Done").length, all = d===g.rows.length;
   return `<div class="v-card v-obj ${open?"open":""}">
     <button class="v-obj-h" aria-expanded="${open}" onclick="v4ObjToggle(this,'${v4Arg(key)}')">
-      <div class="v-obj-n ${all?"ok":""}">${all ? vi("check","sm") : esc(g.num||"•")}</div>
+      <div class="v5-ring ${all?"ok":""}" style="--p:${g.rows.length ? Math.round(d*100/g.rows.length) : 0}"><b>${all ? vi("check","xs") : esc(g.num||"•")}</b></div>
       <div class="v-obj-t">${esc(g.text)}</div>
       <div class="v-obj-p">${d}/${g.rows.length}</div>
       <span class="v-obj-c">${vi("chevd","sm")}</span>
@@ -4536,7 +4716,7 @@ function v4KrRow(r, can){
     r.ref && /^https?:\/\//.test(r.ref) ? `<a class="v-link" href="${esc(r.ref)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${vi("link","xs")} Evidence</a>` : (r.ref ? `<span>${esc(r.ref)}</span>` : ""),
     can ? `<button class="v-link" onclick="event.stopPropagation();v4KrSheet('${v4Arg(r.id)}')">${r.comment ? "Edit note" : "Add note"}</button>` : ""
   ].filter(Boolean).join("");
-  return v4ItemRow({ kind:"ngokr", id:r.id, done, can, title:r.kr || "Key result", meta,
+  return v4ItemRow({ kind:"ngokr", id:r.id, done, can, title:r.kr || "Key result", meta, urg: !done && due ? v4DueCls(due) : "",
     open: can ? `v4KrSheet('${v4Arg(r.id)}')` : "",
     extra: r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}${r.editedBy?`<div class="v-muted" style="font-size:11px;margin-top:3px">${esc(r.editedBy)}${r.editedAt?" · "+esc(shortDate(r.editedAt)):""}</div>`:""}</div></div>` : "" });
 }
@@ -4569,7 +4749,7 @@ function v4TaskRow(t, can){
     t.priority ? `<span>${esc(t.priority)} priority</span>` : "",
     isDone && t.doneBy ? `<span>Done by ${esc(t.doneBy)}</span>` : ""
   ].filter(Boolean).join("");
-  return v4ItemRow({ kind:"task", id:t.id, done:isDone, can, title:t.title || "Action", meta,
+  return v4ItemRow({ kind:"task", id:t.id, done:isDone, can, title:t.title || "Action", meta, urg: !isDone && t.due ? v4DueCls(t.due) : "",
     open:`v4TaskSheet('${v4Arg(t.id)}')` });
 }
 function v4AddTask(ngoId){
@@ -4669,7 +4849,7 @@ function v4MyRow(r, can, first, showMonth){
     tmPriLabel(r) ? `<span>${esc(tmPriLabel(r))}</span>` : "",
     can ? `<button class="v-link" onclick="event.stopPropagation();v4MySheet('${v4Arg(r.id)}')">${r.comment ? "Edit note" : "Add note"}</button>` : ""
   ].filter(Boolean).join("");
-  return v4ItemRow({ kind: r.type==="kr" ? "mykr" : "myact", id:r.id, done:isDone, can, title:r.title || "Untitled", meta,
+  return v4ItemRow({ kind: r.type==="kr" ? "mykr" : "myact", id:r.id, done:isDone, can, title:r.title || "Untitled", meta, urg: !isDone && r.deadline ? v4DueCls(r.deadline) : "",
     open:`v4MySheet('${v4Arg(r.id)}')`,
     extra: r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}</div></div>` : "" });
 }
@@ -4915,6 +5095,23 @@ function pageV4More(){
     </div>`).join("")}</div>
   <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Sahkar · KRSF Partnership Program · V74</div>`;
 }
+
+/* V75: the entrance animation plays when a page opens, not on every
+   re-draw (ticking an item re-draws the page and must not flicker) */
+function v5Enter(){
+  try{
+    document.body.classList.add("v5-anim");
+    clearTimeout(window._v5a);
+    window._v5a = setTimeout(()=>document.body.classList.remove("v5-anim"), 900);
+  }catch(e){}
+}
+(function(){
+  if(typeof go!=="function" || go._v5) return;
+  const orig = go;
+  go = function(){ v5Enter(); return orig.apply(this, arguments); };
+  go._v5 = true;
+  v5Enter();
+})();
 
 /* =================================================================
    V72 · NGO LOGINS — a phone-first OKR + task view

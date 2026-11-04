@@ -1,5 +1,22 @@
 # Changelog
 
+## V75 — 2026-11-04
+### Changed
+- New look. Colour now means something: red for overdue, amber for today,
+  blue for this week, green for done.
+- Home opens with a "day bar" that shows overdue, today, this week and done
+  today in one line, in place of number boxes.
+- Each Home group (Overdue, Today, This week, Done today) is a soft card
+  with its own icon and count.
+- Every NGO has its own colour dot, so lines are easy to scan. Key results
+  and actions are marked with a small icon.
+- Ticking: the circle pops green, the line strikes through, and it slides
+  into Done today. The tick ring is tinted by how urgent the item is.
+- Objectives show a progress ring, which turns green when all their key
+  results are done.
+- Floating bottom bar, rounder sheets, pill month chips, deeper cards.
+- Pages animate in once when opened and don't flicker when you tick.
+
 ## V74.8 — 2026-11-04
 ### Changed
 - Tap anywhere on a key result or action line to tick it, like Google Keep.
