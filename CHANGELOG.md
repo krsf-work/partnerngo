@@ -1,5 +1,14 @@
 # Changelog
 
+## V74.8 — 2026-11-04
+### Changed
+- Tap anywhere on a key result or action line to tick it, like Google Keep.
+  No extra screen opens. A small › at the end of the line opens the status
+  and note.
+- Objectives on My OKRs and the NGO page fold. Tap an objective to show its
+  key results, then tick them in place. A fully done objective shows a green
+  tick.
+
 ## V74.7 — 2026-11-04
 ### Fixed
 - 9 am reminder sign-up now saves and checks the phone's record with a direct

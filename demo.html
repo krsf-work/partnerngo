@@ -1755,6 +1755,23 @@ body.ngo-mode .v-snack{bottom:calc(140px + var(--safe-b))}
 .v-filter .i:last-child{pointer-events:none}
 .v-grp.g-donetoday .v-grp-h{color:var(--v-success)}
 
+/* V74.8 — tap the row to tick (Google Keep style); objectives fold open */
+.v-item.tap{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.v-item.tap:active{background:var(--v-n50)}
+.v-item-main{cursor:inherit}
+.v-item-go{flex:none;align-self:center;width:36px;height:36px;margin:-6px -8px -6px 0;border:0;background:transparent;border-radius:10px;color:var(--v-n400);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.v-item-go:active{background:var(--v-n100)}
+@media (hover:hover){.v-item-go:hover{background:var(--v-n100);color:var(--v-n700)}}
+button.v-obj-h{width:100%;border:0;background:transparent;text-align:left;font:inherit;cursor:pointer;align-items:center;padding:var(--s4)}
+.v-obj-c{flex:none;color:var(--v-n400);display:flex;transition:transform .2s}
+.v-obj.open .v-obj-c{transform:rotate(180deg)}
+.v-obj-b{display:none}
+.v-obj.open .v-obj-b{display:block}
+.v-obj.open:not(:has(.v-obj-h)) .v-item:first-child{border-top:none}
+.v-obj-n.ok{background:var(--v-success);color:#fff}
+.v-obj-n .i{width:14px;height:14px;stroke-width:3}
+.v-hint{font-size:12.5px;color:var(--v-n500);margin:-4px 0 12px}
+
 </style>
 </head>
 <body>
@@ -4052,17 +4069,27 @@ function v4HideRemind(){ try{ localStorage.setItem(V4_REMIND_HIDE+ME.id, "1"); }
 
 function v4TickBtn(kind, id, done, can){
   return `<button class="v-tick ${done?"on":""}" ${can?"":"disabled"} aria-label="${done?"Mark not done":"Mark done"}"
-    onclick="event.stopPropagation();v4Tick(this,'${kind}','${v4Arg(id)}')">${vi("check")}</button>`;
+    onclick="event.stopPropagation();v4RowTick(null,this.closest('.v-item'),'${kind}','${v4Arg(id)}')">${vi("check")}</button>`;
 }
+/* Like Google Keep: tapping the row ticks it. The › at the end opens the
+   details (status, note). Without edit rights the row just opens details. */
 function v4ItemRow(o){
-  return `<div class="v-item ${o.done?"done":""}">
+  const tap = o.can ? `v4RowTick(event,this,'${o.kind}','${v4Arg(o.id)}')` : (o.open || "");
+  return `<div class="v-item ${o.done?"done":""} ${tap?"tap":""}" ${tap?`onclick="${tap}"`:""}>
     ${v4TickBtn(o.kind, o.id, o.done, o.can)}
-    <div class="v-item-main" ${o.open?`role="button" tabindex="0" onclick="${o.open}" onkeydown="if(event.key==='Enter')this.click()"`:""}>
+    <div class="v-item-main">
       <div class="v-item-t">${esc(o.title)}</div>
       ${o.meta ? `<div class="v-item-s">${o.meta}</div>` : ""}
       ${o.extra || ""}
     </div>
+    ${o.open ? `<button class="v-item-go" aria-label="Details" onclick="event.stopPropagation();${o.open}">${vi("chevr","sm")}</button>` : ""}
   </div>`;
+}
+function v4RowTick(ev, row, kind, id){
+  if(ev && ev.target && ev.target.closest("a,button:not(.v-tick),textarea,input,select")) return;
+  const btn = row.querySelector(".v-tick");
+  if(!btn || btn.disabled) return;
+  v4Tick(btn, kind, id);
 }
 function v4HomeItem(x){
   const k = V4_KIND[x.kind];
@@ -4339,7 +4366,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V74.7</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V74.8</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -4443,6 +4470,29 @@ function pageV4Ngo(id){
   ${body}
   <div class="v-only-m" style="text-align:center;margin-top:24px"><button class="v-btn ghost" onclick="go('ngo','${v4Arg(id)}')">${vi("ext","sm")} Open full record</button></div>`;
 }
+/* objective header: tap to show / hide its key results */
+function v4ObjCard(scope, g, rowsHtml){
+  if(!g.text) return `<div class="v-card v-obj open">${rowsHtml}</div>`;
+  V4.objOpen = V4.objOpen || {};
+  const key = scope+"|"+(g.num||"")+"|"+g.text, open = !!V4.objOpen[key];
+  const d = g.rows.filter(r=>r.status==="Done").length, all = d===g.rows.length;
+  return `<div class="v-card v-obj ${open?"open":""}">
+    <button class="v-obj-h" aria-expanded="${open}" onclick="v4ObjToggle(this,'${v4Arg(key)}')">
+      <div class="v-obj-n ${all?"ok":""}">${all ? vi("check","sm") : esc(g.num||"•")}</div>
+      <div class="v-obj-t">${esc(g.text)}</div>
+      <div class="v-obj-p">${d}/${g.rows.length}</div>
+      <span class="v-obj-c">${vi("chevd","sm")}</span>
+    </button>
+    <div class="v-obj-b">${rowsHtml}</div>
+  </div>`;
+}
+function v4ObjToggle(btn, key){
+  V4.objOpen = V4.objOpen || {};
+  V4.objOpen[key] = !V4.objOpen[key];
+  const card = btn.closest(".v-obj");
+  card.classList.toggle("open", V4.objOpen[key]);
+  btn.setAttribute("aria-expanded", V4.objOpen[key]);
+}
 function v4ObjGroups(rows, numKey, textKey){
   const groups = [], by = {};
   rows.forEach(r=>{
@@ -4471,12 +4521,9 @@ function v4NgoOkrTab(n, can){
         <div><b>${done} of ${rows.length}</b> key results done${rows.some(r=>r.status==="Not Done")?` · <span class="late">${rows.filter(r=>r.status==="Not Done").length} not done</span>`:""}</div>
         ${v4Meter(rows.length ? pct(done, rows.length) : 0, "thin")}
       </div>
-      <div class="v-stagger">${v4ObjGroups(rows,"objNum","objective").map(g=>`
-        <div class="v-card v-obj">
-          <div class="v-obj-h"><div class="v-obj-n">${esc(g.num||"•")}</div><div class="v-obj-t">${esc(g.text||"Objective")}</div>
-            <div class="v-obj-p">${g.rows.filter(r=>r.status==="Done").length}/${g.rows.length}</div></div>
-          ${g.rows.map(r=>v4KrRow(r, can)).join("")}
-        </div>`).join("")}</div>
+      <div class="v-hint">Tap an objective to see its key results. Tap a key result to tick it.</div>
+      <div class="v-stagger">${v4ObjGroups(rows,"objNum","objective").map(g=>
+        v4ObjCard("n:"+n.id+":"+m, { num:g.num, text:g.text||"Objective", rows:g.rows }, g.rows.map(r=>v4KrRow(r, can)).join(""))).join("")}</div>
       <div class="v-only-m" style="margin-top:4px">${add}</div>`;
   }
   return krHtml + (bets.length ? v4Sec("Milestones", bets.length) + `<div class="v-grid c2 v-stagger">${bets.map(v4BetCard).join("")}</div>` : "");
@@ -4602,12 +4649,9 @@ function pageV4MyOkr(){
     <button class="${view==="kr"?"on":""}" onclick="v4SetMyView('kr')">${vi("target","sm")} Key results <span class="n">${krs.length}</span></button>
     <button class="${view==="act"?"on":""}" onclick="v4SetMyView('act')">${vi("checksq","sm")} Action items <span class="n">${acts.length}</span></button>
   </div></div>
-  ${shown.length ? `<div class="v-stagger">${v4ObjGroups(shown,"objNum","objective").map(g=>`
-    <div class="v-card v-obj">
-      ${g.text ? `<div class="v-obj-h"><div class="v-obj-n">${esc(g.num||"•")}</div><div class="v-obj-t">${esc(g.text)}</div>
-        <div class="v-obj-p">${g.rows.filter(r=>r.status==="Done").length}/${g.rows.length}</div></div>` : ""}
-      ${g.rows.map((r,i)=>v4MyRow(r, isMe || ME.role==="PM", !g.text && i===0)).join("")}
-    </div>`).join("")}</div>`
+  ${shown.some(r=>r.objective) ? `<div class="v-hint">Tap an objective to open it. Tap a line to tick it.</div>` : ""}
+  ${shown.length ? `<div class="v-stagger">${v4ObjGroups(shown,"objNum","objective").map(g=>
+    v4ObjCard("m:"+pid+":"+m+":"+view, g, g.rows.map((r,i)=>v4MyRow(r, isMe || ME.role==="PM", !g.text && i===0)).join(""))).join("")}</div>`
     : `<div class="v-card">${v4Empty(view==="kr"?"target":"checksq", view==="kr"?"No key results this month":"No action items this month",
         view==="act" && canAdd ? "Add the things you need to get done, with a deadline." : "Pick another month above.", view==="act"?add:"")}</div>`}
   `}
