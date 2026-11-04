@@ -1,5 +1,10 @@
 # Changelog
 
+## V74.5 — 2026-11-04
+### Changed
+- Bell panel says plainly whether 9 am reminders are ON or NOT set up on this
+  phone, with the reason; shows the app version at the bottom.
+
 ## V74.4 — 2026-11-04
 ### Fixed
 - Phone sign-up for the 9 am reminder now reports why it failed. The bell

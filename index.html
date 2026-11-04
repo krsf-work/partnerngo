@@ -4291,8 +4291,11 @@ function v4OpenNotifs(focus){
   let perm = "";
   if("Notification" in window){
     perm = Notification.permission==="granted"
-      ? `<div class="v-remind" style="margin:0 0 16px;background:var(--v-success-subtle)">${vi("check")}<div><b>${v4PushOn() ? "9 am reminders are on" : "Reminders are on"}</b>${v4PushOn() ? "Every morning at 9, even when Sahkar is closed." : "Only when you open Sahkar. "+(v4PushErr() ? esc(v4PushErr()) : "")}</div>
-           ${v4PushOn() ? `<button class="v-btn sm" onclick="v4DailyReminder(true)">Test</button>` : `<button class="v-btn sm primary" onclick="v4PushRetry()">Turn on 9 am</button>`}</div>`
+      ? (v4PushOn()
+        ? `<div class="v-remind" style="margin:0 0 16px;background:var(--v-success-subtle)">${vi("check")}<div><b>9 am reminders: ON for this phone</b>Every morning at 9, even when Sahkar is closed.</div>
+           <button class="v-btn sm" onclick="v4DailyReminder(true)">Test</button></div>`
+        : `<div class="v-remind" style="margin:0 0 16px;background:var(--v-warning-subtle)">${vi("alert")}<div><b>9 am reminders: NOT set up on this phone</b>${v4PushErr() ? "Reason: "+esc(v4PushErr()) : "Tap the button to set it up."}</div>
+           <button class="v-btn sm primary" onclick="v4PushRetry()">Turn on 9 am</button></div>`)
       : Notification.permission==="default"
       ? `<div class="v-remind" style="margin:0 0 16px">${vi("bell")}<div><b>Turn on reminders</b>A daily summary of what's due.</div>
            <button class="v-btn sm primary" onclick="v4EnableReminders()">Turn on</button></div>`
@@ -4307,7 +4310,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V74.5</div>`);
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
 function v4DlRow(x){ return v4HomeItem(x); }
