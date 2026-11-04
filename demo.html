@@ -1750,6 +1750,10 @@ body.ngo-mode .v-snack{bottom:calc(140px + var(--safe-b))}
 .v-sumline .late{color:var(--v-error);font-weight:600}
 .v-sumline .v-meter{margin-top:8px}
 .v-obj-n{background:var(--v-n100);color:var(--v-n700)}
+.v-filter{position:relative;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;margin:0 0 var(--s4);border:1px solid var(--v-line);border-radius:10px;background:var(--v-surface);color:var(--v-n500)}
+.v-filter select{flex:1;min-width:0;appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;font-size:14px;font-weight:600;color:var(--v-n900);height:100%;cursor:pointer;outline:none}
+.v-filter .i:last-child{pointer-events:none}
+.v-grp.g-donetoday .v-grp-h{color:var(--v-success)}
 
 </style>
 </head>
@@ -4130,28 +4134,79 @@ function v4NavRow(ic, title, sub, onclick){
     ${vi("chevr","sm")}
   </div>`;
 }
+function v4DoneToday(){
+  const out = [];
+  if(!ME || !DB) return out;
+  (DB.teamMbo||[]).forEach(r=>{
+    if(!r || r.ownerId!==ME.id || r.status!=="Done" || r.editedAt!==TODAY_ISO) return;
+    out.push({ kind: r.type==="kr" ? "mykr" : "myact", id:r.id, title:r.title || r.objective || "Untitled", sub:monthLabel(r.month) });
+  });
+  const mine = new Set(v4MyNgos().map(n=>n.id));
+  (DB.tasks||[]).forEach(t=>{
+    if(!t || t.status!=="Done" || t.doneAt!==TODAY_ISO || !mine.has(t.ngoId)) return;
+    out.push({ kind:"task", id:t.id, title:t.title || "Action", sub:(ngoById(t.ngoId)||{}).short || "NGO", ngoId:t.ngoId });
+  });
+  (DB.mbo||[]).forEach(r=>{
+    if(!r || r.status!=="Done" || r.editedAt!==TODAY_ISO || !mine.has(r.ngoId)) return;
+    out.push({ kind:"ngokr", id:r.id, title:r.kr || "Key result", sub:(ngoById(r.ngoId)||{}).short || "NGO", ngoId:r.ngoId });
+  });
+  return out;
+}
+function v4HomeFilter(x){
+  const f = V4.homeNgo || "";
+  if(!f) return true;
+  if(f==="me") return x.kind==="mykr" || x.kind==="myact";
+  return x.ngoId===f;
+}
+function v4SetHomeNgo(v){ V4.homeNgo = v; V4.homeAll = {}; render(); }
+function v4DoneItem(x){
+  const k = V4_KIND[x.kind];
+  return v4ItemRow({ kind:x.kind, id:x.id, done:true, can:v4CanComplete(x), title:x.title,
+    open:`v4OpenItem('${x.kind}','${v4Arg(x.id)}')`,
+    meta:`<span>Done today</span><span>${esc(x.sub)}</span><span>${k.label}</span>` });
+}
+function v4DoneItem(x){
+  const k = V4_KIND[x.kind];
+  return v4ItemRow({ kind:x.kind, id:x.id, done:true, can:v4CanComplete(x), title:x.title,
+    open:`v4OpenItem('${x.kind}','${v4Arg(x.id)}')`,
+    meta:`<span>Done today</span><span>${esc(x.sub)}</span><span>${k.label}</span>` });
+}
 function pageV4Home(){
   V4.homeAll = V4.homeAll || {};
-  const list = v4Deadlines(), c = v4Count(list);
+  const ngos = v4MyNgos();
+  if(V4.homeNgo && V4.homeNgo!=="me" && !ngos.some(n=>n.id===V4.homeNgo)) V4.homeNgo = "";
+  const f = V4.homeNgo || "";
+  const list = v4Deadlines().filter(v4HomeFilter), c = v4Count(list);
   const date = new Date().toLocaleDateString("en-IN",{ weekday:"long", day:"numeric", month:"long" });
   const line = c.late || c.today
     ? [c.late ? `<b class="late">${c.late} overdue</b>` : "", c.today ? `<b>${c.today} due today</b>` : ""].filter(Boolean).join(" · ")
     : c.week ? `${c.week} due this week` : "Nothing due this week";
 
-  const groups = [["late","Overdue"],["today","Today"],["week","This week"]];
+  /* with one NGO picked, show everything open for it, including later and undated actions */
+  const groups = f && f!=="me"
+    ? [["late","Overdue"],["today","Today"],["week","This week"],["later","Later"],["old","Older, still open"]]
+    : f==="me" ? [["late","Overdue"],["today","Today"],["week","This week"],["later","Later"]]
+    : [["late","Overdue"],["today","Today"],["week","This week"]];
   const lim = 5;
-  const todo = groups.map(([b,label])=>{
-    const rows = list.filter(x=>x.bucket===b);
+  const grp = (b, label, rows, render) => {
     if(!rows.length) return "";
     const all = !!V4.homeAll[b];
     return `<div class="v-grp g-${b}"><div class="v-grp-h">${label}<span>${rows.length}</span></div>
-      <div class="v-items">${rows.slice(0, all ? 999 : lim).map(v4HomeItem).join("")}</div>
+      <div class="v-items">${rows.slice(0, all ? 999 : lim).map(render).join("")}</div>
       ${rows.length>lim ? `<button class="v-more" onclick="V4.homeAll['${b}']=${!all};render()">${all ? "Show less" : "Show "+(rows.length-lim)+" more"}</button>` : ""}
     </div>`;
-  }).join("");
-  const rest = [c.later ? c.later+" later" : "", c.old ? c.old+" older, still open" : ""].filter(Boolean).join(" · ");
+  };
+  let todo = groups.map(([b,label])=>grp(b, label, list.filter(x=>x.bucket===b), v4HomeItem)).join("");
+  if(f && f!=="me"){
+    const undated = (DB.tasks||[]).filter(t=>t && t.ngoId===f && t.status!=="Done" && !t.due)
+      .map(t=>({ kind:"task", id:t.id, title:t.title||"Action", sub:(ngoById(f)||{}).short||"NGO", ngoId:f }));
+    todo += grp("none", "No due date", undated, x=>v4ItemRow({ kind:"task", id:x.id, done:false, can:canEditNgo(f), title:x.title,
+      open:`v4TaskSheet('${v4Arg(x.id)}')`, meta:`<span>${esc(x.sub)}</span><span>NGO action</span>` }));
+  }
+  const doneToday = v4DoneToday().filter(v4HomeFilter);
+  const shownBuckets = new Set(groups.map(g=>g[0]));
+  const rest = f ? "" : [c.later ? c.later+" later" : "", c.old ? c.old+" older, still open" : ""].filter(Boolean).join(" · ");
 
-  const ngos = v4MyNgos();
   const stats = ngos.map(n=>v4NgoStats(n.id));
   const krD = stats.reduce((s,x)=>s+x.krDone,0), krT = stats.reduce((s,x)=>s+x.krTotal,0);
   const openActs = stats.reduce((s,x)=>s+x.open,0);
@@ -4162,21 +4217,30 @@ function pageV4Home(){
   const budget = stats.reduce((s,x)=>s+x.total,0), spent = stats.reduce((s,x)=>s+x.spent,0);
   const pend = stats.reduce((s,x)=>s+x.pending,0);
 
+  const filter = `<label class="v-filter">${vi("list","sm")}
+    <select onchange="v4SetHomeNgo(this.value)" aria-label="Show items for">
+      <option value="" ${!f?"selected":""}>Everything</option>
+      <option value="me" ${f==="me"?"selected":""}>My own OKRs &amp; actions</option>
+      ${ngos.map(n=>`<option value="${v4Arg(n.id)}" ${f===n.id?"selected":""}>${esc(n.short||n.name)}</option>`).join("")}
+    </select>${vi("chevd","sm")}</label>`;
+
   return `
   <div class="v-hello">
     <div style="flex:1;min-width:0"><h1>${v4Greeting()}, ${esc(v4First(ME.name))}</h1>
       <p>${esc(date)}</p><p class="v-hello-line">${line}</p></div>
   </div>
   ${v4RemindCard()}
-  ${todo || `<div class="v-calm">${vi("check")} You're all caught up this week.</div>`}
+  ${filter}
+  ${todo || `<div class="v-calm">${vi("check")} ${f ? "Nothing open here." : "You're all caught up this week."}</div>`}
   ${rest ? `<button class="v-more" style="margin-top:4px" onclick="v4OpenNotifs('later')">${esc(rest)} ${vi("chevr","sm")}</button>` : ""}
+  ${grp("donetoday", "Done today", doneToday, v4DoneItem)}
 
-  ${v4Sec("Your work")}
+  ${f ? "" : v4Sec("Your work") + `
   <div class="v-list">
     ${v4NavRow("building","My NGOs", `${ngos.length} NGO${ngos.length===1?"":"s"} · ${krT ? krD+"/"+krT+" KRs done" : "no KRs yet"} · ${openActs} open action${openActs===1?"":"s"}`, "go('myngos')")}
     ${v4NavRow("target","My OKRs", `${esc(monthLabel(mm))} · ${myDone}/${myKr.length} KRs done · ${myOpen} action${myOpen===1?"":"s"} open`, "go('myokr')")}
     ${v4NavRow("wallet","Budget &amp; debit notes", `${budget ? pct(spent,budget)+"% of "+fmtRs(budget)+" used" : "No budget yet"} · ${pend} DN${pend===1?"":"s"} pending`, "go('money')")}
-  </div>`;
+  </div>`}`;
 }
 
 /* ---------- notifications panel ---------- */
@@ -12385,7 +12449,7 @@ body.ngo-mode #demoPill{bottom:calc(96px + var(--safe-b))}
   const users = [
     { id:"pm",   name:"Asha Mehta",     role:"PM",        title:"Program Manager",            avatar:"AM", username:"asha", ngoIds:[] },
     { id:"u_ro", name:"Rohan Kulkarni", role:"Programme", title:"Partnership Lead",           avatar:"RK", username:"rohan", ngoIds:["n1","n2","n3","n4"] },
-    { id:"u_ne", name:"Neha Iyer",      role:"Programme", title:"Associate Partnership Lead", avatar:"NI", username:"neha", ngoIds:["n5","n6","n7"], reportsTo:"u_ro" },
+    { id:"u_ne", name:"Neha Iyer",      role:"Programme", title:"Partnership Lead"          , avatar:"NI", username:"neha", ngoIds:["n5","n6","n7"] },
     { id:"u_vi", name:"Vikram Rao",     role:"Programme", title:"Partnership Lead",           avatar:"VR", username:"vikram", ngoIds:["n8","n9","n10"] }
   ];
   const ngos = [
@@ -12520,8 +12584,8 @@ body.ngo-mode #demoPill{bottom:calc(96px + var(--safe-b))}
 })();
 
 const DEMO_ROLES = [
-  { id:"u_ro", label:"Partnership Lead", sub:"Rohan · 4 NGOs, manages Neha" },
-  { id:"u_ne", label:"Associate Partnership Lead", sub:"Neha · 3 NGOs" },
+  { id:"u_ro", label:"Rohan · Partnership Lead", sub:"4 NGOs" },
+  { id:"u_ne", label:"Neha · Partnership Lead", sub:"3 NGOs" },
   { id:"pm",   label:"Program Manager", sub:"Asha · every NGO" },
   { id:"ngo",  label:"Partner NGO login", sub:"Jeevan Jyoti Trust's own view" }
 ];

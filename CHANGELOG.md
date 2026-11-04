@@ -1,5 +1,16 @@
 # Changelog
 
+## V74.2 — 2026-11-04
+### Added
+- Home: "Done today" list. Items you tick stay visible there, ticked and
+  struck through; tick again to reopen.
+- Home: a filter to show one NGO's items (every open action and key result,
+  including later and undated ones) or only your own OKRs and actions.
+
+### Changed
+- Demo: Partnership Lead and Associate Partnership Lead are one role; no
+  reporting line between demo users.
+
 ## V74.1 — 2026-11-04
 Simpler screens, one-tap ticks.
 
