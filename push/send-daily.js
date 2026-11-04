@@ -62,6 +62,10 @@ const COLLECTIONS = ['users', 'ngos', 'bigBets', 'debits', 'documents', 'tasks',
   const [tracker, ngoData, roles, push] = await Promise.all(
     ['tracker', 'ngoData', 'roles', 'push'].map(p => db.ref(p).once('value').then(s => s.val() || {})));
 
+  const shallow = await db.ref('push').once('value');
+  console.log('push node: exists=' + shallow.exists() + ', logins=' + shallow.numChildren() +
+              ', tokens=' + Object.values(push).reduce((n, v) => n + Object.keys(v || {}).length, 0) +
+              ', team roles=' + Object.values(roles).filter(r => r && r.team === true).length);
   const DB = {};
   ctx.DB_PARTS.filter(p => ctx.NGO_SPLIT_PARTS.indexOf(p) < 0).forEach(p => { DB[p] = tracker[p]; });
   COLLECTIONS.forEach(p => { if (ctx.NGO_SPLIT_PARTS.indexOf(p) < 0) DB[p] = call('toArr', DB[p]); });
