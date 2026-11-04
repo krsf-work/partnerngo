@@ -63,6 +63,11 @@ const COLLECTIONS = ['users', 'ngos', 'bigBets', 'debits', 'documents', 'tasks',
     ['tracker', 'ngoData', 'roles', 'push'].map(p => db.ref(p).once('value').then(s => s.val() || {})));
 
   const shallow = await db.ref('push').once('value');
+  try {
+    const tok = (await admin.app().options.credential.getAccessToken()).access_token;
+    const r = await fetch('https://ngo-partnership-program-default-rtdb.firebaseio.com/.json?shallow=true&access_token=' + tok);
+    console.log('key project=' + sa.project_id + ', top-level folders=' + Object.keys(await r.json() || {}).sort().join(','));
+  } catch (e) { console.log('shallow check failed: ' + e.message); }
   console.log('push node: exists=' + shallow.exists() + ', logins=' + shallow.numChildren() +
               ', tokens=' + Object.values(push).reduce((n, v) => n + Object.keys(v || {}).length, 0) +
               ', team roles=' + Object.values(roles).filter(r => r && r.team === true).length);
