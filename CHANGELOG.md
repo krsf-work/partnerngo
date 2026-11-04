@@ -1,5 +1,13 @@
 # Changelog
 
+## V74.4 — 2026-11-04
+### Fixed
+- Phone sign-up for the 9 am reminder now reports why it failed. The bell
+  panel shows the reason and a "Turn on 9 am" button to retry.
+- Removed duplicate copies of a few functions left by the build script
+  (they were identical, so behaviour did not change).
+- Reminder job: loads the app helpers it needs inside its sandbox.
+
 ## V74.3 — 2026-11-04
 ### Added
 - 9 am deadline reminder on phones, even when Sahkar is closed. "Turn on"
