@@ -1,5 +1,10 @@
 # Changelog
 
+## V74.6 — 2026-11-04
+### Fixed
+- 9 am reminder sign-up reads its record back from the server before showing
+  ON; the bell panel shows a live server check of registered phones.
+
 ## V74.5 — 2026-11-04
 ### Changed
 - Bell panel says plainly whether 9 am reminders are ON or NOT set up on this

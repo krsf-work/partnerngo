@@ -4183,6 +4183,10 @@ async function v4PushRegister(){
     if(!token) return fail("Google returned no token.");
     try{ await fb.db.ref("push/"+_authUid+"/"+v4Hash(token)).set({ token, at:new Date().toISOString() }); }
     catch(e){ return fail("Couldn't save to Sahkar: "+((e&&e.code)||(e&&e.message)||"permission denied")); }
+    try{
+      const back = await sahkarTimeout(fb.db.ref("push/"+_authUid+"/"+v4Hash(token)).once("value"), 10000);
+      if(!back.exists()) return fail("Saved, but the server doesn't have it. Uid ends "+String(_authUid).slice(-4)+".");
+    }catch(e){ return fail("Couldn't confirm with the server: "+((e&&e.code)||(e&&e.message)||e)); }
     V4.pushErr = "";
     try{ localStorage.setItem("sahkar_push_ok:"+ME.id, TODAY_ISO); localStorage.removeItem("sahkar_push_err:"+ME.id); }catch(e){}
     return true;
@@ -4209,6 +4213,17 @@ async function v4PushRetry(){
   v4CloseSheet(); setTimeout(()=>v4OpenNotifs(), 300);
 }
 
+async function v4PushCheck(){
+  const out = el("v4PushChk"); if(!out) return;
+  try{
+    if(!_authUid || !fb || !fb.db){ out.textContent = "Server check: not signed in to the server."; return; }
+    const snap = await sahkarTimeout(fb.db.ref("push/"+_authUid).once("value"), 10000);
+    const n = snap.exists() ? snap.numChildren() : 0;
+    if(n){ out.textContent = "Server check: " + n + " phone" + (n>1?"s":"") + " registered ✓"; return; }
+    out.textContent = "Server check: this phone is NOT registered. Tap Re-check.";
+    try{ localStorage.removeItem("sahkar_push_ok:"+ME.id); }catch(e){}
+  }catch(e){ out.textContent = "Server check failed: " + ((e&&e.code)||(e&&e.message)||e); }
+}
 function pageV4Home(){
   V4.homeAll = V4.homeAll || {};
   const ngos = v4MyNgos();
@@ -4289,8 +4304,8 @@ function v4OpenNotifs(focus){
   if("Notification" in window){
     perm = Notification.permission==="granted"
       ? (v4PushOn()
-        ? `<div class="v-remind" style="margin:0 0 16px;background:var(--v-success-subtle)">${vi("check")}<div><b>9 am reminders: ON for this phone</b>Every morning at 9, even when Sahkar is closed.</div>
-           <button class="v-btn sm" onclick="v4DailyReminder(true)">Test</button></div>`
+        ? `<div class="v-remind" style="margin:0 0 16px;background:var(--v-success-subtle)">${vi("check")}<div><b>9 am reminders: ON for this phone</b>Every morning at 9, even when Sahkar is closed.<div id="v4PushChk" style="margin-top:4px;font-size:12px">Checking the server…</div></div>
+           <button class="v-btn sm" onclick="v4PushRetry()">Re-check</button></div>`
         : `<div class="v-remind" style="margin:0 0 16px;background:var(--v-warning-subtle)">${vi("alert")}<div><b>9 am reminders: NOT set up on this phone</b>${v4PushErr() ? "Reason: "+esc(v4PushErr()) : "Tap the button to set it up."}</div>
            <button class="v-btn sm primary" onclick="v4PushRetry()">Turn on 9 am</button></div>`)
       : Notification.permission==="default"
@@ -4307,7 +4322,8 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V74.5</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V74.6</div>`);
+  v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
 function v4DlRow(x){ return v4HomeItem(x); }
