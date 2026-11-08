@@ -1,5 +1,21 @@
 # Changelog
 
+## V77 — 2026-11-09
+### Added
+- Program Manager Overview: budget used this year (with the expected pace),
+  NGOs active/passive, debit notes pending (count and amount), KRs done,
+  overdue items, budget used by each NGO, and a summary for each
+  Partnership Lead.
+- An Add button (the round "+" on phones) for a debit note, an NGO action,
+  your own OKR action or the daily log.
+### Changed
+- One way to every page. The menu is now Today (Overview for the PM) ·
+  NGOs · Add · Me. The 11-page "Workspace" list is gone; the PM's older
+  tools are under Me → Programme tools.
+- Partnership Leads see their NGOs at the bottom of Today instead of
+  duplicate shortcuts.
+- Offline cache bumped to pulse-v77-1.
+
 ## V76.1 — 2026-11-08
 ### Changed
 - The sign-in card no longer shows the "NGO OKRs, my OKRs, budgets and
