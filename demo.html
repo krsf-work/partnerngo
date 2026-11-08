@@ -3521,6 +3521,7 @@ async function doLogout(){
   showLoginForm();
 }
 function teardownSession(){
+  if(_roleWatch){ try{ _roleWatch(); }catch(e){} _roleWatch = null; }
   _unsub.forEach(fn=>{ try{fn();}catch(e){} });
   _unsub = [];
   ME = null; DB = null; _authUid = null;
@@ -3540,7 +3541,7 @@ function showLoginForm(bootMsg, errMsg){
   const hint = el("loginHint");
   if(hint) hint.textContent = "Sign in with the username and password KRSF gave you.";
   const btn = el("loginBtn"); if(btn){ btn.disabled = false; btn.textContent = "Sign in →"; }
-  const errEl = el("loginErr"); if(errEl) errEl.textContent = errMsg || "";
+  const errEl = el("loginErr"); if(errEl) errEl.textContent = errMsg || _signOutMsg || "";
   const u = el("loginUser"); if(u && !u.value) try{ u.focus(); }catch(e){}
 }
 /* signed in to Firebase: find out who this is, load what they may see */
@@ -3584,7 +3585,9 @@ async function enterApp(user){
     catch(e){ console.error("loadDB failed", e); DB = migrateDB(cacheLoad() || skeletonData()); CLOUD_OK = false; }
     if(_authUid!==user.uid) return;
     ME = userById(role.userId);
-    if(!ME || ME.role!==role.role){
+    /* V75.3: the server's role wins over the editable user list */
+    if(ME && ME.role!==role.role){ console.warn("user list role differs from roles/; using roles/"); ME.role = role.role; }
+    if(!ME){
       ME = null; DB = null; _authUid = null;
       _unsub.forEach(fn=>{ try{fn();}catch(e){} }); _unsub = [];
       try{ await fb.auth.signOut(); }catch(e){}
@@ -3593,6 +3596,8 @@ async function enterApp(user){
     }
   }
   setConnState(CLOUD_OK);
+  _signOutMsg = "";
+  watchOwnRole(user.uid, role);
   el("login").style.display = "none";
   el("app").style.display = "block";
   bootApp();
@@ -4563,7 +4568,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75.2</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75.3</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -11430,20 +11435,23 @@ async function saveApl(editId){
       Object.assign(u, { name, phone, username, role, ngoIds, reportsTo, title, avatar:initials });
       delete u.password;
       stampEdit(u);
-      if(u.authUid){
+      const live = liveUidsFor(await liveRoles(), u);
+      if(live.indexOf(_authUid)>=0) throw loginErr("own-login");
+      if(live.length){
         const upd = {};
-        if(oldUsername!==username){
-          if(oldUsername) upd["logins/"+fbKey(oldUsername)] = null;
-          upd["logins/"+fbKey(username)] = u.loginEmail;
+        await moveUsername(u, oldUsername, username, upd);
+        if(oldRole!==role){
+          if(!role || role==="PM" || role==="NGO") throw loginErr("bad-role");
+          live.forEach(k=>{ upd["roles/"+k] = roleRecordFor(u); });
         }
-        if(oldRole!==role) upd["roles/"+u.authUid] = roleRecordFor(u);
         if(Object.keys(upd).length) await fb.db.ref().update(upd);
+        u.authUid = live[0];
         await saveDB();
         closeModal(); render();
         toast("Login updated");
       } else {
         const pw = ngoGenPassword();
-        await provisionLogin(u, pw);
+        await provisionLogin(u, pw, false);
         await saveDB(); render();
         showNewCredentials([{ who:name, username, password:pw }]);
       }
@@ -11451,7 +11459,7 @@ async function saveApl(editId){
       const rec = { id:genId("u"), role, name, phone, username, ngoIds, reportsTo, title, avatar:initials };
       stampEdit(rec);
       const pw = ngoGenPassword();
-      await provisionLogin(rec, pw);
+      await provisionLogin(rec, pw, false);
       if(!DB.users) DB.users=[];
       DB.users.push(rec);
       await saveDB(); render();
@@ -11512,34 +11520,137 @@ async function authCreateAccount(email, password){
   try{ await auth.signOut(); }catch(e){}
   return uid;
 }
-function roleRecordFor(u){
-  return u.role==="NGO"
-    ? { team:false, role:"NGO", ngoId:(u.ngoIds||[])[0]||"", userId:u.id, name:u.name||"" }
-    : { team:true, role:u.role, userId:u.id };
+/* ---- V75.3: login actions trust only roles/ and logins/ ----
+   Any team login can edit tracker/users, so a user record's authUid,
+   loginEmail, username, role and ngoIds are only hints. What to grant or
+   revoke is read from roles/ (PM-only) and logins/ (PM-only writes).
+   Every sign-in email is "u-<user id>-<random>@...", so a logins/ entry
+   tells whose account it is. */
+function loginOwnerKey(id){ return String(id==null?"":id).toLowerCase().replace(/[^a-z0-9]/g,""); }
+function loginEmailOwner(email){
+  const m = /^u-([a-z0-9]+)-[a-z0-9]+@/.exec(String(email||""));
+  return m ? m[1] : null;
+}
+function loginErr(code){ const e = new Error(code); e.code = "sahkar/"+code; return e; }
+async function liveRoles(){
+  const sn = await sahkarTimeout(fb.db.ref("roles").once("value"), 12000);
+  return sn.val() || {};
+}
+/* every live sign-in account that belongs to this user (normally one) */
+function liveUidsFor(roles, u){
+  return Object.keys(roles).filter(k=>roles[k] && roles[k].userId===u.id);
+}
+async function loginValue(username){
+  if(!username) return null;
+  const sn = await sahkarTimeout(fb.db.ref("logins/"+fbKey(username)).once("value"), 12000);
+  return sn.val();
+}
+/* this user's sign-in email, as the server knows it */
+async function liveLoginEmail(u){
+  const v = await loginValue(u.username);
+  if(v && loginEmailOwner(v)===loginOwnerKey(u.id)) return v;
+  if(u.loginEmail && loginEmailOwner(u.loginEmail)===loginOwnerKey(u.id)) return u.loginEmail;
+  return null;
+}
+/* a username may be pointed at this user only if it is free or already theirs */
+async function usernameFreeFor(username, u){
+  const v = await loginValue(username);
+  return !v || loginEmailOwner(v)===loginOwnerKey(u.id);
+}
+function roleRecordFor(u, prev){
+  if(u.role==="NGO"){
+    const ngoId = (prev && prev.role==="NGO" && prev.ngoId) || (u.ngoIds||[])[0] || "";
+    return { team:false, role:"NGO", ngoId, userId:u.id, name:u.name||"" };
+  }
+  return { team:true, role:u.role, userId:u.id };
 }
 /* Give a user a fresh sign-in with this password. Also how a password is
-   reset: the old account loses its role and stops working at once. */
-async function provisionLogin(u, password){
+   reset: every older account of this user loses its role at once.
+   A reset keeps the role the server already holds; only saveApl (the PM
+   picking a role in the form) passes keepRole=false. */
+async function provisionLogin(u, password, keepRole){
   if(!ME || ME.role!=="PM") throw new Error("PM only");
+  const roles = await liveRoles();
+  const old = liveUidsFor(roles, u);
+  if(old.indexOf(_authUid)>=0) throw loginErr("own-login");
+  const prev = old.length ? roles[old[0]] : null;
+  const rec = Object.assign({}, u);
+  if(prev && keepRole!==false){ rec.role = prev.role; }
+  if(rec.role==="PM" || !rec.role) throw loginErr("bad-role");
+  if(rec.role==="NGO" && !(prev && prev.ngoId) && (u.ngoIds||[]).length!==1) throw loginErr("ngo-scope");
+  if(!(await usernameFreeFor(u.username, u))) throw loginErr("username-taken");
   const email = newLoginEmail(u.id);
   const uid = await authCreateAccount(email, password);
   const upd = {};
-  upd["roles/"+uid] = roleRecordFor(u);
+  upd["roles/"+uid] = roleRecordFor(rec, prev);
   upd["logins/"+fbKey(u.username)] = email;
-  if(u.authUid && u.authUid!==uid) upd["roles/"+u.authUid] = null;
+  old.forEach(k=>{ if(k!==uid) upd["roles/"+k] = null; });
   await fb.db.ref().update(upd);
+  u.role = rec.role;
+  if(rec.role==="NGO") u.ngoIds = [upd["roles/"+uid].ngoId];
   u.authUid = uid; u.loginEmail = email; delete u.password;
   return uid;
 }
 async function revokeLogin(u){
   if(!ME || ME.role!=="PM") return;
+  const roles = await liveRoles();
   const upd = {};
-  if(u.authUid) upd["roles/"+u.authUid] = null;
-  if(u.username && u.loginEmail) upd["logins/"+fbKey(u.username)] = null;
+  liveUidsFor(roles, u).forEach(k=>{ if(k!==_authUid) upd["roles/"+k] = null; });
+  const v = await loginValue(u.username);
+  if(v && loginEmailOwner(v)===loginOwnerKey(u.id)) upd["logins/"+fbKey(u.username)] = null;
   if(Object.keys(upd).length) await fb.db.ref().update(upd);
+}
+/* point a new username at this user's live account; drop the old one if it is theirs */
+async function moveUsername(u, oldUsername, newUsername, upd){
+  if(oldUsername===newUsername) return;
+  if(!(await usernameFreeFor(newUsername, u))) throw loginErr("username-taken");
+  const email = await liveLoginEmail(Object.assign({}, u, { username:oldUsername }));
+  if(!email) return;                       // no live login: nothing to move
+  const ov = await loginValue(oldUsername);
+  if(oldUsername && ov && loginEmailOwner(ov)===loginOwnerKey(u.id)) upd["logins/"+fbKey(oldUsername)] = null;
+  upd["logins/"+fbKey(newUsername)] = email;
+  u.loginEmail = email;
+}
+/* after a restore: make every user's authUid / loginEmail match the server */
+async function reconcileLogins(){
+  const roles = await liveRoles();
+  for(const u of (DB.users||[])){
+    if(!u) continue;
+    const live = liveUidsFor(roles, u);
+    if(!live.length){ delete u.authUid; delete u.loginEmail; continue; }
+    u.authUid = live[0];
+    const email = await liveLoginEmail(u);
+    if(email) u.loginEmail = email; else delete u.loginEmail;
+  }
+}
+/* sign this device out as soon as its own roles/ entry is removed or changed */
+let _roleWatch = null, _signOutMsg = "";
+function watchOwnRole(uid, start){
+  if(_roleWatch){ try{ _roleWatch(); }catch(e){} _roleWatch = null; }
+  if(!fb || !fb.db) return;
+  const ref = fb.db.ref("roles/"+uid);
+  const h = ref.on("value", sn=>{
+    if(_authUid!==uid) return;
+    const r = sn.val();
+    const same = r && r.role===start.role && (r.team===true)===(start.team===true)
+      && (r.ngoId||"")===(start.ngoId||"") && r.userId===start.userId;
+    if(same) return;
+    _signOutMsg = r ? "Your access was changed. Please sign in again."
+                    : "This login was removed. Please contact your KRSF admin.";
+    try{ cacheClear(); }catch(e){}
+    teardownSession();
+    try{ fb.auth.signOut(); }catch(e){}
+    showLoginForm();
+  }, ()=>{});
+  _roleWatch = ()=>ref.off("value", h);
 }
 function loginErrorText(e){
   const c = (e && e.code) || "", m = (e && e.message) || "";
+  if(c==="sahkar/username-taken") return "That username belongs to another login";
+  if(c==="sahkar/own-login") return "Change your own login from Edit Your Login";
+  if(c==="sahkar/bad-role") return "That role can't be given to a login here";
+  if(c==="sahkar/ngo-scope") return "An NGO login must belong to exactly one NGO";
+  if(c==="timeout") return "No connection — try again";
   if(c==="auth/operation-not-allowed" || /CONFIGURATION_NOT_FOUND/.test(m)) return "Firebase sign-in isn't switched on for this project";
   if(/permission/i.test(c+" "+m)) return "Only the Program Manager can manage logins";
   if(c==="auth/network-request-failed") return "No connection — try again";
@@ -11577,7 +11688,7 @@ function showNewCredentials(list){
      <button class="btn primary" onclick="closeModal()">Done</button>`), true);
 }
 function downloadCredentials(){
-  const q = v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const q = v=>{ let t = String(v==null?"":v); if(/^[=+\-@\t\r]/.test(t)) t = "'"+t; return '"'+t.replace(/"/g,'""')+'"'; };
   const csv = "\ufeff"+[["Who","Username","Password"]].concat(CRED_LAST.map(c=>[c.who,c.username,c.password]))
     .map(r=>r.map(q).join(",")).join("\r\n")+"\r\n";
   const a = document.createElement("a");
@@ -11632,9 +11743,9 @@ async function saveNgoLogin(ngoId){
   try{
     if(u){
       const old = u.username;
-      if(old!==username && u.loginEmail){
-        const upd = {}; upd["logins/"+fbKey(old)] = null; upd["logins/"+fbKey(username)] = u.loginEmail;
-        await fb.db.ref().update(upd);
+      if(old!==username){
+        const upd = {}; await moveUsername(u, old, username, upd);
+        if(Object.keys(upd).length) await fb.db.ref().update(upd);
       }
       Object.assign(u, { username, name:n.name }); delete u.password; stampEdit(u);
       await saveDB(); closeModal(); render();
@@ -11664,6 +11775,7 @@ async function createMissingNgoLogins(){
         u = ngoUserRecord(n, name);
         DB.users.push(u); fresh.push(u);
       }
+      u.ngoIds = [n.id];   // V75.3: the login is for this NGO only
       const pw = ngoGenPassword();
       await provisionLogin(u, pw);
       made.push({ who:n.short, username:u.username, password:pw });
@@ -11688,7 +11800,7 @@ function deleteNgoLogin(id){
 /* ---- edit the PM's own credentials ---- */
 function openPmForm(){
   if(ME.role!=="PM") return;
-  const pm = (DB.users||[]).find(u=>u.role==="PM");
+  const pm = (DB.users||[]).find(u=>u.id===ME.id);
   const body = `
     <div class="field">
       <label>Name</label>
@@ -11712,7 +11824,7 @@ function openPmForm(){
 }
 async function savePm(){
   if(ME.role!=="PM") return;
-  const pm = (DB.users||[]).find(u=>u.role==="PM");
+  const pm = (DB.users||[]).find(u=>u.id===ME.id);
   const name = el("pmName").value.trim();
   const username = el("pmUser").value.trim().toLowerCase();
   const password = el("pmPass").value;
@@ -11723,12 +11835,15 @@ async function savePm(){
     (x.username||"").trim().toLowerCase()===username);
   if(clash){ toast("That username is already taken"); return; }
   try{
+    const email = fb.auth.currentUser && fb.auth.currentUser.email;
+    if(username!==pm.username && !(await usernameFreeFor(username, pm))) throw loginErr("username-taken");
     if(password) await fb.auth.currentUser.updatePassword(password);
-    if(username!==pm.username && pm.loginEmail){
+    if(username!==pm.username && email){
       const upd = {};
-      if(pm.username) upd["logins/"+fbKey(pm.username)] = null;
-      upd["logins/"+fbKey(username)] = pm.loginEmail;
+      if(pm.username && (await loginValue(pm.username))===email) upd["logins/"+fbKey(pm.username)] = null;
+      upd["logins/"+fbKey(username)] = email;
       await fb.db.ref().update(upd);
+      pm.loginEmail = email;
     }
   }catch(e){
     if(e && e.code==="auth/requires-recent-login"){ toast("For safety, sign out and back in, then change your password"); return; }
@@ -11790,7 +11905,10 @@ function importBackup(input){
        file. Everyone's tracker will update. This cannot be undone — make sure
        you have a current backup first.`,
       async ()=>{
+        const keep = DB;
         DB = migrateDB(data);
+        try{ await reconcileLogins(); }
+        catch(e){ DB = keep; console.error(e); toast("Couldn't check logins with the server — nothing was restored"); return; }
         // force every collection to be treated as changed so it all writes
         DB_PARTS.forEach(p=>{ _lastSynced[p] = "__force__"; });
         await saveDB();

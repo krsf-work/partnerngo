@@ -1,5 +1,25 @@
 # Changelog
 
+## V75.3 — 2026-11-08
+### Fixed (security)
+- The PM's login actions (remove, reset password, set up, change role or
+  username, NGO logins) now decide which accounts to change from the
+  PM-only roles/ and logins/ in the database, not from the user list that
+  any team login can edit. A tampered user record can no longer keep a
+  removed login alive, remove someone else's access, give itself a higher
+  role on reset, point an NGO login at another NGO, or take over another
+  person's username.
+- Restoring a backup now matches every user's login to the live accounts,
+  so an old backup can't bring back a retired password.
+- A device signs out as soon as its login is removed or its role changes,
+  with a message saying why.
+- Your own role always comes from the database. A changed user-list entry
+  can no longer sign the PM out.
+- In the downloaded "Sahkar logins" CSV, a name that starts with = + - or @
+  is kept as plain text, not run as a spreadsheet formula.
+### Changed
+- Offline cache bumped to sahkar-v75-4.
+
 ## V75.2.1 — 2026-11-08 (reminder job only; the app is unchanged)
 ### Fixed (security)
 - The 9 am reminder job installs firebase-admin from a committed lockfile
