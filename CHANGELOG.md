@@ -1,5 +1,17 @@
 # Changelog
 
+## V77.3 — 2026-11-09
+### Changed
+- On phones the bottom bar now sits flush on the bottom edge (solid white,
+  no floating gap), and the page uses the full screen including the area
+  behind the iPhone home bar.
+### Fixed
+- Icon files have new names (pulse-192.png, pulse-512.png,
+  pulse-maskable-512.png, pulse-apple-touch.png) so phones and browsers
+  can't reuse a cached copy of the old logo. The old files stay in place
+  for anything that still points at them.
+- Offline cache bumped to pulse-v77-4.
+
 ## V77.2 — 2026-11-09
 ### Added
 - "Install Pulse" card at the top of Today/Overview, and an Install row on

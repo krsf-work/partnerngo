@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://cdn.jsdelivr.net https://*.firebaseio.com; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://ngo-partnership-program.firebaseapp.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' data: blob: https://ngo-partnership-program.firebaseapp.com https://*.firebaseio.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Pulse · Demo</title>
 <meta name="robots" content="noindex">
 <script>(function(){ try{
@@ -22,8 +22,8 @@
 }catch(e){} })();</script>
 <meta name="description" content="Pulse — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
-<link rel="icon" type="image/png" href="icon-192.png" />
-<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="pulse-192.png" />
+<link rel="apple-touch-icon" href="pulse-apple-touch.png" />
 <script>window.__pulseInstall=null;addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pulseInstall=e;if(typeof v7InstallRefresh==='function')v7InstallRefresh();});addEventListener('appinstalled',function(){window.__pulseInstall=null;if(typeof v7InstallRefresh==='function')v7InstallRefresh();});</script>
 
 <meta name="theme-color" content="#5b3fc0" />
@@ -71,6 +71,7 @@ window.FIREBASE_CONFIG = null;   // demo: no database
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
+  html{background:#f5f6fa}
   body{
     background:var(--paper);
     color:var(--ink);
@@ -1917,13 +1918,13 @@ button.v-obj-h{padding:16px;gap:14px}
 
 /* ---------- floating tab bar ---------- */
 @media (max-width:767px){
-  .content{padding-bottom:calc(var(--tabbar-h) + var(--safe-b) + 44px)}
-  .v-tabbar{left:12px;right:12px;bottom:calc(10px + var(--safe-b));height:var(--tabbar-h);padding:6px;border-radius:24px;border:1px solid rgba(255,255,255,.7);
-    background:color-mix(in srgb,#fff 80%,transparent);box-shadow:var(--e-float)}
+  .content{padding-bottom:calc(var(--tabbar-h) + var(--safe-b) + 24px)}
+  .v-tabbar{left:0;right:0;bottom:0;height:calc(var(--tabbar-h) + var(--safe-b));padding:6px 8px calc(6px + var(--safe-b));border-radius:0;border:0;border-top:1px solid var(--v-line);
+    background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 -6px 20px rgba(23,20,43,.06)}
   .v-tab.on{color:var(--v-primary-ink)}
   .v-tab.on::before{top:5px;width:52px;height:32px;border-radius:12px;background:linear-gradient(135deg,#efeafd,#f6e9ff)}
-  .v-snack{bottom:calc(var(--tabbar-h) + var(--safe-b) + 26px)}
-  .toast{bottom:calc(var(--tabbar-h) + var(--safe-b) + 26px)!important}
+  .v-snack{bottom:calc(var(--tabbar-h) + var(--safe-b) + 14px)}
+  .toast{bottom:calc(var(--tabbar-h) + var(--safe-b) + 14px)!important}
 }
 .v-snack{border-radius:16px;padding:10px 10px 10px 18px;background:#17142b;box-shadow:var(--e-float)}
 
@@ -4811,7 +4812,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.2</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.3</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -4851,7 +4852,7 @@ async function v4DailyReminder(force){
     const first = list.find(x=>x.bucket==="late"||x.bucket==="today"||x.bucket==="week");
     const title = n ? parts.join(" · ") : "You're all caught up";
     const opts = { body: first ? (V4_KIND[first.kind].label+": "+first.title).slice(0,140) : "No deadlines this week.",
-      icon:"icon-192.png", badge:"icon-192.png", tag:"sahkar-daily", data:{ url: location.href.split("#")[0] } };
+      icon:"pulse-192.png", badge:"pulse-192.png", tag:"sahkar-daily", data:{ url: location.href.split("#")[0] } };
     const reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
     if(reg && reg.showNotification) await reg.showNotification(title, opts);
     else new Notification(title, opts);

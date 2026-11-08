@@ -1,7 +1,7 @@
 /* Pulse service worker — network-first so the app is always fresh when online,
    and still opens (from cache) when offline. Bump CACHE on each release. */
-const CACHE = 'pulse-v77-3';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
+const CACHE = 'pulse-v77-4';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './pulse-192.png', './pulse-512.png', './pulse-maskable-512.png', './pulse-apple-touch.png'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -53,7 +53,7 @@ self.addEventListener('notificationclick', e => {
 self.addEventListener('push', e => {
   let d = {};
   try { const j = e.data ? e.data.json() : {}; d = j.data || j.notification || j || {}; } catch (_) {}
-  const opts = { body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png',
+  const opts = { body: d.body || '', icon: 'pulse-192.png', badge: 'pulse-192.png',
                  tag: d.tag || 'sahkar-daily', renotify: true, data: { url: d.url || './' } };
   e.waitUntil(
     self.registration.showNotification(d.title || 'Pulse', opts).then(() => {
