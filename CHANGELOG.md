@@ -1,5 +1,14 @@
 # Changelog
 
+## V77.1 — 2026-11-09
+### Changed
+- The menu's third item is now OKRs (key results and action items) instead
+  of Add. Menu: Today/Overview · NGOs · OKRs · Me.
+- The Overview no longer shows the "KRs done" card.
+- Offline cache bumped to pulse-v77-2.
+### Removed
+- The Add menu. Debit notes and NGO actions are added from the NGO's page.
+
 ## V77 — 2026-11-09
 ### Added
 - Program Manager Overview: budget used this year (with the expected pace),

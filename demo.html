@@ -1936,7 +1936,8 @@ button.v-obj-h{padding:16px;gap:14px}
 @media (prefers-reduced-motion:reduce){.v5-hero,.v-grp,.v5-bar i{animation:none}.v-item.leave{transition:none}}
 /* V77 overview */
   .v7-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
-  @media (min-width:900px){.v7-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .v7-kpis>.v7-kpi:last-child:nth-child(odd){grid-column:1/-1}
+  @media (min-width:900px){.v7-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.v7-kpis>.v7-kpi:last-child:nth-child(odd){grid-column:auto}}
   .v7-kpi{background:var(--v-surface,#fff);border:1px solid var(--v-n200,#e6e8ef);border-radius:16px;padding:12px 14px;min-width:0}
   .v7-kpi.tap{cursor:pointer}
   .v7-kpi .l{font-size:12px;color:var(--v-n500);font-weight:600}
@@ -3924,9 +3925,8 @@ function navItems(){
   return [
     { id:"home",   label: ME.role==="PM" ? "Overview" : "Today", ic:"home", sec:"", primary:true, count: urgent || null, hot:true },
     { id:"myngos", label:"NGOs", ic:"building", sec:"", primary:true },
-    { id:"add",    label:"Add",  ic:"plus",     sec:"", primary:true, add:true },
+    { id:"myokr",  label:"OKRs", ic:"target",   sec:"", primary:true },
     { id:"more",   label:"Me",   ic:"users",    sec:"", primary:true },
-    { id:"myokr",  label:"My OKRs", ic:"target", hidden:true },
     { id:"money",  label:"Budget & debit notes", ic:"wallet", hidden:true }
   ].concat(mapped.map(x=>Object.assign(x, { hidden:true })));
 }
@@ -3954,7 +3954,6 @@ function toggleSide(force){
   scrim.classList.toggle("show", open);
 }
 function go(page, arg){
-  if(page==="add"){ v4AddSheet(); return; }   // V77: Add opens a sheet, not a page
   CUR_PAGE = page; PAGE_ARG = arg||null;
   document.querySelectorAll(".nav-item").forEach(n=>
     n.classList.toggle("active", n.dataset.page===page));
@@ -4267,7 +4266,7 @@ function v4TabItems(items){
 function v4ActiveTab(){
   if(CUR_PAGE==="ngo2" || CUR_PAGE==="ngo") return "myngos";
   if(CUR_PAGE==="money") return "home";
-  if(CUR_PAGE==="home" || CUR_PAGE==="myngos" || CUR_PAGE==="more") return CUR_PAGE;
+  if(CUR_PAGE==="home" || CUR_PAGE==="myngos" || CUR_PAGE==="myokr" || CUR_PAGE==="more") return CUR_PAGE;
   return v4IsTeam() ? "more" : CUR_PAGE;
 }
 function v4BuildTabbar(items){
@@ -4279,7 +4278,7 @@ function v4BuildTabbar(items){
       ${it.hot && it.count ? `<span class="v-dot">${it.count}</span>` : ""}
     </button>`).join("");
 }
-const V4_TITLES = { home:"Today", myngos:"NGOs", myokr:"My OKRs", money:"Budget & debit notes", more:"Me" };
+const V4_TITLES = { home:"Today", myngos:"NGOs", myokr:"OKRs", money:"Budget & debit notes", more:"Me" };
 function v4AfterRender(){
   const c = el("content");
   const key = CUR_PAGE+"|"+(PAGE_ARG||"")+"|"+(CUR_PAGE==="ngo2" ? (V4.ngoTab[PAGE_ARG]||"okr") : CUR_PAGE==="myokr" ? V4.myView : "");
@@ -4298,7 +4297,7 @@ function v4AfterRender(){
   if(bar){ bar.classList.toggle("always", V4_PAGES_NEW.indexOf(CUR_PAGE)<0); bar.classList.toggle("scrolled", window.scrollY > 48); }
   const back = el("v4Back");
   if(back){
-    const showBack = CUR_PAGE==="ngo2" || CUR_PAGE==="ngo" || CUR_PAGE==="money" || CUR_PAGE==="myokr" ||
+    const showBack = CUR_PAGE==="ngo2" || CUR_PAGE==="ngo" || CUR_PAGE==="money" ||
       (v4IsTeam() && V4_PAGES_NEW.indexOf(CUR_PAGE)<0 && window.innerWidth<768);
     back.classList.toggle("show", showBack);
   }
@@ -4317,7 +4316,6 @@ function v4Back(){
   if(CUR_PAGE==="ngo") return go("ngo2", PAGE_ARG);
   if(CUR_PAGE==="ngo2") return go("myngos");
   if(CUR_PAGE==="money") return go("home");
-  if(CUR_PAGE==="myokr") return go("more");
   go(window.innerWidth<768 ? "more" : "home");
 }
 
@@ -4642,7 +4640,6 @@ function v7Overview(){
   const kpis = `<div class="v7-kpis">
       ${v7Kpi("NGOs", ngos.length, `<span class="ok">${active} active</span> · ${ngos.length-active} passive`, "", "go('myngos')")}
       ${v7Kpi("Debit notes pending", pend, fmtRs(pendAmt)+" not yet paid", pend?"warn":"", "go('money')")}
-      ${v7Kpi("KRs done", krT ? pct(krD,krT)+"%" : "—", krT ? krD+" of "+krT+" this month" : "No KRs this month", "")}
       ${v7Kpi("Overdue", c.late, (lateActs ? lateActs+" NGO actions · " : "")+(c.today ? c.today+" due today" : "nothing due today"), c.late?"bad":"", "v4OpenNotifs()")}
     </div>`;
   const byNgo = rows.filter(x=>x.st.total).sort((a,b)=>b.st.used-a.st.used).map(({n,st})=>{
@@ -4676,33 +4673,6 @@ function v7Overview(){
       </div>`).join("")}</div>` : "");
 }
 
-/* V77: the Add button — every new thing starts here */
-function v7AddRow(ic, title, sub, onclick){
-  return `<div class="v-row tap" role="button" tabindex="0" onclick="${onclick}" onkeydown="if(event.key==='Enter')this.click()">
-    <div class="v-navic">${vi(ic)}</div>
-    <div class="v-row-main"><div class="v-row-t">${title}</div><div class="v-row-s">${sub}</div></div>${vi("chevr","sm")}</div>`;
-}
-function v7EditableNgos(){ return v4MyNgos().filter(n=>canEditNgo(n.id)); }
-function v4AddSheet(){
-  const ngos = v7EditableNgos(), has = id=>navItems().some(i=>i.id===id);
-  const rows = [];
-  if(ngos.length) rows.push(v7AddRow("receipt", "Debit note", "For one of your NGOs", "v7AddFor('dn')"));
-  if(ngos.length) rows.push(v7AddRow("checksq", "NGO action item", "Something an NGO needs to do", "v7AddFor('task')"));
-  rows.push(v7AddRow("target", "My OKR action", "Add to your own monthly OKRs", "v4CloseSheet();go('myokr');setTimeout(v4AddActionForm,60)"));
-  if(has("daily")) rows.push(v7AddRow("cal", "Daily log", "Today's hours and notes", "v4CloseSheet();go('daily')"));
-  v4OpenSheet("Add", `<div class="v-list">${rows.join("")}</div>`);
-}
-function v7AddFor(kind){
-  const ngos = v7EditableNgos();
-  if(ngos.length===1) return v7AddGo(kind, ngos[0].id);
-  v4OpenSheet(kind==="dn" ? "Debit note for which NGO?" : "Action for which NGO?",
-    `<div class="v-list">${ngos.map(n=>`<div class="v-row tap" role="button" tabindex="0" onclick="v7AddGo('${jsArg(kind)}','${jsArg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
-      ${v4Mono(n)}<div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}</div></div>${vi("chevr","sm")}</div>`).join("")}</div>`);
-}
-function v7AddGo(kind, ngoId){
-  v4CloseSheet();
-  if(kind==="dn") openDebitForm(ngoId); else v4AddTask(ngoId);
-}
 function pageV4Home(){
   V4.homeAll = V4.homeAll || {};
   const ngos = v4MyNgos();
@@ -4800,7 +4770,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.0</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.1</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -5334,7 +5304,6 @@ function pageV4More(){
   const myRows = v4RowsOf(ME.id), mm = v4DefaultMonth(myRows);
   const myKr = myRows.filter(r=>r.month===mm && r.type==="kr");
   const rows = [
-    v4NavRow("target", "My OKRs", mm ? `${monthLabel(mm)} · ${myKr.filter(r=>r.status==="Done").length}/${myKr.length} KRs done` : "Your monthly objectives", "go('myokr')"),
     has("daily") ? v4NavRow("cal", "Daily sheet", "Hours and daily log", "go('daily')") : "",
     has("docs") ? v4NavRow("folder", "Documents", "Agreements and files", "go('docs')") : "",
     perm ? v4NavRow("bell", "Deadline reminders", perm, "v4OpenNotifs()") : "",
