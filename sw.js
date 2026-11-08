@@ -1,6 +1,6 @@
 /* Sahkar service worker — network-first so the app is always fresh when online,
    and still opens (from cache) when offline. Bump CACHE on each release. */
-const CACHE = 'sahkar-v75-6';
+const CACHE = 'sahkar-v75-7';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -22,17 +22,25 @@ self.addEventListener('fetch', e => {
   if (url.origin !== self.location.origin) return;  // only cache our own assets (not Firebase/gstatic)
   e.respondWith(
     fetch(req).then(res => {
-      const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+      // V75.6: keep only good answers, so an error page never replaces the app offline
+      if (res.ok && res.type === 'basic') {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+      }
       return res;
-    }).catch(() => caches.match(req).then(r => r || caches.match('./index.html')))
+    }).catch(() => caches.match(req).then(r => r || (req.mode === 'navigate' ? caches.match('./index.html') : Response.error())))
   );
 });
 
 /* V74: tapping a deadline reminder opens Sahkar (or brings it forward) */
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  const target = (e.notification.data && e.notification.data.url) || './';
+  // V75.6: only ever open a page of this site
+  let target = new URL('./', self.location.href).href;
+  try {
+    const u = new URL((e.notification.data && e.notification.data.url) || './', self.location.href);
+    if (u.origin === self.location.origin) target = u.href;
+  } catch (_) {}
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const c of list) { if ('focus' in c) return c.focus(); }

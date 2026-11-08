@@ -2,9 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com https://cdn.jsdelivr.net https://*.firebaseio.com; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://ngo-partnership-program.firebaseapp.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' data: blob: https://ngo-partnership-program.firebaseapp.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sahkar · Demo</title>
 <meta name="robots" content="noindex">
+<script>(function(){ try{
+  var real = window.localStorage, P = "sahkar_demo:";
+  function keys(){ var a=[]; for(var i=0;i<real.length;i++){ var k=real.key(i); if(k && k.indexOf(P)===0) a.push(k.slice(P.length)); } return a; }
+  var api = { getItem:function(k){ return real.getItem(P+k); }, setItem:function(k,v){ real.setItem(P+k, String(v)); },
+    removeItem:function(k){ real.removeItem(P+k); }, clear:function(){ keys().forEach(function(k){ real.removeItem(P+k); }); },
+    key:function(i){ var a=keys(); return i<a.length ? a[i] : null; } };
+  Object.defineProperty(api, "length", { get:function(){ return keys().length; }, configurable:true });
+  var px = new Proxy(api, {
+    ownKeys:function(){ return keys(); },
+    getOwnPropertyDescriptor:function(t,k){ var v = typeof k==="string" ? real.getItem(P+k) : null; return v===null ? undefined : { value:v, enumerable:true, configurable:true, writable:true }; },
+    get:function(t,k){ if(k in api) return api[k]; return typeof k==="string" ? (real.getItem(P+k) ?? undefined) : undefined; }
+  });
+  Object.defineProperty(window, "localStorage", { value:px, configurable:true });
+}catch(e){} })();</script>
 <meta name="description" content="Sahkar — the KRSF Partnership Program: milestones, budget and monthly delivery across partner NGOs." />
 <link rel="manifest" href="manifest.webmanifest" />
 
@@ -13,19 +28,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="KRSF Sahkar" />
 <!-- Inter font embedded in <style> below (no CDN) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous"></script>
 <!-- Firebase (compat build — exposes a global `firebase`, works without ES modules) -->
 <script>
 /* ===== Firebase project configuration — KRSF Partnership Program ===== */
-window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD3hEVkQfVN5fIUS7mWX-rtZCKcbYFy9wI",
-  authDomain: "ngo-partnership-program.firebaseapp.com",
-  databaseURL: "https://ngo-partnership-program-default-rtdb.firebaseio.com",
-  projectId: "ngo-partnership-program",
-  storageBucket: "ngo-partnership-program.firebasestorage.app",
-  messagingSenderId: "819757883253",
-  appId: "1:819757883253:web:2bf817514aecae02e57d3c"
-};
+window.FIREBASE_CONFIG = null;   // demo: no database
 </script>
 <style>
 /* Inter — embedded, no CDN (V50). Latin variable subset (all weights) + rupee glyph. */
@@ -4680,7 +4687,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75.5</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75.6</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -7925,6 +7932,7 @@ async function bbLib(){
     const prev=window.XLSX;
     await new Promise((res,rej)=>{ const s=document.createElement("script");
       s.src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js";
+      s.integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb"; s.crossOrigin="anonymous";   // V75.6
       s.onload=res; s.onerror=rej; document.head.appendChild(s); });
     window._XLSXS=window.XLSX; window.XLSX=prev;
     return window._XLSXS||prev;

@@ -1,5 +1,25 @@
 # Changelog
 
+## V75.6 — 2026-11-08
+### Security
+- The page now has a Content-Security-Policy. Scripts may only come from
+  this site, cdnjs, gstatic, jsdelivr and the Firebase database; network
+  calls only go to Firebase and Google APIs; plugins are blocked and the
+  page's base address can't be changed. Inline handlers are still allowed
+  for now (the app has about 180 of them).
+- Every outside script (SheetJS, the four Firebase files, the styled Excel
+  library) carries an integrity hash. If a CDN ever serves a changed file,
+  the browser refuses to run it.
+- The offline cache keeps only successful answers, so an error page can no
+  longer replace the app when offline, and only page loads fall back to the
+  cached app.
+- Tapping a reminder only ever opens a page of this site.
+- The demo keeps its own browser storage, so trying the demo can no longer
+  change the live app's cache, session or weekly-backup date on the same
+  device. The demo no longer contains the Firebase settings.
+### Changed
+- Offline cache bumped to sahkar-v75-7.
+
 ## V75.5 — 2026-11-08
 ### Fixed (data safety)
 - Two people saving at the same time no longer wipe each other out. A save
