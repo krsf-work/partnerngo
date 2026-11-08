@@ -1,5 +1,15 @@
 # Changelog
 
+## V75.4 — 2026-11-08
+### Changed
+- Saving now sends only the lists your role is allowed to change: only the
+  PM sends the user list, and a Viewer sends only their own OKR ticks and
+  daily logs. Nothing changes for what anyone can do in the app.
+- This prepares for the per-role database rules (next step): once those
+  are live, a save never includes a list the rules would refuse, so no
+  one's saves start failing.
+- Offline cache bumped to sahkar-v75-5.
+
 ## V75.3 — 2026-11-08
 ### Fixed (security)
 - The PM's login actions (remove, reset password, set up, change role or
