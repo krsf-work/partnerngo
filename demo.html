@@ -2080,13 +2080,13 @@ const SCORE_MAX = SCORE_CRITERIA.length * 5;   // 40
 const VERT_CLASS = {Livelihood:"live",Advocacy:"adv",Education:"edu",Healthcare:"health",Climate:"climate"};
 
 /* ---------- helpers ---------- */
-function monthLabel(m){ if(!m)return"—"; const[y,mo]=m.split("-"); return MONTH_NAMES[+mo]+" "+y.slice(2); }
-function monthLong(m){ if(!m)return"—"; const[y,mo]=m.split("-"); return MONTH_NAMES[+mo]+" 20"+y.slice(2); }
+function monthLabel(m){ if(!m)return"—"; const[y,mo]=String(m).split("-"); if(!/^\d{4}$/.test(y)||!MONTH_NAMES[+mo]) return esc(m); return MONTH_NAMES[+mo]+" "+y.slice(2); }
+function monthLong(m){ if(!m)return"—"; const[y,mo]=String(m).split("-"); if(!/^\d{4}$/.test(y)||!MONTH_NAMES[+mo]) return esc(m); return MONTH_NAMES[+mo]+" 20"+y.slice(2); }
 /* shortDate("2026-06-11") → "11 Jun 26", for the debit-note "Received" column */
 function shortDate(s){
   if(!s) return "—";
   const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if(!m) return s;
+  if(!m) return esc(s);   // V75.2: non-date text is shown as text
   return (+m[3])+" "+MONTH_NAMES[+m[2]]+" "+m[1].slice(2);
 }
 function fmtN(n){ if(n==null||isNaN(n))return"—"; return Math.round(n).toLocaleString("en-IN"); }
@@ -2111,24 +2111,40 @@ function scrollIdsLabel(d){
   const ids = (Array.isArray(d.scrolls)?d.scrolls:[]).map(s=>s&&s.scrollId).filter(Boolean);
   return ids.length ? esc(ids.join(", ")) : "—";
 }
-/* display dates as dd-mm-yyyy everywhere; leaves non-date text untouched */
+/* display dates as dd-mm-yyyy everywhere; non-date text comes back HTML-escaped */
 function fmtDMY(d){
   if(d==null||d==="") return "—";
   const s=String(d), m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if(m) return m[3]+"-"+m[2]+"-"+m[1];
   const dt=new Date(s);
   if(!isNaN(dt) && /\d{4}/.test(s)) return String(dt.getDate()).padStart(2,"0")+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+dt.getFullYear();
-  return s;
+  return esc(s);   // V75.2: non-date text is shown as text
 }
 function pct(a,b){ if(!b)return 0; return Math.round(a/b*100); }
 let _idSeq = 0;
 function genId(p){ return p+"_"+Date.now().toString(36)+"_"+(_idSeq++).toString(36)+Math.random().toString(36).slice(2,7); }
-/* V43: esc() now also escapes single quotes. Without this, ~50 onclick
-   sites in the form `onclick="fn('${esc(value)}')"` were XSS-able the
-   moment a string contained an apostrophe (NGO name "St Joseph's",
-   debit note "Aakar's Sept Salary", etc) — the apostrophe broke out of
-   the JS string literal and let arbitrary code run. */
+/* esc() is for HTML text and attribute values. It is NOT enough for a
+   value inside a '...' string in onclick code: the browser turns &#39;
+   back into ' before running it. Use jsArg() there (V75.2). */
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+/* V75.2: a value placed inside a '...' JavaScript string in an inline
+   handler (onclick="fn('${jsArg(v)}')"). The browser decodes HTML entities
+   in the attribute before it runs the code, so esc() alone cannot stop an
+   apostrophe from ending the string. Escape for JavaScript first, then
+   for the HTML attribute. */
+function jsArg(s){
+  const js = String(s==null?"":s).replace(/[\\'"<>\n\r]/g, c => ({
+    "\\":"\\\\", "'":"\\'", '"':'\\"', "<":"\\x3c", ">":"\\x3e",
+    "\n":"\\n", "\r":"\\r"
+  }[c]));
+  return esc(js);
+}
+/* V75.2: only web links become clickable; anything else (javascript:,
+   data:, typos) turns into a dead "#" link. */
+function safeHref(u){
+  const v = String(u==null?"":u).trim();
+  return /^https?:\/\//i.test(v) ? esc(v) : "#";
+}
 function statusColor(p){ if(p>=90)return"green"; if(p>=65)return"amber"; return"red"; }
 function el(id){ return document.getElementById(id); }
 function toast(msg){
@@ -3250,7 +3266,7 @@ function aplFoldersPanel(){
       const ngos = DB.ngos.filter(n=>(apl.ngoIds||[]).includes(n.id));
       const preview = ngos.slice(0,5);
       const cls = APL_FOLDER_COLORS[i % APL_FOLDER_COLORS.length];
-      return `<div class="apl-folder" onclick="openAplFolder('${apl.id}')">
+      return `<div class="apl-folder" onclick="openAplFolder('${jsArg(apl.id)}')">
         <div class="apl-folder-fan">
           ${preview.map(n=>`<div class="apl-fan-chip"><div class="ngo-avatar ${(n.vertical||'').toLowerCase()}">${esc(n.short.slice(0,2).toUpperCase())}</div></div>`).join("")}
         </div>
@@ -3274,7 +3290,7 @@ function openAplFolder(aplId){
   const ngos = DB.ngos.filter(n=>(apl.ngoIds||[]).includes(n.id));
   const body = ngos.length
     ? `<div class="apl-modal-grid">
-        ${ngos.map(n=>`<div class="apl-modal-card" onclick="closeModal();go('ngo','${n.id}')">
+        ${ngos.map(n=>`<div class="apl-modal-card" onclick="closeModal();go('ngo','${jsArg(n.id)}')">
           <div class="ngo-avatar ${(n.vertical||'').toLowerCase()}">${esc(n.short.slice(0,2).toUpperCase())}</div>
           <div class="nm">${esc(n.name)}</div>
         </div>`).join("")}
@@ -3778,7 +3794,7 @@ function buildNav(){
     if(it.mobileOnly) return;
     if(it.sec!==lastSec){ if(it.sec) html+=`<div class="nav-sec">${it.sec}</div>`; lastSec=it.sec; }
     const on = it.id===CUR_PAGE || (it.id===act && it.primary);
-    html+=`<button class="nav-item ${on?'active':''}" data-page="${it.id}" onclick="go('${it.id}')">
+    html+=`<button class="nav-item ${on?'active':''}" data-page="${it.id}" onclick="go('${jsArg(it.id)}')">
       <span class="ic">${vi(it.ic,"sm")}</span><span>${esc(it.label)}</span>
       ${it.count!=null?`<span class="ct ${it.hot?'hot':''}">${it.count}</span>`:''}
     </button>`;
@@ -4040,7 +4056,8 @@ function v4Mono(n, lg){
 function v4Sec(title, n, link){
   return `<div class="v-sec"><h2>${title}</h2>${n!=null?`<span class="v-sec-n">${n}</span>`:""}${link?`<span class="v-link-wrap" style="margin-left:auto">${link}</span>`:""}</div>`;
 }
-function v4Arg(s){ return esc(String(s==null?"":s)); }
+/* V75.2: v4Arg is for values inside a '...' string in inline handler code */
+function v4Arg(s){ return jsArg(s); }
 
 /* ---------- per-NGO numbers ---------- */
 function v4NgoMonths(ngoId){
@@ -4110,7 +4127,7 @@ function v4BuildTabbar(items){
   const bar = el("v4Tabbar"); if(!bar) return;
   const act = v4ActiveTab();
   bar.innerHTML = v4TabItems(items).map(it=>`
-    <button class="v-tab ${it.id===act?"on":""}" onclick="go('${it.id}')" aria-label="${esc(it.label)}">
+    <button class="v-tab ${it.id===act?"on":""}" onclick="go('${jsArg(it.id)}')" aria-label="${esc(it.label)}">
       ${vi(it.ic)}<span>${esc(it.short||it.label)}</span>
       ${it.hot && it.count ? `<span class="v-dot">${it.count}</span>` : ""}
     </button>`).join("");
@@ -4184,7 +4201,7 @@ function v4Greeting(){
 function v4DlCard(x){
   const k = V4_KIND[x.kind];
   return `<div class="v-card tap v-dl ${v4DueCls(x.due)}" role="button" tabindex="0"
-      onclick="v4OpenItem('${x.kind}','${v4Arg(x.id)}')" onkeydown="if(event.key==='Enter')this.click()">
+      onclick="v4OpenItem('${jsArg(x.kind)}','${jsArg(x.id)}')" onkeydown="if(event.key==='Enter')this.click()">
     <div class="v-dl-top">
       <span class="v-badge nodot brand">${vi(k.ic,"xs")} ${k.label}</span>
       <span class="v-due ${v4DueCls(x.due)}" style="margin-left:auto">${v4DueLabel(x.due)}</span>
@@ -4192,7 +4209,7 @@ function v4DlCard(x){
     <div class="v-dl-t">${esc(x.title)}</div>
     <div class="v-dl-s">${esc(x.sub)}
       ${v4CanComplete(x) ? `<button class="v-check v-dl-act" title="Mark done" aria-label="Mark done"
-         onclick="event.stopPropagation();v4Complete('${x.kind}','${v4Arg(x.id)}')">${vi("check")}</button>` : ""}
+         onclick="event.stopPropagation();v4Complete('${jsArg(x.kind)}','${jsArg(x.id)}')">${vi("check")}</button>` : ""}
     </div>
   </div>`;
 }
@@ -4223,7 +4240,7 @@ function v4HideRemind(){ try{ localStorage.setItem(V4_REMIND_HIDE+ME.id, "1"); }
 
 function v4TickBtn(kind, id, done, can){
   return `<button class="v-tick ${done?"on":""}" ${can?"":"disabled"} aria-label="${done?"Mark not done":"Mark done"}"
-    onclick="event.stopPropagation();v4RowTick(null,this.closest('.v-item'),'${kind}','${v4Arg(id)}')">${vi("check")}</button>`;
+    onclick="event.stopPropagation();v4RowTick(null,this.closest('.v-item'),'${jsArg(kind)}','${jsArg(id)}')">${vi("check")}</button>`;
 }
 /* Like Google Keep: tapping the row ticks it. The › at the end opens the
    details (status, note). Without edit rights the row just opens details. */
@@ -4468,7 +4485,7 @@ function pageV4Home(){
     const all = !!V4.homeAll[b];
     return `<div class="v-grp g-${b}"><div class="v-grp-h"><i class="v5-gi">${vi(GI[b]||"dot","xs")}</i>${label}<span>${rows.length}</span></div>
       <div class="v-items">${rows.slice(0, all ? 999 : lim).map(render).join("")}</div>
-      ${rows.length>lim ? `<button class="v-more" onclick="V4.homeAll['${b}']=${!all};render()">${all ? "Show less" : "Show "+(rows.length-lim)+" more"}</button>` : ""}
+      ${rows.length>lim ? `<button class="v-more" onclick="V4.homeAll['${jsArg(b)}']=${!all};render()">${all ? "Show less" : "Show "+(rows.length-lim)+" more"}</button>` : ""}
     </div>`;
   };
   let todo = groups.map(([b,label])=>grp(b, label, list.filter(x=>x.bucket===b), v4HomeItem)).join("");
@@ -4496,7 +4513,7 @@ function pageV4Home(){
     <select onchange="v4SetHomeNgo(this.value)" aria-label="Show items for">
       <option value="" ${!f?"selected":""}>Everything</option>
       <option value="me" ${f==="me"?"selected":""}>My own OKRs &amp; actions</option>
-      ${ngos.map(n=>`<option value="${v4Arg(n.id)}" ${f===n.id?"selected":""}>${esc(n.short||n.name)}</option>`).join("")}
+      ${ngos.map(n=>`<option value="${esc(n.id)}" ${f===n.id?"selected":""}>${esc(n.short||n.name)}</option>`).join("")}
     </select>${vi("chevd","sm")}</label>`;
 
   const doneN = v4DoneToday().filter(v4HomeFilter).length;
@@ -4515,7 +4532,7 @@ function pageV4Home(){
   ${f ? "" : v4Sec("Your work") + `
   <div class="v-list">
     ${v4NavRow("building","My NGOs", `${ngos.length} NGO${ngos.length===1?"":"s"} · ${krT ? krD+"/"+krT+" KRs done" : "no KRs yet"} · ${openActs} open action${openActs===1?"":"s"}`, "go('myngos')")}
-    ${v4NavRow("target","My OKRs", `${esc(monthLabel(mm))} · ${myDone}/${myKr.length} KRs done · ${myOpen} action${myOpen===1?"":"s"} open`, "go('myokr')")}
+    ${v4NavRow("target","My OKRs", `${monthLabel(mm)} · ${myDone}/${myKr.length} KRs done · ${myOpen} action${myOpen===1?"":"s"} open`, "go('myokr')")}
     ${v4NavRow("wallet","Budget &amp; debit notes", `${budget ? pct(spent,budget)+"% of "+fmtRs(budget)+" used" : "No budget yet"} · ${pend} DN${pend===1?"":"s"} pending`, "go('money')")}
   </div>`}`;
 }
@@ -4546,7 +4563,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75.1</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75.2</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -4556,7 +4573,7 @@ function v4NgoCard(n, st){
   st = st || v4NgoStats(n.id);
   const act = (n.partnership||"Active")==="Active";
   const bits = [st.krTotal ? `${st.krDone}/${st.krTotal} KRs` : "No KRs", `${st.open} open`, st.total ? `${st.used}% budget` : ""].filter(Boolean);
-  return `<div class="v-row tap" role="button" tabindex="0" onclick="go('ngo2','${v4Arg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
+  return `<div class="v-row tap" role="button" tabindex="0" onclick="go('ngo2','${jsArg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
     ${v4Mono(n)}
     <div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}${act ? "" : ` <span class="v-muted" style="font-weight:500">· ${esc(n.partnership)}</span>`}</div>
       <div class="v-row-s">${bits.join(" · ")}${st.pending ? ` · ${st.pending} DN pending` : ""}</div></div>
@@ -4640,15 +4657,15 @@ function pageV4Ngo(id){
     <div style="flex:1;min-width:0"><h1>${esc(n.short||n.name)}</h1>
       <p>${esc(n.name && n.name!==n.short ? n.name : "")}${n.state?` <span class="v-badge nodot">${esc(n.state)}</span>`:""}${n.vertical?` <span class="v-badge nodot">${esc(n.vertical)}</span>`:""}
         ${lead?` <span class="v-badge nodot brand">${vi("users","xs")} ${esc(lead.name)}</span>`:""}${can?"":` <span class="v-badge nodot">View only</span>`}</p></div>
-    <button class="v-btn sm v-hide-m" onclick="go('ngo','${v4Arg(id)}')">${vi("ext","sm")} Full record</button>
+    <button class="v-btn sm v-hide-m" onclick="go('ngo','${jsArg(id)}')">${vi("ext","sm")} Full record</button>
   </div>
   <div class="v-tabs-sticky"><div class="v-seg" role="tablist">
-    <button class="${tab==="okr"?"on":""}" onclick="v4SetNgoTab('${v4Arg(id)}','okr')">${vi("target","sm")} OKRs</button>
-    <button class="${tab==="act"?"on":""}" onclick="v4SetNgoTab('${v4Arg(id)}','act')">${vi("checksq","sm")} Actions <span class="n">${tasksOpen||""}</span></button>
-    <button class="${tab==="money"?"on":""}" onclick="v4SetNgoTab('${v4Arg(id)}','money')">${vi("wallet","sm")} Money</button>
+    <button class="${tab==="okr"?"on":""}" onclick="v4SetNgoTab('${jsArg(id)}','okr')">${vi("target","sm")} OKRs</button>
+    <button class="${tab==="act"?"on":""}" onclick="v4SetNgoTab('${jsArg(id)}','act')">${vi("checksq","sm")} Actions <span class="n">${tasksOpen||""}</span></button>
+    <button class="${tab==="money"?"on":""}" onclick="v4SetNgoTab('${jsArg(id)}','money')">${vi("wallet","sm")} Money</button>
   </div></div>
   ${body}
-  <div class="v-only-m" style="text-align:center;margin-top:24px"><button class="v-btn ghost" onclick="go('ngo','${v4Arg(id)}')">${vi("ext","sm")} Open full record</button></div>`;
+  <div class="v-only-m" style="text-align:center;margin-top:24px"><button class="v-btn ghost" onclick="go('ngo','${jsArg(id)}')">${vi("ext","sm")} Open full record</button></div>`;
 }
 /* objective header: tap to show / hide its key results */
 function v4ObjCard(scope, g, rowsHtml){
@@ -4657,7 +4674,7 @@ function v4ObjCard(scope, g, rowsHtml){
   const key = scope+"|"+(g.num||"")+"|"+g.text, open = !!V4.objOpen[key];
   const d = g.rows.filter(r=>r.status==="Done").length, all = d===g.rows.length;
   return `<div class="v-card v-obj ${open?"open":""}">
-    <button class="v-obj-h" aria-expanded="${open}" onclick="v4ObjToggle(this,'${v4Arg(key)}')">
+    <button class="v-obj-h" aria-expanded="${open}" onclick="v4ObjToggle(this,'${jsArg(key)}')">
       <div class="v5-ring ${all?"ok":""}" style="--p:${g.rows.length ? Math.round(d*100/g.rows.length) : 0}"><b>${all ? vi("check","xs") : esc(g.num||"•")}</b></div>
       <div class="v-obj-t">${esc(g.text)}</div>
       <div class="v-obj-p">${d}/${g.rows.length}</div>
@@ -4689,13 +4706,13 @@ function v4NgoOkrTab(n, can){
   const rows = m ? (DB.mbo||[]).filter(r=>r && r.ngoId===n.id && r.month===m) : [];
   const done = rows.filter(r=>r.status==="Done").length;
   const bets = betsForNgo(n.id);
-  const add = can ? `<button class="v-btn sm primary" onclick="openMboModal('${v4Arg(n.id)}')">${vi("plus","sm")} Add key results</button>` : "";
+  const add = can ? `<button class="v-btn sm primary" onclick="openMboModal('${jsArg(n.id)}')">${vi("plus","sm")} Add key results</button>` : "";
   let krHtml;
   if(!months.length){
     krHtml = `<div class="v-card">${v4Empty("target","No key results yet", can ? "Add this month's objectives and key results for "+esc(n.short)+"." : "Key results will appear once the NGO's lead adds them.", add)}</div>`;
   } else {
     krHtml = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div class="v-chips" style="flex:1">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetNgoMonth('${v4Arg(n.id)}','${x}')">${esc(monthLabel(x))}</button>`).join("")}</div>
+        <div class="v-chips" style="flex:1">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetNgoMonth('${jsArg(n.id)}','${jsArg(x)}')">${monthLabel(x)}</button>`).join("")}</div>
         <span class="v-hide-m">${add}</span></div>
       <div class="v-sumline">
         <div><b>${done} of ${rows.length}</b> key results done${rows.some(r=>r.status==="Not Done")?` · <span class="late">${rows.filter(r=>r.status==="Not Done").length} not done</span>`:""}</div>
@@ -4713,12 +4730,12 @@ function v4KrRow(r, can){
   const meta = [
     !done && r.status && r.status!=="Pending" ? v4StatBtn(r.status, can ? `v4KrSheet('${v4Arg(r.id)}')` : "") : "",
     !done && due ? `<span class="v-due ${v4DueCls(due)}">${v4DueLabel(due)}</span>` : (r.timeline ? `<span>${esc(r.timeline)}</span>` : ""),
-    r.ref && /^https?:\/\//.test(r.ref) ? `<a class="v-link" href="${esc(r.ref)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${vi("link","xs")} Evidence</a>` : (r.ref ? `<span>${esc(r.ref)}</span>` : ""),
-    can ? `<button class="v-link" onclick="event.stopPropagation();v4KrSheet('${v4Arg(r.id)}')">${r.comment ? "Edit note" : "Add note"}</button>` : ""
+    r.ref && /^https?:\/\//.test(r.ref) ? `<a class="v-link" href="${safeHref(r.ref)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${vi("link","xs")} Evidence</a>` : (r.ref ? `<span>${esc(r.ref)}</span>` : ""),
+    can ? `<button class="v-link" onclick="event.stopPropagation();v4KrSheet('${jsArg(r.id)}')">${r.comment ? "Edit note" : "Add note"}</button>` : ""
   ].filter(Boolean).join("");
   return v4ItemRow({ kind:"ngokr", id:r.id, done, can, title:r.kr || "Key result", meta, urg: !done && due ? v4DueCls(due) : "",
     open: can ? `v4KrSheet('${v4Arg(r.id)}')` : "",
-    extra: r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}${r.editedBy?`<div class="v-muted" style="font-size:11px;margin-top:3px">${esc(r.editedBy)}${r.editedAt?" · "+esc(shortDate(r.editedAt)):""}</div>`:""}</div></div>` : "" });
+    extra: r.comment ? `<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}${r.editedBy?`<div class="v-muted" style="font-size:11px;margin-top:3px">${esc(r.editedBy)}${r.editedAt?" · "+shortDate(r.editedAt):""}</div>`:""}</div></div>` : "" });
 }
 function v4BetCard(b){
   const h = betHealth(b), p = betProgress(b), cum = betCumulative(b, FY_END);
@@ -4733,19 +4750,19 @@ function v4NgoActTab(n, can){
   const all = (DB.tasks||[]).filter(t=>t && t.ngoId===n.id);
   const open = all.filter(t=>t.status!=="Done").sort((a,b)=>(a.due||"9")<(b.due||"9")?-1:1);
   const done = all.filter(t=>t.status==="Done");
-  const add = can ? `<button class="v-btn sm primary" onclick="v4AddTask('${v4Arg(n.id)}')">${vi("plus","sm")} Add action</button>` : "";
+  const add = can ? `<button class="v-btn sm primary" onclick="v4AddTask('${jsArg(n.id)}')">${vi("plus","sm")} Add action</button>` : "";
   if(!all.length) return `<div class="v-card">${v4Empty("checksq","No action items", can ? "Track what you or the NGO must do next — with a due date." : "Nothing has been raised for this NGO yet.", add)}</div>`;
   const showDone = !!V4.showDone[n.id];
   return `<div style="display:flex;align-items:center;margin-bottom:12px"><div class="v-muted" style="font-size:13px;flex:1">${open.length} open · ${done.length} done</div>${add}</div>
     ${open.length ? `<div class="v-list v-stagger">${open.map(t=>v4TaskRow(t,can)).join("")}</div>`
       : `<div class="v-card">${v4Empty("check","All actions done","Every action item for "+esc(n.short)+" is closed.","",true)}</div>`}
-    ${done.length ? `<button class="v-btn ghost" style="margin-top:12px" onclick="V4.showDone['${v4Arg(n.id)}']=${!showDone};render()">${vi(showDone?"chevd":"chevr","sm")} ${showDone?"Hide":"Show"} ${done.length} done</button>
+    ${done.length ? `<button class="v-btn ghost" style="margin-top:12px" onclick="V4.showDone['${jsArg(n.id)}']=${!showDone};render()">${vi(showDone?"chevd":"chevr","sm")} ${showDone?"Hide":"Show"} ${done.length} done</button>
       ${showDone ? `<div class="v-list" style="margin-top:8px">${done.map(t=>v4TaskRow(t,can)).join("")}</div>` : ""}` : ""}`;
 }
 function v4TaskRow(t, can){
   const isDone = t.status==="Done";
   const meta = [
-    !isDone && t.due ? `<span class="v-due ${v4DueCls(t.due)}">${v4DueLabel(t.due)}</span>` : (t.due ? `<span>${esc(shortDate(t.due))}</span>` : ""),
+    !isDone && t.due ? `<span class="v-due ${v4DueCls(t.due)}">${v4DueLabel(t.due)}</span>` : (t.due ? `<span>${shortDate(t.due)}</span>` : ""),
     t.priority ? `<span>${esc(t.priority)} priority</span>` : "",
     isDone && t.doneBy ? `<span>Done by ${esc(t.doneBy)}</span>` : ""
   ].filter(Boolean).join("");
@@ -4761,7 +4778,7 @@ function v4NgoMoneyTab(n, can, st){
   const b = (DB.budgets && DB.budgets[n.id]) || null;
   const cats = ngoSpendByCat(n.id, FY_END);
   const dns = st.dns.slice().sort((a,b2)=>(b2.date||"").localeCompare(a.date||""));
-  const add = can ? `<button class="v-btn sm primary" onclick="openDebitForm('${v4Arg(n.id)}')">${vi("plus","sm")} Add debit note</button>` : "";
+  const add = can ? `<button class="v-btn sm primary" onclick="openDebitForm('${jsArg(n.id)}')">${vi("plus","sm")} Add debit note</button>` : "";
   const budgetCard = st.total ? `<div class="v-card v-money">
       <div class="v-money-top"><div><div class="big">${fmtRs(st.spent)}</div><div class="of">spent of ${fmtRsFull(st.total)} · FY budget</div></div>
         <div style="margin-left:auto">${v4Ring(Math.min(st.spent,st.total), st.total, 64, "", "used")}</div></div>
@@ -4783,7 +4800,7 @@ function v4DnRow(d, can, showNgo){
   return `<div class="v-row ${can?"tap":""}" ${can?`onclick="openDebitForm('${v4Arg(d.ngoId)}','${v4Arg(d.id)}')"`:""}>
     <div class="v-kind" style="background:var(--v-n100);color:var(--v-n600)">${vi("receipt","sm")}</div>
     <div class="v-row-main"><div class="v-row-t">${esc(d.dnNo||"Debit note")}${ngo?` <span class="v-muted" style="font-weight:500">· ${esc(ngo.short)}</span>`:""}</div>
-      <div class="v-row-s"><span>${esc(shortDate(d.date))}</span>${d.category?`<span class="sep"></span><span>${esc(d.category)}</span>`:""}
+      <div class="v-row-s"><span>${shortDate(d.date)}</span>${d.category?`<span class="sep"></span><span>${esc(d.category)}</span>`:""}
         <span class="v-badge ${v4DnCls(st)}">${esc(st)}</span></div></div>
     <div class="v-row-end"><span class="v-amt">${fmtRsFull(d.amount)}</span></div>
   </div>`;
@@ -4817,8 +4834,8 @@ function pageV4MyOkr(){
   <div class="v-head"><div><h1>${isMe ? "My OKRs" : esc(person.name)}</h1>
       <p>${isMe ? "Your monthly key results and action items" : esc(person.title||"")+" · view only"}</p></div>
     <div class="v-head-act v-hide-m">${add}</div></div>
-  ${people.length>1 ? `<div class="v-chips" style="margin-bottom:10px">${people.map(p=>`<button class="v-chip ${p.id===pid?"on":""}" onclick="v4SetPerson('${v4Arg(p.id)}')">${p.id===ME.id?"Me":esc(v4First(p.name))}</button>`).join("")}</div>` : ""}
-  ${months.length ? `<div class="v-chips" style="margin-bottom:16px">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetMyMonth('${x}')">${esc(monthLabel(x))}</button>`).join("")}</div>` : ""}
+  ${people.length>1 ? `<div class="v-chips" style="margin-bottom:10px">${people.map(p=>`<button class="v-chip ${p.id===pid?"on":""}" onclick="v4SetPerson('${jsArg(p.id)}')">${p.id===ME.id?"Me":esc(v4First(p.name))}</button>`).join("")}</div>` : ""}
+  ${months.length ? `<div class="v-chips" style="margin-bottom:16px">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetMyMonth('${jsArg(x)}')">${monthLabel(x)}</button>`).join("")}</div>` : ""}
   ${!rows.length ? `<div class="v-card">${v4Empty("target", isMe ? "No OKRs yet" : "No OKRs for "+esc(v4First(person.name)),
       isMe ? "Your monthly MBO sheet appears here once it's imported. You can add your own action items now." : "Nothing imported for this person yet.", add)}</div>` : `
   <div class="v-sumline">
@@ -4844,10 +4861,10 @@ function v4MyRow(r, can, first, showMonth){
   const isDone = r.status==="Done";
   const meta = [
     !isDone && r.status ? v4StatBtn(r.status, can ? `v4MySheet('${v4Arg(r.id)}')` : "") : "",
-    !isDone && r.deadline ? `<span class="v-due ${v4DueCls(r.deadline)}">${v4DueLabel(r.deadline)}</span>` : (r.deadline ? `<span>${esc(shortDate(r.deadline))}</span>` : ""),
-    showMonth ? `<span>${esc(monthLabel(r.month))}</span>` : "",
+    !isDone && r.deadline ? `<span class="v-due ${v4DueCls(r.deadline)}">${v4DueLabel(r.deadline)}</span>` : (r.deadline ? `<span>${shortDate(r.deadline)}</span>` : ""),
+    showMonth ? `<span>${monthLabel(r.month)}</span>` : "",
     tmPriLabel(r) ? `<span>${esc(tmPriLabel(r))}</span>` : "",
-    can ? `<button class="v-link" onclick="event.stopPropagation();v4MySheet('${v4Arg(r.id)}')">${r.comment ? "Edit note" : "Add note"}</button>` : ""
+    can ? `<button class="v-link" onclick="event.stopPropagation();v4MySheet('${jsArg(r.id)}')">${r.comment ? "Edit note" : "Add note"}</button>` : ""
   ].filter(Boolean).join("");
   return v4ItemRow({ kind: r.type==="kr" ? "mykr" : "myact", id:r.id, done:isDone, can, title:r.title || "Untitled", meta, urg: !isDone && r.deadline ? v4DueCls(r.deadline) : "",
     open:`v4MySheet('${v4Arg(r.id)}')`,
@@ -4857,7 +4874,7 @@ function v4MyRow(r, can, first, showMonth){
 /* ---------- item sheets ---------- */
 function v4StatusOpts(list, current, fn){
   return `<div style="display:flex;flex-direction:column;gap:2px;margin:6px 0 16px">${list.map(([s,cls])=>`
-    <button class="v-opt ${s===(current||"")?"on":""}" onclick="${fn}('${esc(s)}')">
+    <button class="v-opt ${s===(current||"")?"on":""}" onclick="${fn}('${jsArg(s)}')">
       <span class="v-stat-btn ${cls}" style="pointer-events:none">${esc(v4StatLabel(s))}</span></button>`).join("")}</div>`;
 }
 function v4MySheet(id){
@@ -4869,18 +4886,18 @@ function v4MySheet(id){
     <div style="font-size:16px;font-weight:650;color:var(--v-n900);line-height:1.4">${esc(r.title||"Untitled")}</div>
     <div class="v-kr-meta" style="margin-top:10px">
       <span class="v-badge nodot brand">${r.type==="kr"?"Key result":"Action item"}</span>
-      <span class="v-badge nodot">${esc(monthLong(r.month))}</span>
+      <span class="v-badge nodot">${monthLong(r.month)}</span>
       ${r.deadline ? `<span class="v-due ${r.status==="Done"?"later":v4DueCls(r.deadline)}">${r.status==="Done"?shortDate(r.deadline):v4DueLabel(r.deadline)}</span>` : ""}
       ${r.ownerId!==ME.id ? `<span class="v-badge nodot">${esc(tmOwnerName(r.ownerId))}</span>` : ""}
     </div>
-    ${r.ref ? `<div class="v-muted" style="font-size:12.5px;margin-top:10px">${vi("link","xs")} ${/^https?:\/\//.test(r.ref)?`<a class="v-link" href="${esc(r.ref)}" target="_blank" rel="noopener">Reference</a>`:esc(r.ref)}</div>` : ""}
+    ${r.ref ? `<div class="v-muted" style="font-size:12.5px;margin-top:10px">${vi("link","xs")} ${/^https?:\/\//.test(r.ref)?`<a class="v-link" href="${safeHref(r.ref)}" target="_blank" rel="noopener">Reference</a>`:esc(r.ref)}</div>` : ""}
     ${can ? `<div class="v-ngroup" style="margin-top:20px">Status</div>
       ${v4StatusOpts(V4_MY_STATUS, r.status, "v4MyPick")}
       <div class="v-ngroup">Note</div>
       <textarea class="v-ta" id="v4Cmt" placeholder="What happened, what's next">${esc(r.comment||"")}</textarea>
       <div style="display:flex;gap:8px;margin-top:12px">
-        ${r.source==="app" && r.ownerId===ME.id ? `<button class="v-btn danger" onclick="v4DeleteAction('${v4Arg(r.id)}')">Delete</button>` : ""}
-        <button class="v-btn primary" style="margin-left:auto" onclick="v4SaveMyComment('${v4Arg(r.id)}')">Save note</button></div>`
+        ${r.source==="app" && r.ownerId===ME.id ? `<button class="v-btn danger" onclick="v4DeleteAction('${jsArg(r.id)}')">Delete</button>` : ""}
+        <button class="v-btn primary" style="margin-left:auto" onclick="v4SaveMyComment('${jsArg(r.id)}')">Save note</button></div>`
       : `<div style="margin-top:16px">${v4StatBtn(r.status)}</div>${r.comment?`<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}</div></div>`:""}`}`;
   V4.sheetRow = id;
   v4OpenSheet(r.type==="kr" ? "Key result" : "Action item", body);
@@ -4914,7 +4931,7 @@ function v4AddActionForm(){
     <div class="field"><label>What needs doing?</label><textarea id="v4aTitle" class="v-ta" style="min-height:70px" placeholder="e.g. Share the Q3 field report with SeSTA"></textarea></div>
     <div class="frow">
       <div class="field"><label>Deadline</label><input type="date" id="v4aDue" value="${TODAY_ISO}"></div>
-      <div class="field"><label>Month</label><select id="v4aMonth">${months.map(x=>`<option value="${x}" ${x===m?"selected":""}>${esc(monthLong(x))}</option>`).join("")}</select></div>
+      <div class="field"><label>Month</label><select id="v4aMonth">${months.map(x=>`<option value="${x}" ${x===m?"selected":""}>${monthLong(x)}</option>`).join("")}</select></div>
     </div>
     ${objs.length ? `<div class="field"><label>Objective (optional)</label><select id="v4aObj"><option value="">None</option>${objs.map(o=>`<option value="${esc(o)}">${esc(o.slice(0,90))}</option>`).join("")}</select></div>` : ""}
     <button class="v-btn primary" style="width:100%;height:46px;margin-top:4px" onclick="v4SaveAction()">${vi("plus","sm")} Add action item</button>`;
@@ -4961,7 +4978,7 @@ function v4KrSheet(id){
     <div style="font-size:16px;font-weight:650;color:var(--v-n900);line-height:1.4">${esc(r.kr||"Key result")}</div>
     <div class="v-kr-meta" style="margin-top:10px">
       <span class="v-badge nodot brand">${esc(n.short||"NGO")}</span>
-      <span class="v-badge nodot">${esc(monthLong(r.month))}</span>
+      <span class="v-badge nodot">${monthLong(r.month)}</span>
       ${due && r.status!=="Done" ? `<span class="v-due ${v4DueCls(due)}">${v4DueLabel(due)}</span>` : ""}
     </div>
     ${can ? `<div class="v-ngroup" style="margin-top:20px">Status</div>
@@ -4969,8 +4986,8 @@ function v4KrSheet(id){
       <div class="v-ngroup">Note</div>
       <textarea class="v-ta" id="v4Cmt" placeholder="Progress, numbers, blockers">${esc(r.comment||"")}</textarea>
       <div style="display:flex;gap:8px;margin-top:12px">
-        <button class="v-btn" onclick="v4CloseSheet();go('ngo2','${v4Arg(r.ngoId)}')">Open NGO</button>
-        <button class="v-btn primary" style="margin-left:auto" onclick="v4SaveKrCmt('${v4Arg(r.id)}')">Save note</button></div>`
+        <button class="v-btn" onclick="v4CloseSheet();go('ngo2','${jsArg(r.ngoId)}')">Open NGO</button>
+        <button class="v-btn primary" style="margin-left:auto" onclick="v4SaveKrCmt('${jsArg(r.id)}')">Save note</button></div>`
       : `<div style="margin-top:16px">${v4StatBtn(r.status)}</div>${r.comment?`<div class="v-kr-cmt">${vi("msg","xs")}<div>${esc(r.comment)}</div></div>`:""}`}`;
   V4.sheetRow = id;
   v4OpenSheet("NGO key result", body);
@@ -5008,9 +5025,9 @@ function v4TaskSheet(id){
       ${isDone ? `<span class="v-badge ok">Done${t.doneBy?" by "+esc(t.doneBy):""}</span>` : ""}
     </div>
     <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap">
-      ${can ? `<button class="v-btn" onclick="v4CloseSheet();openTaskForm('${v4Arg(t.id)}')">Edit</button>` : ""}
-      <button class="v-btn" onclick="v4CloseSheet();V4.ngoTab['${v4Arg(t.ngoId)}']='act';go('ngo2','${v4Arg(t.ngoId)}')">Open NGO</button>
-      ${can ? `<button class="v-btn primary" style="margin-left:auto" onclick="v4ToggleTask('${v4Arg(t.id)}')">${vi("check","sm")} ${isDone?"Reopen":"Mark done"}</button>` : ""}
+      ${can ? `<button class="v-btn" onclick="v4CloseSheet();openTaskForm('${jsArg(t.id)}')">Edit</button>` : ""}
+      <button class="v-btn" onclick="v4CloseSheet();V4.ngoTab['${jsArg(t.ngoId)}']='act';go('ngo2','${jsArg(t.ngoId)}')">Open NGO</button>
+      ${can ? `<button class="v-btn primary" style="margin-left:auto" onclick="v4ToggleTask('${jsArg(t.id)}')">${vi("check","sm")} ${isDone?"Reopen":"Mark done"}</button>` : ""}
     </div>`;
   v4OpenSheet("NGO action", body);
 }
@@ -5051,7 +5068,7 @@ function pageV4Money(){
     <div class="of" style="margin-top:10px"><b>${pend.length}</b> debit note${pend.length===1?"":"s"} waiting on payment · ${fmtRs(pendAmt)}</div>
   </div>
   ${v4Sec("Debit notes by stage")}
-  <div class="v-list">${DN_STATUS.map(s=>`<div class="v-row tap v-stage-r ${V4.stage===s?"on":""}" role="button" tabindex="0" onclick="v4SetStage('${esc(s)}')">
+  <div class="v-list">${DN_STATUS.map(s=>`<div class="v-row tap v-stage-r ${V4.stage===s?"on":""}" role="button" tabindex="0" onclick="v4SetStage('${jsArg(s)}')">
       <div class="v-row-main"><div class="v-row-t">${esc(s)}</div><div class="v-row-s">${fmtRs(by[s].amt)}</div></div>
       <div class="v-row-end"><span class="v-cnt">${by[s].n}</span></div></div>`).join("")}</div>
   ${v4Sec(V4.stage ? esc(V4.stage) : "Waiting on payment", list.length, V4.stage?`<button class="v-link" onclick="v4SetStage(null)">Clear filter</button>`:"")}
@@ -5060,7 +5077,7 @@ function pageV4Money(){
     : `<div class="v-calm">${vi("check")} No debit notes at this stage.</div>`}
   ${v4Sec("By NGO", ngos.length)}
   <div class="v-list">${stats.sort((a,b)=>b.st.used-a.st.used).map(({n,st})=>`
-    <div class="v-row tap" onclick="V4.ngoTab['${v4Arg(n.id)}']='money';go('ngo2','${v4Arg(n.id)}')">
+    <div class="v-row tap" onclick="V4.ngoTab['${jsArg(n.id)}']='money';go('ngo2','${jsArg(n.id)}')">
       ${v4Mono(n)}
       <div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}</div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:6px"><div style="flex:1;max-width:240px">${v4Meter(st.used, "thin "+(st.used>100?"bad":""))}</div>
@@ -5088,7 +5105,7 @@ function pageV4More(){
       <div class="v-row-main"><div class="v-row-t">Deadline reminders</div><div class="v-row-s">${perm}</div></div>${vi("chevr","sm")}</div></div>` : ""}
   ${v4Sec("Workspace")}
   <div class="v-grid c2 v-stagger">${legacy.map(it=>`
-    <div class="v-card tap v-tile" role="button" tabindex="0" onclick="go('${it.id}')" onkeydown="if(event.key==='Enter')this.click()">
+    <div class="v-card tap v-tile" role="button" tabindex="0" onclick="go('${jsArg(it.id)}')" onkeydown="if(event.key==='Enter')this.click()">
       <div class="v-pillar-ic">${vi(it.ic)}</div>
       <div style="min-width:0"><b>${esc(it.label)}</b><small>${esc((V4_LEGACY[it.id]||{}).sub||"")}</small></div>
       ${it.count ? `<span class="ct">${it.count}</span>` : ""}
@@ -5227,7 +5244,7 @@ function ngoHead(title){
 function ngoTabs(){
   const tabs = [["nokr","◎","OKRs",ngoPendingCount()],["ntask","✓","Tasks",ngoOpenTaskCount()]];
   return `<nav class="nm-tabs" aria-label="Sections">
-    ${tabs.map(([id,ic,lb,ct])=>`<button class="${CUR_PAGE===id?'on':''}" onclick="go('${id}')" ${CUR_PAGE===id?'aria-current="page"':''}>
+    ${tabs.map(([id,ic,lb,ct])=>`<button class="${CUR_PAGE===id?'on':''}" onclick="go('${jsArg(id)}')" ${CUR_PAGE===id?'aria-current="page"':''}>
       <span class="ic">${ic}</span>${lb}${ct?`<span class="ct">${ct}</span>`:''}</button>`).join("")}
     <button onclick="doLogout()"><span class="ic">⎋</span>Sign out</button>
   </nav>`;
@@ -5245,7 +5262,7 @@ function pageNgoOkr(){
   if(!months.length){
     return html + `<div class="nm-empty">No key results have been set for your organisation yet.<br>KRSF will add them here each month.</div>` + ngoTabs();
   }
-  html += `<div class="nm-months">${months.map(m=>`<button class="nm-chip ${m===sel?'on':''}" onclick="NGO_OKR_MONTH='${m}';NGO_CMT_OPEN=null;render()">${monthLong(m)}</button>`).join("")}</div>`;
+  html += `<div class="nm-months">${months.map(m=>`<button class="nm-chip ${m===sel?'on':''}" onclick="NGO_OKR_MONTH='${jsArg(m)}';NGO_CMT_OPEN=null;render()">${monthLong(m)}</button>`).join("")}</div>`;
   const rows = ngoMboRows().filter(r=>r.month===sel);
   const done = rows.filter(r=>r.status==="Done").length;
   const notDone = rows.filter(r=>r.status==="Not Done").length;
@@ -5271,18 +5288,18 @@ function pageNgoOkr(){
 }
 function ngoKrCard(k){
   const st = k.status==="Done" ? "Done" : k.status==="Not Done" ? "Not Done" : "Pending";
-  const btn = (val,cls,lb)=>`<button class="${cls} ${st===val?'on':''}" aria-pressed="${st===val}" onclick="ngoSetKr('${k.id}','${val}')">${lb}</button>`;
+  const btn = (val,cls,lb)=>`<button class="${cls} ${st===val?'on':''}" aria-pressed="${st===val}" onclick="ngoSetKr('${jsArg(k.id)}','${jsArg(val)}')">${lb}</button>`;
   const open = NGO_CMT_OPEN===k.id;
   const draft = (NGO_CMT_DRAFT[k.id]!=null) ? NGO_CMT_DRAFT[k.id] : (k.comment||"");
   return `<div class="nm-kr">
     <div class="t">${esc(k.kr)}</div>
-    ${k.timeline?`<div class="m">Target: ${esc(fmtDMY(k.timeline))}</div>`:''}
+    ${k.timeline?`<div class="m">Target: ${fmtDMY(k.timeline)}</div>`:''}
     <div class="nm-seg">${btn("Done","s-done","Done")}${btn("Pending","s-prog","In progress")}${btn("Not Done","s-not","Not done")}</div>
-    ${open ? `<textarea id="nmc_${k.id}" maxlength="2000" placeholder="What happened? Numbers, links or blockers" oninput="NGO_CMT_DRAFT['${k.id}']=this.value">${esc(draft)}</textarea>
-      <div class="nm-act"><button class="btn ghost sm" onclick="delete NGO_CMT_DRAFT['${k.id}'];NGO_CMT_OPEN=null;render()">Cancel</button>
-      <button class="btn accent sm" onclick="ngoSaveKrComment('${k.id}')">Save comment</button></div>`
+    ${open ? `<textarea id="nmc_${k.id}" maxlength="2000" placeholder="What happened? Numbers, links or blockers" oninput="NGO_CMT_DRAFT['${jsArg(k.id)}']=this.value">${esc(draft)}</textarea>
+      <div class="nm-act"><button class="btn ghost sm" onclick="delete NGO_CMT_DRAFT['${jsArg(k.id)}'];NGO_CMT_OPEN=null;render()">Cancel</button>
+      <button class="btn accent sm" onclick="ngoSaveKrComment('${jsArg(k.id)}')">Save comment</button></div>`
     : `${k.comment?`<div class="nm-cmt">${esc(k.comment)}</div>`:''}
-       <button class="nm-link" onclick="NGO_CMT_OPEN='${k.id}';render()">${k.comment?'Edit comment':'+ Add comment'}</button>`}
+       <button class="nm-link" onclick="NGO_CMT_OPEN='${jsArg(k.id)}';render()">${k.comment?'Edit comment':'+ Add comment'}</button>`}
   </div>`;
 }
 function ngoSetKr(id, status){
@@ -5312,9 +5329,9 @@ function pageNgoTasks(){
     const isDone = t.status==="Done";
     const overdue = !isDone && t.due && t.due<TODAY_ISO;
     return `<div class="nm-task ${isDone?'done':''}">
-      <button class="nm-tick ${isDone?'on':''}" aria-label="${isDone?'Mark as not done':'Mark as done'}" onclick="ngoToggleTask('${t.id}')">${isDone?'✓':''}</button>
+      <button class="nm-tick ${isDone?'on':''}" aria-label="${isDone?'Mark as not done':'Mark as done'}" onclick="ngoToggleTask('${jsArg(t.id)}')">${isDone?'✓':''}</button>
       <div style="min-width:0;flex:1"><div class="t">${esc(t.title)}</div>
-      <div class="m">${t.due?'Due '+esc(fmtDMY(t.due)):'No due date'}${overdue?' · <b style="color:var(--red)">overdue</b>':''}${t.priority?' · '+esc(t.priority)+' priority':''}</div></div></div>`;
+      <div class="m">${t.due?'Due '+fmtDMY(t.due):'No due date'}${overdue?' · <b style="color:var(--red)">overdue</b>':''}${t.priority?' · '+esc(t.priority)+' priority':''}</div></div></div>`;
   };
   let html = ngoHead("Tasks from KRSF");
   html += `<div class="nm-sec">To do · ${open.length}</div>`;
@@ -5348,7 +5365,7 @@ function setPartnership(ngoId, ev){
   if(!n) return;
   const next = (n.partnership==="Active") ? "Passive" : "Active";
   confirmAction(
-    `Mark ${n.short} as ${next}?`,
+    `Mark ${esc(n.short)} as ${next}?`,
     `This changes the partnership status of ${esc(n.name)}. ${next==="Passive"
       ? "Passive partners are kept on record but treated as inactive."
       : "The partner will be treated as actively funded again."}`,
@@ -5376,9 +5393,9 @@ function openScorePop(ev, ngoId, key){
   const opts = [0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5];
   pop.innerHTML =
     `<div class="sp-head">${esc(crit?crit.label:key)}</div>` +
-    opts.map(v=>`<div class="sp-opt" onclick="setScoreCell('${ngoId}','${key}',${v})">${fmtScore(v)}</div>`).join("") +
+    opts.map(v=>`<div class="sp-opt" onclick="setScoreCell('${jsArg(ngoId)}','${jsArg(key)}',${v})">${fmtScore(v)}</div>`).join("") +
     `<div class="sp-opt" style="grid-column:1/-1;background:var(--paper)"
-          onclick="setScoreCell('${ngoId}','${key}',null)">Clear</div>`;
+          onclick="setScoreCell('${jsArg(ngoId)}','${jsArg(key)}',null)">Clear</div>`;
   pop.classList.add("show");
   _scorePopAnchor = ev.currentTarget;
   positionScorePop();
@@ -5595,7 +5612,7 @@ function pageDash(){
       ${(()=>{
         const acts = portfolioActivityStream(ngos, 12);
         return acts.length ? acts.map(a=>`
-          <div class="act-item" ${a.ngoId?`style="cursor:pointer" onclick="go('ngo','${a.ngoId}')"`:''}>
+          <div class="act-item" ${a.ngoId?`style="cursor:pointer" onclick="go('ngo','${jsArg(a.ngoId)}')"`:''}>
             <div class="act-ico">${a.icon}</div>
             <div class="act-body">
               <div class="act-top"><span class="act-t">${esc(a.title)}</span><span class="act-d">${esc(a.date)}</span></div>
@@ -5642,7 +5659,7 @@ function dashNgoRow(n){
   const aBand = !bets.length?'gray': offTrack? 'red' : onTrack<bets.length? 'amber' : 'green';
 
   const mainRow = `
-    <tr class="ngo-main ${open?'open':''}" onclick="toggleNgoRow('${n.id}')">
+    <tr class="ngo-main ${open?'open':''}" onclick="toggleNgoRow('${jsArg(n.id)}')">
       <td>
         <span class="caret">▶</span>
         <b>${esc(n.short)}</b>
@@ -5654,8 +5671,8 @@ function dashNgoRow(n){
         <div style="font-size:10.5px;color:var(--${up>=100?'red':up>=85?'amber':'green'})">${up}% used</div>
       </td>
       <td>
-        <span class="ptag ${n.partnership}" onclick="setPartnership('${n.id}',event)" title="Click to change">
-          <span class="pd"></span>${n.partnership}
+        <span class="ptag ${esc(n.partnership)}" onclick="setPartnership('${jsArg(n.id)}',event)" title="Click to change">
+          <span class="pd"></span>${esc(n.partnership)}
         </span>
       </td>
       <td>
@@ -5732,7 +5749,7 @@ function pageBets(){
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
     <div class="seg-toggle">
       ${["all","green","amber","red"].map(f=>`
-        <button class="${BETS_FILTER===f?'on':''}" onclick="BETS_FILTER='${f}';render()">
+        <button class="${BETS_FILTER===f?'on':''}" onclick="BETS_FILTER='${jsArg(f)}';render()">
           ${f==='all'?'All':f==='green'?'On track':f==='amber'?'Slipping':'Behind'} ${counts[f]}
         </button>`).join("")}
     </div>
@@ -5769,7 +5786,7 @@ function renderBetRow(bet){
   const open = BETS_OPEN===bet.id;
 
   const row = `
-    <div class="bet-row ${open?'open':''}" onclick="toggleBet('${bet.id}')">
+    <div class="bet-row ${open?'open':''}" onclick="toggleBet('${jsArg(bet.id)}')">
       <span class="caret">▶</span>
       <span class="bi">${bet.icon||'◎'}</span>
       <div class="bmain">
@@ -5804,7 +5821,7 @@ function renderBetRow(bet){
       varHtml = `<div class="lad-var zero">awaiting</div>`;
     }
     return `<div class="lad-cell editable ${isFuture?'future':''} ${isCurrent?'current':''}"
-                 onclick="event.stopPropagation();openCellEdit('${bet.id}','${m}')">
+                 onclick="event.stopPropagation();openCellEdit('${jsArg(bet.id)}','${jsArg(m)}')">
       <div class="lad-mo">${monthLabel(m)}</div>
       <div class="lad-body">
         <div class="lad-line"><span class="k">Plan</span><span class="v plan">${c.plan!=null?fmtCompact(c.plan,bet.unit):'·'}</span></div>
@@ -5821,7 +5838,7 @@ function renderBetRow(bet){
           <b>${prog}%</b> ${h.status!=='gray'?`· <span style="color:var(--${h.status})">${h.label} (${h.pace}% of plan-to-date)</span>`:'· not started'}
         </span>
         <span style="display:flex;gap:8px">
-          ${canEditNgo(bet.ngoId)?`<button class="btn sm" onclick="event.stopPropagation();openBetForm('${bet.id}')">Edit bet</button>`:''}
+          ${canEditNgo(bet.ngoId)?`<button class="btn sm" onclick="event.stopPropagation();openBetForm('${jsArg(bet.id)}')">Edit bet</button>`:''}
         </span>
       </div>
       <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:6px">
@@ -5995,7 +6012,7 @@ function openCellEdit(betId, month){
   `;
   const footer = `
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveCellEdit('${betId}','${month}')">Save month</button>`;
+    <button class="btn primary" onclick="saveCellEdit('${jsArg(betId)}','${jsArg(month)}')">Save month</button>`;
 
   showModal(modalShell(
     monthLong(month)+" · monthly entry",
@@ -6094,9 +6111,9 @@ function openBetForm(editId){
     </div>
   `;
   const footer = `
-    ${editId?`<button class="btn" style="margin-right:auto;color:var(--red)" onclick="deleteBet('${editId}')">Delete</button>`:''}
+    ${editId?`<button class="btn" style="margin-right:auto;color:var(--red)" onclick="deleteBet('${jsArg(editId)}')">Delete</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveBet('${editId||''}')">${editId?'Save changes':'Create milestone'}</button>`;
+    <button class="btn primary" onclick="saveBet('${jsArg(editId||'')}')">${editId?'Save changes':'Create milestone'}</button>`;
   showModal(modalShell(editId?"Edit milestone":"New milestone",
     editId?"Edit Milestone":"Add a Milestone", body, footer));
   // preselect icon
@@ -6172,7 +6189,7 @@ function pageNgos(){
       const utilCls = util>92?"red": util<45?"amber":"green";
       const initials = n.short.slice(0,2).toUpperCase();
       return `
-      <div class="ngo-card" onclick="go('ngo','${n.id}')">
+      <div class="ngo-card" onclick="go('ngo','${jsArg(n.id)}')">
         <div class="ngo-card-stripe ${cls}"></div>
         <div class="ngo-card-body">
           <div class="ngo-card-top">
@@ -6285,9 +6302,9 @@ function openNgoForm(editId){
     </div>
     ${n?`<div style="font-size:11px;color:var(--ink-3)">${editStampLine(n)||''}</div>`:''}`;
   const foot = `
-    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteNgo('${editId}')">Delete partner</button>`:''}
+    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteNgo('${jsArg(editId)}')">Delete partner</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveNgo('${editId||''}')">${editId?'Save changes':'Add partner'}</button>`;
+    <button class="btn primary" onclick="saveNgo('${jsArg(editId||'')}')">${editId?'Save changes':'Add partner'}</button>`;
   showModal(modalShell(editId?"Edit partner":"New partner", editId?"Edit Partner NGO":"Add a Partner NGO", body, foot));
 }
 async function saveNgo(editId){
@@ -6451,7 +6468,7 @@ function pageNgoDetail(ngoId){
       <div class="ngo-hero-actions">
         <span class="badge ${sc.status}"><span class="dot ${sc.status}"></span>${
           sc.scored?scoreStatusLabel(sc.total):'Not scored'}</span>
-        ${ME.role==="PM"?`<button class="btn sm" onclick="openNgoForm('${n.id}')">Edit partner</button>`:''}
+        ${ME.role==="PM"?`<button class="btn sm" onclick="openNgoForm('${jsArg(n.id)}')">Edit partner</button>`:''}
       </div>
     </div>
     <div class="ngo-hero-strip">
@@ -6465,7 +6482,7 @@ function pageNgoDetail(ngoId){
   ${ngoHealthLine(ngoId)}
 
   <div class="ngo-tabs">
-    ${tabs.map(t=>`<div class="tb ${NGO_TAB===t.id?'active':''}" onclick="NGO_TAB='${t.id}';render()">
+    ${tabs.map(t=>`<div class="tb ${NGO_TAB===t.id?'active':''}" onclick="NGO_TAB='${jsArg(t.id)}';render()">
       ${t.label}${t.ct!=null?`<span class="tc">${t.ct}</span>`:''}</div>`).join("")}
   </div>
   ${body}`;
@@ -6627,10 +6644,10 @@ function ngoMboTab(ngoId){
   <div class="sec-head">
     <h2>Monthly Outcomes</h2>
     <div class="sh-act">
-      ${months.length? `<select class="mbo-month" onchange="MBO_MONTH['${ngoId}']=this.value;render()">${monthOpts}</select>`:''}
-      ${canEditNgo(ngoId)&&selMonth?`<button class="btn ghost sm" style="color:var(--red)" onclick="deleteMboMonth('${ngoId}','${selMonth}')">Delete month</button>`:''}
-      ${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openMboUpload('${ngoId}')">↑ Upload Excel</button>
-      <button class="btn accent sm" onclick="openMboModal('${ngoId}')">+ Key Result</button>`:''}
+      ${months.length? `<select class="mbo-month" onchange="MBO_MONTH['${jsArg(ngoId)}']=this.value;render()">${monthOpts}</select>`:''}
+      ${canEditNgo(ngoId)&&selMonth?`<button class="btn ghost sm" style="color:var(--red)" onclick="deleteMboMonth('${jsArg(ngoId)}','${jsArg(selMonth)}')">Delete month</button>`:''}
+      ${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openMboUpload('${jsArg(ngoId)}')">↑ Upload Excel</button>
+      <button class="btn accent sm" onclick="openMboModal('${jsArg(ngoId)}')">+ Key Result</button>`:''}
     </div>
   </div>`;
 
@@ -6690,7 +6707,7 @@ function renderObjCard(g, ngoId){
 
   return `
   <div class="obj-card ${open?'open':''}">
-    <div class="obj-head" onclick="MBO_OPEN['${esc(g.key)}']=${!open};render()">
+    <div class="obj-head" onclick="MBO_OPEN['${jsArg(g.key)}']=${!open};render()">
       <div class="obj-num">${g.objNum||"—"}</div>
       <div>
         <div class="obj-title">${esc(g.objective)}</div>
@@ -6713,17 +6730,17 @@ function renderObjCard(g, ngoId){
             <div class="kr-text">${esc(k.kr)}</div>
             <div class="kr-meta">
               ${k.timeline?`<time>${fmtDMY(k.timeline)}</time>`:''}
-              ${k.ref?`<a href="${esc(k.ref)}" target="_blank" rel="noopener">↗ Reference</a>`:''}
+              ${k.ref?`<a href="${safeHref(k.ref)}" target="_blank" rel="noopener">↗ Reference</a>`:''}
             </div>
             ${k.comment?`<div class="kr-cmt">${esc(k.comment)}</div>`:''}
           </div>
           <div class="kr-actions">
-            <select class="status-select ${sel}" onchange="updateKrStatus('${k.id}',this.value)" ${canEditNgo(k.ngoId)?'':'disabled'}>
+            <select class="status-select ${sel}" onchange="updateKrStatus('${jsArg(k.id)}',this.value)" ${canEditNgo(k.ngoId)?'':'disabled'}>
               <option value="Done"     ${k.status==="Done"?'selected':''}>Done</option>
               <option value="Not Done" ${k.status==="Not Done"?'selected':''}>Not Done</option>
               <option value="Pending"  ${k.status==="Pending"?'selected':''}>In progress</option>
             </select>
-            ${canEditNgo(k.ngoId)?`<button class="btn ghost sm" onclick="openMboModal('${k.ngoId}','${k.id}')">Edit</button>`:''}
+            ${canEditNgo(k.ngoId)?`<button class="btn ghost sm" onclick="openMboModal('${jsArg(k.ngoId)}','${jsArg(k.id)}')">Edit</button>`:''}
           </div>
         </div>`;
       }).join("")}
@@ -6798,9 +6815,9 @@ function openMboModal(ngoId, editId){
       <input id="mbRef" value="${esc(r.ref)}" placeholder="https://drive.google.com/…">
     </div>`;
   const foot = `
-    ${isEdit?`<button class="btn ghost" onclick="deleteMbo('${editId}')" style="margin-right:auto;color:var(--red)">Delete</button>`:''}
+    ${isEdit?`<button class="btn ghost" onclick="deleteMbo('${jsArg(editId)}')" style="margin-right:auto;color:var(--red)">Delete</button>`:''}
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
-    <button class="btn accent" onclick="saveMbo('${ngoId}','${editId||''}')">${isEdit?'Save':'Create'}</button>`;
+    <button class="btn accent" onclick="saveMbo('${jsArg(ngoId)}','${jsArg(editId||'')}')">${isEdit?'Save':'Create'}</button>`;
   showModal(modalShell(isEdit?"Edit outcome":"Record outcome", isEdit?"Edit Key Result":"New Key Result", body, foot));
 }
 
@@ -6881,7 +6898,7 @@ function openMboUpload(ngoId){
     <div id="mbUpPreview"></div>`;
   const foot = `
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
-    <button class="btn accent" onclick="importMboFile('${ngoId}')">Import outcomes</button>`;
+    <button class="btn accent" onclick="importMboFile('${jsArg(ngoId)}')">Import outcomes</button>`;
   showModal(modalShell("MBO", "Upload Monthly Outcomes", body, foot));
 }
 
@@ -7034,7 +7051,7 @@ function pageTeamMbo(){
   const sel = (id, label, value, opts) => `
     <label class="tm-f">
       <span>${label}</span>
-      <select id="tmf_${id}" onchange="tmSetFilter('${id}',this.value)">
+      <select id="tmf_${id}" onchange="tmSetFilter('${jsArg(id)}',this.value)">
         ${opts.map(o=>`<option value="${esc(o.v)}" ${o.v===value?"selected":""}>${esc(o.t)}</option>`).join("")}
       </select>
     </label>`;
@@ -7062,7 +7079,7 @@ function pageTeamMbo(){
       list.map(r=>{
         const late = r.deadline && tmDaysLate(r, TODAY_ISO) > 0;
         const pri  = tmPriLabel(r);
-        return `<div class="tm-row" onclick="tmOpenRow('${r.id}')">
+        return `<div class="tm-row" onclick="tmOpenRow('${jsArg(r.id)}')">
           <div class="tm-av" title="${esc(tmOwnerName(r.ownerId))}">${esc(tmInitials(r.ownerId))}</div>
           <div class="tm-tx">
             <div class="tm-t1">${esc(r.title)}</div>
@@ -7081,8 +7098,8 @@ function pageTeamMbo(){
     ? (isPM ? "No MBOs uploaded yet. Use <b>Upload MBO</b> to bring in a lead's spreadsheet."
             : "Nothing here yet — your MBO hasn't been uploaded.")
     : (TM_FILTER.month === "recent"
-        ? "Nothing for " + esc(monthLong(tmRecentMonths()[1])) + " or "
-          + esc(monthLong(tmRecentMonths()[0])) + ". There is older MBO here — "
+        ? "Nothing for " + monthLong(tmRecentMonths()[1]) + " or "
+          + monthLong(tmRecentMonths()[0]) + ". There is older MBO here — "
           + `<a href="#" onclick="tmSetFilter('month','');return false">show all months</a>.`
         : "Nothing matches these filters.");
   const empty = `<div class="empty"><div class="mk">📋</div><p>${emptyMsg}</p></div>`;
@@ -7172,7 +7189,7 @@ function tmPreviewHtml(res){
   const byMonth = {};
   res.rows.forEach(r=>{ (byMonth[r.month] = byMonth[r.month] || []).push(r); });
   const table = Object.keys(byMonth).sort().reverse().map(m=>`
-      <div class="tm-pv-m">${esc(monthLong(m))} — ${byMonth[m].length}</div>
+      <div class="tm-pv-m">${monthLong(m)} — ${byMonth[m].length}</div>
       ${byMonth[m].slice(0,5).map(r=>`<div class="tm-pv-r">${esc(r.title)}</div>`).join("")}
       ${byMonth[m].length>5?`<div class="tm-pv-more">+ ${byMonth[m].length-5} more</div>`:""}
     `).join("");
@@ -7276,7 +7293,7 @@ function ngoBudgetTab(ngoId){
   const b = DB.budgets[ngoId];
   if(!b) return `<div class="panel"><div class="empty"><div class="mk">▦</div>
     <p>No budget uploaded for ${esc(n.short)}.</p><br>
-    <button class="btn accent" onclick="openBudgetUpload('${ngoId}')">↑ Upload budget plan</button></div></div>`;
+    <button class="btn accent" onclick="openBudgetUpload('${jsArg(ngoId)}')">↑ Upload budget plan</button></div></div>`;
 
   const spentUpto = ngoSpendUpto(ngoId,CUR_MONTH);
   const utilPct   = pct(spentUpto, b.totalAnnual);
@@ -7307,8 +7324,8 @@ function ngoBudgetTab(ngoId){
   <div class="sec-head">
     <h2>Budget vs Actual</h2>
     <div class="sh-act">
-      <button class="btn ghost sm" style="color:var(--red)" onclick="clearBudget('${ngoId}')">✕ Clear budget</button>
-      <button class="btn accent sm" onclick="openBudgetUpload('${ngoId}')">✎ Edit budget plan</button>
+      <button class="btn ghost sm" style="color:var(--red)" onclick="clearBudget('${jsArg(ngoId)}')">✕ Clear budget</button>
+      <button class="btn accent sm" onclick="openBudgetUpload('${jsArg(ngoId)}')">✎ Edit budget plan</button>
     </div>
   </div>
 
@@ -7483,14 +7500,14 @@ function openBudgetUpload(ngoId){
       <input type="file" id="bgFile" accept=".xlsx,.xls,.csv">
       <div class="hint">Two formats accepted: (1) <b>List format</b> — columns named Month &amp; Planned, one row per month. (2) <b>Pivot/wide format</b> — months as column headers with a Total row (e.g. your standard budget sheet). Read in your browser.</div>
       <div style="margin-top:10px">
-        <button type="button" class="btn ghost sm" onclick="downloadBudgetTemplate('${ngoId}')">↓ Download blank template</button>
+        <button type="button" class="btn ghost sm" onclick="downloadBudgetTemplate('${jsArg(ngoId)}')">↓ Download blank template</button>
         <span style="font-size:11.5px;color:var(--ink-3);margin-left:8px">Fill the Planned Budget column for all 12 months (Apr–Mar), then re-upload above.</span>
       </div>
     </div>`;
   const foot = `
-    ${b?`<button class="btn danger" style="margin-right:auto" onclick="clearBudget('${ngoId}')">Clear budget</button>`:''}
+    ${b?`<button class="btn danger" style="margin-right:auto" onclick="clearBudget('${jsArg(ngoId)}')">Clear budget</button>`:''}
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
-    <button class="btn accent" onclick="saveBudgetPlan('${ngoId}')">Save budget plan</button>`;
+    <button class="btn accent" onclick="saveBudgetPlan('${jsArg(ngoId)}')">Save budget plan</button>`;
   showModal(modalShell("Budget", "Set Budget Plan", body, foot));
   bbGridTotals();
 }
@@ -8204,7 +8221,7 @@ function ngoDebitsTab(ngoId){
   return `
   <div class="sec-head">
     <h2>Debit Notes</h2>
-    <div class="sh-act">${canEditNgo(ngoId)?`<button class="btn accent sm" onclick="openDebitForm('${ngoId}')">+ Upload debit note</button>`:''}</div>
+    <div class="sh-act">${canEditNgo(ngoId)?`<button class="btn accent sm" onclick="openDebitForm('${jsArg(ngoId)}')">+ Upload debit note</button>`:''}</div>
   </div>
 
   <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
@@ -8276,9 +8293,9 @@ function ngoDebitsTab(ngoId){
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
             <td><span class="badge ${s}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
             <td>${d.url
-              ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the debit-note file (shared Drive)">📄 Open</a>`
+              ?`<a href="${safeHref(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the debit-note file (shared Drive)">📄 Open</a>`
               :(d.emailId&&ME.role==="PM"?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
-            <td>${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${ngoId}','${d.id}')">Edit</button>`:''}</td>
+            <td>${canEditNgo(ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${jsArg(ngoId)}','${jsArg(d.id)}')">Edit</button>`:''}</td>
           </tr>`;
         }).join("") : `<tr><td colspan="8"><div class="empty"><div class="mk">▦</div><p>No debit notes uploaded yet.</p></div></td></tr>`}
         </tbody>
@@ -8296,7 +8313,7 @@ function ngoDocsTab(ngoId){
   return `
   <div class="sec-head">
     <h2>Documents</h2>
-    <div class="sh-act">${canEditNgo(ngoId)?`<button class="btn accent sm" onclick="openDocForm('${ngoId}')">+ Add Document</button>`:''}</div>
+    <div class="sh-act">${canEditNgo(ngoId)?`<button class="btn accent sm" onclick="openDocForm('${jsArg(ngoId)}')">+ Add Document</button>`:''}</div>
   </div>
   ${docs.length? `<div class="docs-grid">
     ${docs.map(d=>{
@@ -8309,7 +8326,7 @@ function ngoDocsTab(ngoId){
       }
       const ini = d.type.split(/\s+/)[0].slice(0,3).toUpperCase();
       const link = d.url
-        ? `<a class="doc-link" href="${esc(d.url)}" target="_blank" rel="noopener">↗ Open document</a>`
+        ? `<a class="doc-link" href="${safeHref(d.url)}" target="_blank" rel="noopener">↗ Open document</a>`
         : `<span class="doc-link" style="color:var(--ink-3)">No link attached</span>`;
       return `
       <div class="doc-card">
@@ -8319,7 +8336,7 @@ function ngoDocsTab(ngoId){
         ${statusHtml}
         ${link}
         ${canEditNgo(ngoId)?`<div class="doc-actions">
-          <button class="btn ghost sm" onclick="openDocForm('${ngoId}','${d.id}')">Edit</button>
+          <button class="btn ghost sm" onclick="openDocForm('${jsArg(ngoId)}','${jsArg(d.id)}')">Edit</button>
         </div>`:''}
       </div>`;
     }).join("")}
@@ -8983,9 +9000,9 @@ function openDocForm(ngoId, editId){
     </div>
     ${d?editStampLine(d):''}`;
   const foot = `
-    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteDoc('${editId}')">Delete</button>`:''}
+    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteDoc('${jsArg(editId)}')">Delete</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveDoc('${ngoId}','${editId||''}')">${editId?'Save changes':'Add document'}</button>`;
+    <button class="btn primary" onclick="saveDoc('${jsArg(ngoId)}','${jsArg(editId||'')}')">${editId?'Save changes':'Add document'}</button>`;
   showModal(modalShell(editId?"Edit document":"New document", editId?"Edit Document":"Add a Document", body, foot));
 }
 async function saveDoc(ngoId, editId){
@@ -9030,7 +9047,7 @@ function ngoRefFilesTab(ngoId){
   return `
   <div class="sec-head">
     <h2>Reference Files</h2>
-    <div class="sh-act">${canEditNgo(ngoId)?`<button class="btn accent sm" onclick="openRefFileForm('${ngoId}')">+ Add file link</button>`:''}</div>
+    <div class="sh-act">${canEditNgo(ngoId)?`<button class="btn accent sm" onclick="openRefFileForm('${jsArg(ngoId)}')">+ Add file link</button>`:''}</div>
   </div>
   <div style="font-size:12px;color:var(--ink-3);margin-bottom:14px;line-height:1.6">
     Program files for ${esc(n.short)} — proposals, reports, datasets, presentations.
@@ -9045,10 +9062,10 @@ function ngoRefFilesTab(ngoId){
         <div class="doc-name">${esc(f.label||'Untitled')}</div>
         <span class="pill gray no-dot">${esc(f.addedAt||'')}${f.addedBy?' · '+esc(f.addedBy):''}</span>
         ${f.url
-          ? `<a class="doc-link" href="${esc(f.url)}" target="_blank" rel="noopener">↗ Open file</a>`
+          ? `<a class="doc-link" href="${safeHref(f.url)}" target="_blank" rel="noopener">↗ Open file</a>`
           : `<span class="doc-link" style="color:var(--ink-3)">No link</span>`}
         ${canEditNgo(ngoId)?`<div class="doc-actions">
-          <button class="btn ghost sm" onclick="openRefFileForm('${ngoId}','${f.id}')">Edit</button>
+          <button class="btn ghost sm" onclick="openRefFileForm('${jsArg(ngoId)}','${jsArg(f.id)}')">Edit</button>
         </div>`:''}
       </div>`).join("")}
   </div>` : `<div class="panel"><div class="empty"><div class="mk">▤</div>
@@ -9077,9 +9094,9 @@ function openRefFileForm(ngoId, editId){
     </div>
     ${f?editStampLine(f):''}`;
   const foot = `
-    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteRefFile('${editId}')">Delete</button>`:''}
+    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteRefFile('${jsArg(editId)}')">Delete</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveRefFile('${ngoId}','${editId||''}')">${editId?'Save changes':'Add file link'}</button>`;
+    <button class="btn primary" onclick="saveRefFile('${jsArg(ngoId)}','${jsArg(editId||'')}')">${editId?'Save changes':'Add file link'}</button>`;
   showModal(modalShell(editId?"Edit reference file":"New reference file",
     editId?"Edit Reference File":"Add a Reference File", body, foot));
 }
@@ -9201,7 +9218,7 @@ function svgGroupedBars(rows, seriesNames, colors, money){
       inner+=`<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${Math.max(h,0).toFixed(1)}" rx="2" fill="${colors[si]}" opacity="${op}"/>`;
     });
     inner+=`<rect class="chart-hot" x="${(gx-gw/2).toFixed(1)}" y="${padT}" width="${gw.toFixed(1)}" height="${plotH}"
-      onmousemove="chartHover(event,'${key}',${i})" onmouseleave="hideChartTip()"/>`;
+      onmousemove="chartHover(event,'${jsArg(key)}',${i})" onmouseleave="hideChartTip()"/>`;
     inner+=`<text x="${gx.toFixed(1)}" y="${H-padB+15}" text-anchor="middle" font-size="9.5" fill="var(--ink-3)" font-weight="600">${esc(r.label)}</text>`;
     cols+=`<g class="chart-col">${inner}</g>`;
     return { _tip:
@@ -9301,7 +9318,7 @@ function svgBudgetBars(rows){
     }
     // transparent full-height hotzone for reliable hover
     inner+=`<rect class="chart-hot" x="${(gx-gw/2).toFixed(1)}" y="${padT}" width="${gw.toFixed(1)}" height="${plotH}"
-      onmousemove="chartHover(event,'${key}',${i})" onmouseleave="hideChartTip()"/>`;
+      onmousemove="chartHover(event,'${jsArg(key)}',${i})" onmouseleave="hideChartTip()"/>`;
     inner+=`<text x="${gx.toFixed(1)}" y="${H-padB+17}" text-anchor="middle" font-size="10.5" fill="var(--ink-2)" font-weight="600">${esc(r.label)}</text>`;
     cols+=`<g class="chart-col">${inner}</g>`;
     // tooltip html
@@ -9385,7 +9402,7 @@ function svgCumulativeLine(pts){
     hot+=`<g class="chart-col">
       <line class="chart-vguide" x1="${cx.toFixed(1)}" y1="${padT}" x2="${cx.toFixed(1)}" y2="${padT+plotH}" stroke="var(--rule-2)" stroke-width="1" stroke-dasharray="3 3"/>
       <rect class="chart-hot" x="${(cx-colW/2).toFixed(1)}" y="${padT}" width="${colW.toFixed(1)}" height="${plotH}"
-        onmousemove="chartHover(event,'${key}',${i})" onmouseleave="hideChartTip()"/>
+        onmousemove="chartHover(event,'${jsArg(key)}',${i})" onmouseleave="hideChartTip()"/>
     </g>`;
     const diff = p.reported ? (p.cumActual-p.cumPlan) : null;
     const over = diff!=null && diff>0;
@@ -9574,9 +9591,9 @@ function openDebitForm(ngoId, editId){
     <!-- V44: live "you're about to save" recap, just above the Save button -->
     <div id="dfRecap" class="df-recap"></div>`;
   const footer = `
-    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteDebit('${editId}')">Delete</button>`:''}
+    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteDebit('${jsArg(editId)}')">Delete</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveDebit('${ngoId}','${editId||''}')">${editId?'Save changes':'Log debit note'}</button>`;
+    <button class="btn primary" onclick="saveDebit('${jsArg(ngoId)}','${jsArg(editId||'')}')">${editId?'Save changes':'Log debit note'}</button>`;
   window._dfEditId = editId || null;
   showModal(modalShell(editId?"Edit debit note":"New debit note",
     editId?"Edit Debit Note":"Log a Debit Note", body, footer));
@@ -9605,7 +9622,7 @@ function updateDebitRecap(){
       ${ngo?`for <b>${esc(ngo.short)}</b>`:''}
       ${amt>0?`— <b>${fmtRsFull(amt)}</b><span class="dr-dim"> across ${nLines} scroll line${nLines>1?'s':''}</span>`:'<span class="dr-miss">— add a scroll line with an amount</span>'}
     </div>
-    <div class="dr-meta">${month?esc(monthLong(month)):'—'} · ${cat?esc(cat):'—'} · <span class="dr-dim">${esc(status)}</span></div>`;
+    <div class="dr-meta">${month?monthLong(month):'—'} · ${cat?esc(cat):'—'} · <span class="dr-dim">${esc(status)}</span></div>`;
 }
 
 /* one editable scroll-line row */
@@ -9679,7 +9696,7 @@ function debitParseLink(){
       msg.style.color = "var(--green)";
       msg.innerHTML = "✓ Read from the file name"
         + (numM?` — number <b>${esc((numM[1]||'').toUpperCase().replace(/\s/g,'-'))}</b>`:"")
-        + (mM?`, month <b>${esc(monthLong(mM[2]+'-'+months[mM[1]]))}</b>`:"")
+        + (mM?`, month <b>${monthLong(mM[2]+'-'+months[mM[1]])}</b>`:"")
         + ". Check and adjust below.";
     } else {
       msg.style.color = "var(--ink-3)";
@@ -9894,7 +9911,7 @@ function importDebitExcel(){
           msg.style.color = "var(--green)";
           msg.innerHTML = "✓ Read from the Excel file"
             + (dnNo?` — number <b>${esc(dnNo)}</b>${dnSuggested?" <span style='color:var(--ink-3)'>(suggested — none in the file)</span>":""}`:"")
-            + (repMonth?`, month <b>${esc(monthLong(repMonth))}</b>`:"")
+            + (repMonth?`, month <b>${monthLong(repMonth)}</b>`:"")
             + (lines.length?`, <b>${lines.length}</b> line${lines.length>1?'s':''} totalling <b>${fmtRsFull(total)}</b>`:"")
             + ". Check the fields below and save.";
         } else {
@@ -10151,9 +10168,9 @@ function pageBudget(){
         const _nb = DB.budgets[_fn];
         const _can = canEditNgo(_fn);
         return `<button class="btn ghost sm" onclick="FIN_NGO='all';render()">Clear filter</button>
-          ${_can?`<button class="btn ghost sm" onclick="openBudgetUpload('${_fn}')" title="Edit or replace the budget plan for this NGO">✎ Edit budget</button>`:''}
-          ${_can&&_nb?`<button class="btn ghost sm" style="color:var(--red)" onclick="clearBudget('${_fn}')" title="Delete the current budget plan for this NGO">✕ Clear budget</button>`:''}
-          <a class="link" style="font-size:12px;margin-left:auto;cursor:pointer" onclick="go('ngo','${_fn}')">Open ${esc(ngoById(_fn).short)} detail →</a>`;
+          ${_can?`<button class="btn ghost sm" onclick="openBudgetUpload('${jsArg(_fn)}')" title="Edit or replace the budget plan for this NGO">✎ Edit budget</button>`:''}
+          ${_can&&_nb?`<button class="btn ghost sm" style="color:var(--red)" onclick="clearBudget('${jsArg(_fn)}')" title="Delete the current budget plan for this NGO">✕ Clear budget</button>`:''}
+          <a class="link" style="font-size:12px;margin-left:auto;cursor:pointer" onclick="go('ngo','${jsArg(_fn)}')">Open ${esc(ngoById(_fn).short)} detail →</a>`;
       })():''}
     </div>`;
 
@@ -10249,7 +10266,7 @@ function pageBudget(){
         </tr></thead>
         <tbody>
         ${rows.slice().sort((a,b)=>b.util-a.util).map(r=>{
-          return `<tr class="click" onclick="FIN_NGO='${r.n.id}';render()">
+          return `<tr class="click" onclick="FIN_NGO='${jsArg(r.n.id)}';render()">
             <td><b>${esc(r.n.short)}</b></td>
             <td style="font-size:12px">${esc(aplNamesFor(r.n.id))}</td>
             <td class="num">${fmtRsFull(r.b.totalAnnual)}</td>
@@ -10384,12 +10401,12 @@ function pageDebits(){
             <td style="font-size:11.5px;color:var(--ink-3);max-width:330px">
               ${esc(src.slice(0,90))}
               ${d.url
-                ?`<div style="margin-top:4px"><a href="${esc(d.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the debit-note file (shared Drive)">📄 Open debit note →</a></div>`
+                ?`<div style="margin-top:4px"><a href="${safeHref(d.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the debit-note file (shared Drive)">📄 Open debit note →</a></div>`
                 :(d.emailId&&ME.role==="PM"?`<div style="margin-top:4px"><a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the source email (Gmail — only the owner can view)">📧 Open email →</a></div>`:'')}
             </td>
             <td style="white-space:nowrap">${can?`
-              <button class="btn accent sm" onclick="okayPendingDebit('${d.id}')">✓ Okay</button>
-              <button class="btn ghost sm" style="color:var(--red)" onclick="rejectPendingDebit('${d.id}')">✕ Reject</button>`:''}</td>
+              <button class="btn accent sm" onclick="okayPendingDebit('${jsArg(d.id)}')">✓ Okay</button>
+              <button class="btn ghost sm" style="color:var(--red)" onclick="rejectPendingDebit('${jsArg(d.id)}')">✕ Reject</button>`:''}</td>
           </tr>`;
         }).join("")}
         </tbody>
@@ -10425,11 +10442,11 @@ function pageDebits(){
             <td class="num"><b>${fmtRsFull(d.proposedAmount)}</b></td>
             <td style="font-size:11.5px;color:var(--ink-3);max-width:260px">
               ${esc(String(d.proposedFrom||"").slice(0,80))}
-              ${d.proposedUrl?`<div style="margin-top:4px"><a href="${esc(d.proposedUrl)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px">📄 Open re-sent note →</a></div>`:''}
+              ${d.proposedUrl?`<div style="margin-top:4px"><a href="${safeHref(d.proposedUrl)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px">📄 Open re-sent note →</a></div>`:''}
             </td>
             <td style="white-space:nowrap">${can?`
-              <button class="btn accent sm" onclick="acceptProposedAmount('${d.id}')">✓ Accept</button>
-              <button class="btn ghost sm" onclick="dismissProposedCorrection('${d.id}')">Keep current</button>`:''}</td>
+              <button class="btn accent sm" onclick="acceptProposedAmount('${jsArg(d.id)}')">✓ Accept</button>
+              <button class="btn ghost sm" onclick="dismissProposedCorrection('${jsArg(d.id)}')">Keep current</button>`:''}</td>
           </tr>`;
         }).join("")}
         </tbody>
@@ -10468,9 +10485,9 @@ function pageDebits(){
             <td class="num"><b>${fmtRsFull(d.amount)}</b></td>
             <td><span class="badge ${sc}">${esc(d.status||DN_STATUS_DEFAULT)}</span></td>
             <td>${d.url
-              ?`<a href="${esc(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the debit-note file (shared Drive)">📄 Open</a>`
+              ?`<a href="${safeHref(d.url)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the debit-note file (shared Drive)">📄 Open</a>`
               :(d.emailId&&ME.role==="PM"?`<a href="https://mail.google.com/mail/u/0/#all/${esc(d.emailId)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent)" title="Open the source email (Gmail — only the owner can view)">📧 Email</a>`:'<span style="color:var(--ink-3);font-size:11.5px">—</span>')}</td>
-            <td>${canEditNgo(d.ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${d.ngoId}','${d.id}')">Edit</button>`:''}</td>
+            <td>${canEditNgo(d.ngoId)?`<button class="btn ghost sm" onclick="openDebitForm('${jsArg(d.ngoId)}','${jsArg(d.id)}')">Edit</button>`:''}</td>
           </tr>`;
         }).join("") : `<tr><td colspan="9"><div class="empty"><div class="mk">▦</div><p>No debit notes for ${monthLong(CUR_MONTH)} match this filter.</p></div></td></tr>`}
         </tbody>
@@ -10507,13 +10524,13 @@ function pageDebits(){
             <td style="font-size:12px;max-width:300px">${esc((f.subject||"").slice(0,80))}</td>
             <td style="font-size:11.5px;color:var(--ink-3)">${esc(f.sender||"")}</td>
             <td>${f.url
-              ?`<a href="${esc(f.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the flagged attachment (shared Drive)">📄 ${esc((f.fileName||"open").slice(0,40))}</a>`
+              ?`<a href="${safeHref(f.url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11.5px" title="Open the flagged attachment (shared Drive)">📄 ${esc((f.fileName||"open").slice(0,40))}</a>`
               :esc(f.fileName||"—")}
               ${f.emailId&&ME.role==="PM"?`<div style="margin-top:3px"><a href="https://mail.google.com/mail/u/0/#all/${esc(f.emailId)}" target="_blank" rel="noopener" style="color:var(--ink-3);font-size:11px">📧 source email →</a></div>`:''}</td>
             <td style="font-size:11.5px;color:var(--ink-3);max-width:300px">${esc(f.reason||"")}</td>
             <td style="white-space:nowrap">
-              <button class="btn primary sm" onclick="acceptFlagged('${f.id}')" style="margin-right:4px">Accept</button>
-              <button class="btn ghost sm" onclick="dismissFlagged('${f.id}')">Dismiss</button>
+              <button class="btn primary sm" onclick="acceptFlagged('${jsArg(f.id)}')" style="margin-right:4px">Accept</button>
+              <button class="btn ghost sm" onclick="dismissFlagged('${jsArg(f.id)}')">Dismiss</button>
             </td>
           </tr>`).join("")}
           </tbody>
@@ -10562,7 +10579,7 @@ function acceptFlagged(id){
     <div class="hint" style="margin-top:8px">On <b>Continue</b>, the regular debit-note form opens with the Drive link, date and number pre-filled where possible. You finish filling the amount &amp; scroll lines and save — this row auto-dismisses.</div>`;
   const footer = `
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="acceptFlaggedGo('${id}')">Continue → debit-note form</button>`;
+    <button class="btn primary" onclick="acceptFlaggedGo('${jsArg(id)}')">Continue → debit-note form</button>`;
   showModal(modalShell("Accept flagged email", "Accept as Debit Note", body, footer));
 }
 
@@ -10784,7 +10801,7 @@ function dailyAplPage(){
         <option value="${ME.id}" ${editable?'selected':''}>My sheet</option>
         ${apls.filter(a=>a.id!==ME.id).map(a=>`<option value="${a.id}" ${whoId===a.id?'selected':''}>${esc(a.name)}</option>`).join("")}
       </select>
-      ${editable?`<button class="btn accent sm" style="margin-left:auto" onclick="dailyToggle('${ME.id}|${TODAY_ISO}')">＋ Fill today</button>`:''}
+      ${editable?`<button class="btn accent sm" style="margin-left:auto" onclick="dailyToggle('${jsArg(ME.id+"|"+TODAY_ISO)}')">＋ Fill today</button>`:''}
     </div>
     <div class="panel">
       <div class="panel-h">
@@ -10805,7 +10822,7 @@ function dailyDateRow(aplId,date,editable){
   const badge=filled
     ? `<span class="badge blue">${filled} hour${filled>1?'s':''} filled</span>`
     : `<span class="badge" style="background:var(--paper-2);color:var(--ink-3)">not filled</span>`;
-  const head=`<div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--rule);cursor:pointer${isOpen?';background:var(--paper-2)':''}" onclick="dailyToggle('${key}')">
+  const head=`<div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--rule);cursor:pointer${isOpen?';background:var(--paper-2)':''}" onclick="dailyToggle('${jsArg(key)}')">
       <span style="color:var(${isOpen?'--accent':'--ink-3'})">${isOpen?'▾':'▸'}</span>
       <b style="flex:1${isOpen?';color:var(--accent)':''}">${isToday?'Today — ':''}${dailyDateLabel(date)}</b>
       ${badge}
@@ -10849,7 +10866,7 @@ function dailyGrid(aplId,date,editable){
     </div>
     ${editable?`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap">
       <span style="font-size:12px;color:var(--ink-3)">Fill only the hours you want — blanks are fine.</span>
-      <button class="btn primary sm" onclick="dailySaveDay('${aplId}','${date}')">Save day</button>
+      <button class="btn primary sm" onclick="dailySaveDay('${jsArg(aplId)}','${jsArg(date)}')">Save day</button>
     </div>`:''}`;
 }
 
@@ -10867,7 +10884,7 @@ function dailyComments(aplId,date){
       </div>`).join(""):'<div style="font-size:12px;color:var(--ink-3);margin-bottom:7px">No comments yet.</div>'}
     ${canComment?`<div style="display:flex;gap:8px;margin-top:6px">
         <input id="dcmt_${aplId}_${date}" placeholder="Add a comment…" style="flex:1">
-        <button class="btn primary sm" onclick="dailyAddComment('${aplId}','${date}')">Comment</button>
+        <button class="btn primary sm" onclick="dailyAddComment('${jsArg(aplId)}','${jsArg(date)}')">Comment</button>
       </div>`:''}
   </div>`;
 }
@@ -10895,7 +10912,7 @@ function dailyPmPage(){
     </div>
     <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
       <div class="seg-toggle">
-        ${[["week","This week"],["lastweek","Last week"],["month","This month"]].map(([k,l])=>`<button class="${DAILY_RANGE===k?'on':''}" onclick="DAILY_RANGE='${k}';DAILY_OPEN=null;render()">${l}</button>`).join("")}
+        ${[["week","This week"],["lastweek","Last week"],["month","This month"]].map(([k,l])=>`<button class="${DAILY_RANGE===k?'on':''}" onclick="DAILY_RANGE='${jsArg(k)}';DAILY_OPEN=null;render()">${l}</button>`).join("")}
       </div>
       <select class="sel-inp" style="max-width:220px" onchange="DAILY_WHO=this.value;DAILY_OPEN=null;render()">
         <option value="all" ${who==='all'?'selected':''}>All team members</option>
@@ -11002,13 +11019,13 @@ function pageTasks(){
     const pc = t.priority==="High"?"red":t.priority==="Medium"?"amber":"gray";
     const who = apl ? apl.name.split(" ")[0] : "Unassigned";
     return `<div class="lrow">
-      <button onclick="toggleTask('${t.id}')" style="width:20px;height:20px;border-radius:5px;border:1.5px solid var(--${t.status==='Done'?'green':'rule-2'});background:${t.status==='Done'?'var(--green)':'transparent'};color:#fff;font-size:12px;flex:none">${t.status==='Done'?'✓':''}</button>
+      <button onclick="toggleTask('${jsArg(t.id)}')" style="width:20px;height:20px;border-radius:5px;border:1.5px solid var(--${t.status==='Done'?'green':'rule-2'});background:${t.status==='Done'?'var(--green)':'transparent'};color:#fff;font-size:12px;flex:none">${t.status==='Done'?'✓':''}</button>
       <div class="meta">
         <div class="t" style="${t.status==='Done'?'text-decoration:line-through;color:var(--ink-3)':''}">${esc(t.title)}</div>
         <div class="s">${esc(n?n.short:'—')} · ${esc(who)} · due ${fmtDMY(t.due)}${overdue?' <b style="color:var(--red)">overdue</b>':''}</div>
       </div>
       <span class="badge ${pc}">${t.priority}</span>
-      ${canEdit()?`<button class="btn ghost sm" onclick="openTaskForm('${t.id}')">Edit</button>`:''}
+      ${canEdit()?`<button class="btn ghost sm" onclick="openTaskForm('${jsArg(t.id)}')">Edit</button>`:''}
     </div>`;
   };
 
@@ -11099,9 +11116,9 @@ function openTaskForm(editId){
       <input type="date" id="tfDue" value="${t?t.due:'2026-02-15'}"/>
     </div>`;
   const foot = `
-    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteTask('${editId}')">Delete</button>`:''}
+    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteTask('${jsArg(editId)}')">Delete</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveTask('${editId||''}')"> ${editId?'Save changes':'Create task'}</button>`;
+    <button class="btn primary" onclick="saveTask('${jsArg(editId||'')}')"> ${editId?'Save changes':'Create task'}</button>`;
   showModal(modalShell(editId?"Edit task":"New task", editId?"Edit Task":"Add a Task", body, foot));
 }
 async function saveTask(editId){
@@ -11262,9 +11279,9 @@ function pageAdmin(){
               : (assigned.length ? assigned.map(n=>esc(n.short)).join(", ")
                                  : '<span style="color:var(--ink-3)">none yet</span>')}</td>
             <td class="num" style="white-space:nowrap">
-              <button class="btn ghost sm" onclick="openAplForm('${u.id}')">Edit</button>
-              <button class="btn ghost sm" onclick="resetLogin('${u.id}')">${u.authUid?'Reset password':'Set up login'}</button>
-              <button class="btn ghost sm" style="color:var(--red)" onclick="deleteApl('${u.id}')">Remove</button>
+              <button class="btn ghost sm" onclick="openAplForm('${jsArg(u.id)}')">Edit</button>
+              <button class="btn ghost sm" onclick="resetLogin('${jsArg(u.id)}')">${u.authUid?'Reset password':'Set up login'}</button>
+              <button class="btn ghost sm" style="color:var(--red)" onclick="deleteApl('${jsArg(u.id)}')">Remove</button>
             </td>
           </tr>`;
         }).join("")}
@@ -11377,9 +11394,9 @@ function openAplForm(editId){
       </div>` : `<div class="hint">No NGOs exist yet — add partner NGOs first, then assign them here.</div>`}
     </div>`;
   const foot = `
-    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteApl('${editId}')">Remove APL</button>`:''}
+    ${editId?`<button class="btn danger" style="margin-right:auto" onclick="deleteApl('${jsArg(editId)}')">Remove APL</button>`:''}
     <button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveApl('${editId||''}')">${editId?'Save changes':'Add Partnership Lead'}</button>`;
+    <button class="btn primary" onclick="saveApl('${jsArg(editId||'')}')">${editId?'Save changes':'Add Partnership Lead'}</button>`;
   showModal(modalShell(editId?"Edit Partnership Lead":"New Partnership Lead", editId?"Edit Partnership Lead":"Add a Partnership Lead", body, foot));
 }
 async function saveApl(editId){
@@ -11583,10 +11600,10 @@ function adminNgoLoginsPanel(){
         <td class="mono">${u ? esc(u.username) : '<span style="color:var(--ink-3)">—</span>'}</td>
         <td>${ok ? '<span class="badge green">active</span>' : '<span class="badge gray">no login</span>'}</td>
         <td class="num" style="white-space:nowrap">${u
-          ? `<button class="btn ghost sm" onclick="openNgoLoginForm('${n.id}')">Edit</button>
-             <button class="btn ghost sm" onclick="resetLogin('${u.id}')">${ok?'Reset password':'Set up login'}</button>
-             <button class="btn ghost sm" style="color:var(--red)" onclick="deleteNgoLogin('${u.id}')">Remove</button>`
-          : `<button class="btn ghost sm" onclick="openNgoLoginForm('${n.id}')">+ Create</button>`}</td>
+          ? `<button class="btn ghost sm" onclick="openNgoLoginForm('${jsArg(n.id)}')">Edit</button>
+             <button class="btn ghost sm" onclick="resetLogin('${jsArg(u.id)}')">${ok?'Reset password':'Set up login'}</button>
+             <button class="btn ghost sm" style="color:var(--red)" onclick="deleteNgoLogin('${jsArg(u.id)}')">Remove</button>`
+          : `<button class="btn ghost sm" onclick="openNgoLoginForm('${jsArg(n.id)}')">+ Create</button>`}</td>
       </tr>`; }).join("")}</tbody>
     </table></div>
   </div>`;
@@ -11601,7 +11618,7 @@ function openNgoLoginForm(ngoId){
       <div class="hint">${u ? 'To give them a new password, use “Reset password”.' : 'A password is generated when you create the login.'}</div></div>
     <div class="hint">This login sees only ${esc(n.short)}'s OKRs and tasks, and can update their status and comments.</div>`;
   const foot = `<button class="btn" onclick="closeModal()">Cancel</button>
-    <button class="btn primary" onclick="saveNgoLogin('${ngoId}')">${u ? 'Save changes' : 'Create login'}</button>`;
+    <button class="btn primary" onclick="saveNgoLogin('${jsArg(ngoId)}')">${u ? 'Save changes' : 'Create login'}</button>`;
   showModal(modalShell(u ? "Edit NGO login" : "New NGO login", n.short+" login", body, foot));
 }
 async function saveNgoLogin(ngoId){
@@ -11923,7 +11940,7 @@ function fdSignInScreen(){
   <div class="desc">This module has its own roles, each with separate rights. Choose your account to continue. (Super Admin can add more users, including NGO logins, once signed in.)</div></div>
   <div class="fgrid2">
     ${groups.map(g=>`<div class="panel"><div class="panel-h"><h3>${esc(FD_ROLES[g.r].label)}</h3><span class="note">${esc(FD_ROLES[g.r].desc)}</span></div><div style="padding:12px">
-      ${g.users.map(u=>`<button class="fd-userbtn" onclick="fdSetUser('${u.id}')"><span class="av" style="background:${FD_ROLES[u.role].color}">${esc(fdInitials(u.name))}</span><span style="text-align:left"><span style="font-weight:600;font-size:13px;display:block">${esc(u.name)}</span><span style="font-size:11px;color:var(--ink-3)">@${esc(u.username||"user")}${u.role==="NGO"&&u.ngoIds&&u.ngoIds.length?" · "+u.ngoIds.map(fdNgoName).join(", "):""}</span></span></button>`).join("")}
+      ${g.users.map(u=>`<button class="fd-userbtn" onclick="fdSetUser('${jsArg(u.id)}')"><span class="av" style="background:${FD_ROLES[u.role].color}">${esc(fdInitials(u.name))}</span><span style="text-align:left"><span style="font-weight:600;font-size:13px;display:block">${esc(u.name)}</span><span style="font-size:11px;color:var(--ink-3)">@${esc(u.username||"user")}${u.role==="NGO"&&u.ngoIds&&u.ngoIds.length?" · "+u.ngoIds.map(fdNgoName).join(", "):""}</span></span></button>`).join("")}
     </div></div>`).join("")}
   </div>`;
 }
@@ -11964,7 +11981,7 @@ function pageFDNMS(){
     </div></div>`;
   const cVer=FD.notes.filter(d=>["Submitted","Resubmitted","AccountsVerification"].includes(d.status)).length;
   const cApp=FD.notes.filter(d=>d.status==="FinanceReview").length;
-  const bar=`<div class="fd-tabs">${tabs.map(t=>{ const c=t[0]==="verify"?cVer:t[0]==="approve"?cApp:null; return `<button class="fd-tab ${FD_TAB===t[0]?'on':''}" onclick="fdGo('${t[0]}')">${esc(t[1])}${c?`<span class="ct alert">${c}</span>`:""}</button>`; }).join("")}</div>`;
+  const bar=`<div class="fd-tabs">${tabs.map(t=>{ const c=t[0]==="verify"?cVer:t[0]==="approve"?cApp:null; return `<button class="fd-tab ${FD_TAB===t[0]?'on':''}" onclick="fdGo('${jsArg(t[0])}')">${esc(t[1])}${c?`<span class="ct alert">${c}</span>`:""}</button>`; }).join("")}</div>`;
   let body="";
   switch(FD_TAB){
     case"overview": body=fdOverview(); break;
@@ -12009,7 +12026,7 @@ function fdOverview(){
     (role==="Admin"?`<div class="fbanner accent">You are Super Admin — manage roles & NGO logins in <a style="cursor:pointer;text-decoration:underline" onclick="fdGo('users')">Users &amp; Roles</a>.</div>`:"")+fdMiniTable(sub.slice().reverse().slice(0,8),"Recent activity");
 }
 function fdAvgCycle(){ const rel=FD.notes.filter(d=>d.status==="FundReleased"&&d.paymentId&&d.submittedAt); if(!rel.length)return"—"; const days=rel.map(d=>{ const p=fdPayById(d.paymentId); return (new Date(p.date)-new Date(d.submittedAt))/864e5; }); return Math.max(1,Math.round(fdSum(days)/days.length)); }
-function fdMiniTable(rows,title){ return `<div class="panel"><div class="panel-h"><h3>${esc(title)}</h3></div><div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>NGO</th><th class="num">Net Payable</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rows.length?rows.map(d=>`<tr style="cursor:pointer" onclick="openFDN('${d.id}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(fdNgoName(d.ngoId))}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td>${fdPill(d.status)}</td><td style="font-size:11.5px;color:var(--ink-2)">${fdDate(d.submittedAt||d.createdAt)}</td></tr>`).join(""):`<tr><td colspan="5"><div class="empty"><div class="mk">▦</div><p>Nothing yet.</p></div></td></tr>`}</tbody></table></div></div>`; }
+function fdMiniTable(rows,title){ return `<div class="panel"><div class="panel-h"><h3>${esc(title)}</h3></div><div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>NGO</th><th class="num">Net Payable</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rows.length?rows.map(d=>`<tr style="cursor:pointer" onclick="openFDN('${jsArg(d.id)}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(fdNgoName(d.ngoId))}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td>${fdPill(d.status)}</td><td style="font-size:11.5px;color:var(--ink-2)">${fdDate(d.submittedAt||d.createdAt)}</td></tr>`).join(""):`<tr><td colspan="5"><div class="empty"><div class="mk">▦</div><p>Nothing yet.</p></div></td></tr>`}</tbody></table></div></div>`; }
 
 /* ---------- LIST ---------- */
 let FD_LISTFILTER="all";
@@ -12018,9 +12035,9 @@ function fdListView(){
   const filters=[["all","All"],["open","In Progress"],["Approved","Approved"],["FundReleased","Released"],["ReturnedForCorrection","Returned"],["Rejected","Rejected"]];
   const match=(d,f)=> f==="all"?true : f==="open"?!["Approved","FundReleased","Closed","Rejected"].includes(d.status) : d.status===f;
   const shown=notes.filter(d=>match(d,FD_LISTFILTER));
-  return `<div class="seg-toggle" style="margin-bottom:16px">${filters.map(f=>`<button class="${FD_LISTFILTER===f[0]?'on':''}" onclick="FD_LISTFILTER='${f[0]}';render()">${esc(f[1])} ${notes.filter(d=>match(d,f[0])).length}</button>`).join("")}</div>
+  return `<div class="seg-toggle" style="margin-bottom:16px">${filters.map(f=>`<button class="${FD_LISTFILTER===f[0]?'on':''}" onclick="FD_LISTFILTER='${jsArg(f[0])}';render()">${esc(f[1])} ${notes.filter(d=>match(d,f[0])).length}</button>`).join("")}</div>
   <div class="panel"><div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>NGO / Project</th><th>Budget Head</th><th class="num">Net Payable</th><th>Status</th><th>Updated</th></tr></thead>
-  <tbody>${shown.length?shown.slice().reverse().map(d=>`<tr style="cursor:pointer" onclick="openFDN('${d.id}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b><div style="font-size:10.5px;color:var(--ink-3)">${d.lineItems.length} item(s)</div></td><td><b>${esc(fdNgoName(d.ngoId))}</b><div style="font-size:11px;color:var(--ink-3)">${esc(d.projectName||"—")}</div></td><td>${esc(d.budgetHead||"—")}</td><td class="num"><b>${fmtRsFull(d.netPayable)}</b></td><td>${fdPill(d.status)}</td><td style="font-size:11.5px;color:var(--ink-2)">${fdDate(d.submittedAt||d.createdAt)}</td></tr>`).join(""):`<tr><td colspan="6"><div class="empty"><div class="mk">▦</div><p>No debit notes match this filter.</p></div></td></tr>`}</tbody></table></div></div>`;
+  <tbody>${shown.length?shown.slice().reverse().map(d=>`<tr style="cursor:pointer" onclick="openFDN('${jsArg(d.id)}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b><div style="font-size:10.5px;color:var(--ink-3)">${d.lineItems.length} item(s)</div></td><td><b>${esc(fdNgoName(d.ngoId))}</b><div style="font-size:11px;color:var(--ink-3)">${esc(d.projectName||"—")}</div></td><td>${esc(d.budgetHead||"—")}</td><td class="num"><b>${fmtRsFull(d.netPayable)}</b></td><td>${fdPill(d.status)}</td><td style="font-size:11.5px;color:var(--ink-2)">${fdDate(d.submittedAt||d.createdAt)}</td></tr>`).join(""):`<tr><td colspan="6"><div class="empty"><div class="mk">▦</div><p>No debit notes match this filter.</p></div></td></tr>`}</tbody></table></div></div>`;
 }
 
 /* ---------- QUEUE ---------- */
@@ -12030,7 +12047,7 @@ function fdQueue(kind){
   const list=FD.notes.filter(d=>states.includes(d.status)).sort((a,b)=>new Date(a.submittedAt||a.createdAt)-new Date(b.submittedAt||b.createdAt));
   return `<div class="panel"><div class="panel-h"><h3>${kind==="verify"?"First-Level Verification — Accounts":"Final Approval — Finance"}</h3><span class="note">${list.length} awaiting · ${fmtRs(fdSum(list,d=>d.netPayable))}</span></div>
   <div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>NGO</th><th>Budget Head</th><th class="num">Net Payable</th><th>Age</th><th>Status</th><th></th></tr></thead>
-  <tbody>${list.length?list.map(d=>`<tr style="cursor:pointer" onclick="openFDN('${d.id}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(fdNgoName(d.ngoId))}</td><td>${esc(d.budgetHead||"—")}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td style="font-size:11.5px">${fdAge(d.submittedAt||d.createdAt)}d</td><td>${fdPill(d.status)}</td><td style="text-align:right">${canAct?`<button class="btn primary sm" onclick="event.stopPropagation();${kind==='verify'?`fdOpenVerify('${d.id}')`:`fdOpenApprove('${d.id}')`}">${kind==='verify'?'Verify':'Review'} →</button>`:""}</td></tr>`).join(""):`<tr><td colspan="7"><div class="empty"><div class="mk">✓</div><p>Queue is clear.</p></div></td></tr>`}</tbody></table></div></div>`;
+  <tbody>${list.length?list.map(d=>`<tr style="cursor:pointer" onclick="openFDN('${jsArg(d.id)}')"><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(fdNgoName(d.ngoId))}</td><td>${esc(d.budgetHead||"—")}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td style="font-size:11.5px">${fdAge(d.submittedAt||d.createdAt)}d</td><td>${fdPill(d.status)}</td><td style="text-align:right">${canAct?`<button class="btn primary sm" onclick="event.stopPropagation();${kind==='verify'?`fdOpenVerify('${d.id}')`:`fdOpenApprove('${d.id}')`}">${kind==='verify'?'Verify':'Review'} →</button>`:""}</td></tr>`).join(""):`<tr><td colspan="7"><div class="empty"><div class="mk">✓</div><p>Queue is clear.</p></div></td></tr>`}</tbody></table></div></div>`;
 }
 
 /* ---------- DETAIL ---------- */
@@ -12039,11 +12056,11 @@ function fdOwnsNote(d){ const ids=fdMyNgoIds(); return fdIsAdmin() || (fdRole()=
 function openFDN(id){
   const d=fdById(id); if(!d)return; const aud=fdNoteAudit(id); const pay=d.paymentId?fdPayById(d.paymentId):null;
   let actions="";
-  if(fdCanCreate() && fdOwnsNote(d) && d.status==="Draft") actions+=`<button class="btn" onclick="fdEditDraft('${id}')">Edit Draft</button><button class="btn primary" onclick="fdSubmit('${id}')">Submit for Verification →</button>`;
-  if(fdCanCreate() && fdOwnsNote(d) && d.status==="ReturnedForCorrection") actions+=`<button class="btn" onclick="fdEditDraft('${id}')">Revise</button><button class="btn primary" onclick="fdRespond('${id}')">Respond &amp; Resubmit →</button>`;
-  if(fdCanVerify() && ["Submitted","Resubmitted","AccountsVerification"].includes(d.status)) actions+=`<button class="btn primary" onclick="fdOpenVerify('${id}')">Open Verification ▦</button>`;
-  if(fdCanApprove() && d.status==="FinanceReview") actions+=`<button class="btn primary" onclick="fdOpenApprove('${id}')">Final Review ▦</button>`;
-  if(fdCanRelease() && d.status==="Approved") actions+=`<button class="btn green" onclick="fdOpenRelease('${id}')">₹ Record Fund Release</button>`;
+  if(fdCanCreate() && fdOwnsNote(d) && d.status==="Draft") actions+=`<button class="btn" onclick="fdEditDraft('${jsArg(id)}')">Edit Draft</button><button class="btn primary" onclick="fdSubmit('${jsArg(id)}')">Submit for Verification →</button>`;
+  if(fdCanCreate() && fdOwnsNote(d) && d.status==="ReturnedForCorrection") actions+=`<button class="btn" onclick="fdEditDraft('${jsArg(id)}')">Revise</button><button class="btn primary" onclick="fdRespond('${jsArg(id)}')">Respond &amp; Resubmit →</button>`;
+  if(fdCanVerify() && ["Submitted","Resubmitted","AccountsVerification"].includes(d.status)) actions+=`<button class="btn primary" onclick="fdOpenVerify('${jsArg(id)}')">Open Verification ▦</button>`;
+  if(fdCanApprove() && d.status==="FinanceReview") actions+=`<button class="btn primary" onclick="fdOpenApprove('${jsArg(id)}')">Final Review ▦</button>`;
+  if(fdCanRelease() && d.status==="Approved") actions+=`<button class="btn green" onclick="fdOpenRelease('${jsArg(id)}')">₹ Record Fund Release</button>`;
   const done=Object.values(d.checklist||{}).filter(Boolean).length;
   const body=`
     <div class="finfo" style="margin-bottom:16px">
@@ -12055,7 +12072,7 @@ function openFDN(id){
       <div><div class="k">Raised By</div><div class="v">${esc(fdUserName(d.createdBy))}</div></div>
     </div>
     ${d.purpose?`<div style="background:var(--paper-2);padding:11px 13px;border-radius:10px;font-size:12.5px;margin-bottom:16px"><b>Purpose:</b> ${esc(d.purpose)}</div>`:""}
-    <div class="panel" style="margin-bottom:16px"><div class="panel-h"><h3>Line Items</h3><span class="ha" style="margin-left:auto;display:flex;gap:8px"><button class="btn sm" onclick="fdPrint('${id}')">🖨 Print Soft Copy</button><button class="btn sm" onclick="fdExcel('${id}')">⬇ Excel</button></span></div>
+    <div class="panel" style="margin-bottom:16px"><div class="panel-h"><h3>Line Items</h3><span class="ha" style="margin-left:auto;display:flex;gap:8px"><button class="btn sm" onclick="fdPrint('${jsArg(id)}')">🖨 Print Soft Copy</button><button class="btn sm" onclick="fdExcel('${jsArg(id)}')">⬇ Excel</button></span></div>
       <div class="tbl-wrap"><table><thead><tr><th>Sr. No.</th><th>Description</th><th class="num">Amount (₹)</th></tr></thead><tbody>
       ${d.lineItems.map((li,i)=>`<tr><td>${i+1}</td><td>${esc(li.desc)}</td><td class="num">${fmtRsFull(li.amount)}</td></tr>`).join("")}
       <tr><td colspan="2" style="text-align:right;font-weight:700">Total</td><td class="num" style="font-weight:700">${fmtRsFull(d.total)}</td></tr>
@@ -12063,7 +12080,7 @@ function openFDN(id){
       <tr><td colspan="2" style="text-align:right;font-weight:700">Net Payable</td><td class="num" style="font-weight:800;color:var(--accent)">${fmtRsFull(d.netPayable)}</td></tr></tbody></table></div></div>
     ${(d.paymentTo==="Vendor"&&d.vendor.name)?`<div class="panel" style="margin-bottom:16px"><div class="panel-h"><h3>Vendor / Beneficiary</h3></div><div style="padding:14px" class="finfo"><div><div class="k">Name</div><div class="v">${esc(d.vendor.name)}</div></div><div><div class="k">A/c No.</div><div class="v mono">${esc(d.vendor.ac||"—")}</div></div><div><div class="k">IFSC</div><div class="v mono">${esc(d.vendor.ifsc||"—")}</div></div><div><div class="k">Bank</div><div class="v">${esc(d.vendor.bank||"—")}</div></div><div><div class="k">PAN</div><div class="v mono">${esc(d.vendor.pan||"—")}</div></div><div><div class="k">GST</div><div class="v mono">${esc(d.vendor.gst||"—")}</div></div></div></div>`:""}
     <div class="fgrid2">
-      <div class="panel"><div class="panel-h"><h3>Documents</h3><span class="note">${d.docs.length} file(s)</span></div><div style="padding:14px">${d.docs.length?d.docs.map((doc,di)=>`<div class="fdoc"><span class="di">${fdDocIcon(doc.type)}</span><div style="flex:1"><div class="dn">${esc(doc.name)}</div><div class="dm">${esc(doc.type)}${doc.size?` · ${Math.round(doc.size/1024)} KB`:""}</div></div>${doc.dataUrl?`<button class="btn ghost sm" onclick="fdOpenDoc('${d.id}',${di})">View</button>`:""}</div>`).join(""):`<div class="empty" style="padding:14px"><p>No documents.</p></div>`}</div></div>
+      <div class="panel"><div class="panel-h"><h3>Documents</h3><span class="note">${d.docs.length} file(s)</span></div><div style="padding:14px">${d.docs.length?d.docs.map((doc,di)=>`<div class="fdoc"><span class="di">${fdDocIcon(doc.type)}</span><div style="flex:1"><div class="dn">${esc(doc.name)}</div><div class="dm">${esc(doc.type)}${doc.size?` · ${Math.round(doc.size/1024)} KB`:""}</div></div>${doc.dataUrl?`<button class="btn ghost sm" onclick="fdOpenDoc('${jsArg(d.id)}',${di})">View</button>`:""}</div>`).join(""):`<div class="empty" style="padding:14px"><p>No documents.</p></div>`}</div></div>
       <div class="panel"><div class="panel-h"><h3>Verification &amp; Approval</h3>${done?`<span class="badge ${done===7?'green':'amber'}">${done}/7 checks</span>`:`<span class="badge gray">pending</span>`}</div><div style="padding:14px;font-size:12.5px">${d.accountsApproval?fdApprovalCard("Verified — Accounts (Vadali)",d.accountsApproval,"violet"):`<div style="color:var(--ink-3)">Not yet verified by Accounts.</div>`}${fdApprovalCard("Approved — Finance (Ahmedabad)",d.financeApproval,"green")}${pay?`<div style="margin-top:6px;padding:11px;background:var(--green-soft);border-radius:10px"><b>${esc(pay.number)}</b> · ${fmtRsFull(pay.amount)}<div style="font-size:11.5px;color:var(--ink-2)">${esc(pay.beneficiary)} · ${esc(pay.mode)} · UTR ${esc(pay.utr||"—")} · ${esc(pay.status)}</div></div>`:""}</div></div>
     </div>
     ${(d.queries&&d.queries.length)?`<div class="panel" style="margin-top:16px"><div class="panel-h"><h3>Queries &amp; Responses</h3></div><div style="padding:14px">${d.queries.map(q=>`<div class="ftl-item amber" style="padding-left:0;margin-bottom:8px"><div class="cmt" style="border-left-color:var(--amber)"><b>${esc(q.byName||fdUserName(q.by))}:</b> ${esc(q.text)}<div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">${fdDateTime(q.at)}</div>${q.response?`<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--rule-2)"><b>NGO response:</b> ${esc(q.response)}</div>`:""}</div></div>`).join("")}</div></div>`:""}
@@ -12126,7 +12143,7 @@ function fdForm(){
       <span style="margin-left:auto;display:flex;gap:8px">
         <button class="btn" onclick="fdXlClean();fdSaveDraft(false)">\ud83d\udcbe Save Draft</button>
         <button class="btn primary" onclick="fdXlClean();fdSaveDraft(true)">Submit for Verification \u2192</button>
-        <button class="btn ghost" onclick="FD_DRAFT=null;fdGo('${"${fdRole()==='NGO'?'mine':'all'}"}')">Cancel</button>
+        <button class="btn ghost" onclick="FD_DRAFT=null;fdGo('${jsArg("${fdRole()==='NGO'?'mine':'all'}")}')">Cancel</button>
       </span>
     </div>
   </div>`;
@@ -12173,7 +12190,7 @@ function fdRmDoc(i){ FD_DRAFT.docs.splice(i,1); render(); }
 function fdValidate(d){ const e=[]; if(!d.ngoId)e.push("Select an NGO"); if(!d.budgetHead)e.push("Select a budget head"); if(!d.lineItems.length||d.total<=0)e.push("Add at least one line item with an amount"); if(d.paymentTo==="Vendor"&&!d.vendor.name)e.push("Vendor name is required for direct vendor payment"); return e; }
 function fdSaveDraft(submit){ fdRecalc(FD_DRAFT); if(submit){ const e=fdValidate(FD_DRAFT); if(e.length){ toast(e[0]); return; } } const ex=fdById(FD_DRAFT.id); if(ex){ Object.assign(ex,FD_DRAFT); } else { FD.notes.push(FD_DRAFT); fdLog(FD_DRAFT,"Created Debit Note","Draft created"); } const d=ex||FD_DRAFT; if(submit){ d.status="Submitted"; d.submittedAt=fdNow(); fdLog(d,"Submitted for Verification","Submitted to KRSF Vadali Accounts · "+fmtRsFull(d.netPayable),"accent"); fdSave(); FD_DRAFT=null; toast("Submitted for verification → Accounts"); fdGo("mine"); } else { fdSave(); FD_DRAFT=null; toast("Draft saved"); fdGo(fdRole()==="NGO"?"mine":"all"); } }
 function fdSubmit(id){ const d=fdById(id); const e=fdValidate(d); if(e.length){ toast(e[0]); return; } d.status="Submitted"; d.submittedAt=fdNow(); fdLog(d,"Submitted for Verification","Submitted to KRSF Vadali Accounts","accent"); fdSave(); closeModal(); toast("Submitted → Accounts"); render(); }
-function fdRespond(id){ showModal(modalShell("Respond","Respond & Resubmit",`<div class="field"><label>Response to the query</label><textarea id="fdResp" placeholder="Explain the correction made (revise the draft first to add documents)"></textarea></div>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdDoRespond('${id}')">Resubmit →</button>`)); }
+function fdRespond(id){ showModal(modalShell("Respond","Respond & Resubmit",`<div class="field"><label>Response to the query</label><textarea id="fdResp" placeholder="Explain the correction made (revise the draft first to add documents)"></textarea></div>`,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdDoRespond('${jsArg(id)}')">Resubmit →</button>`)); }
 function fdDoRespond(id){ const d=fdById(id); const r=(el("fdResp").value||"").trim(); if(d.queries&&d.queries.length){ const q=d.queries[d.queries.length-1]; if(!q.response) q.response=r||"Corrected and resubmitted."; } d.status="Resubmitted"; d.submittedAt=fdNow(); fdLog(d,"Resubmitted After Correction",r?("Response: "+r):"Revised and resubmitted","accent"); fdSave(); closeModal(); toast("Resubmitted → Accounts"); render(); }
 
 /* ---------- VERIFICATION ENGINE (Accounts / Admin) ---------- */
@@ -12183,9 +12200,9 @@ function fdOpenVerify(id){
   if(d.status!=="AccountsVerification"){ d.status="AccountsVerification"; fdLog(d,"Accounts Verification Started","Opened for first-level verification"); fdSave(); }
   d.checklist=d.checklist||{};
   const body=`<div class="finfo" style="margin-bottom:14px"><div><div class="k">NGO</div><div class="v">${esc(fdNgoName(d.ngoId))}</div></div><div><div class="k">Net Payable</div><div class="v">${fmtRsFull(d.netPayable)}</div></div><div><div class="k">Budget Head</div><div class="v">${esc(d.budgetHead||"—")}</div></div><div><div class="k">Documents</div><div class="v">${d.docs.length} attached</div></div></div>
-    <div class="panel" style="margin-bottom:14px"><div class="panel-h"><h3>Verification Checklist</h3><span class="note">complete all 7 before recommending</span></div><div style="padding:14px">${FD_CHECKLIST.map(c=>`<label class="fcheck ${d.checklist[c.k]?'on':''}" id="fdchk_${c.k}" onclick="fdToggleChk('${id}','${c.k}')"><span class="box">✓</span><span><span class="ct">${esc(c.t)}</span><span class="cs">${esc(c.s)}</span></span></label>`).join("")}</div></div>
+    <div class="panel" style="margin-bottom:14px"><div class="panel-h"><h3>Verification Checklist</h3><span class="note">complete all 7 before recommending</span></div><div style="padding:14px">${FD_CHECKLIST.map(c=>`<label class="fcheck ${d.checklist[c.k]?'on':''}" id="fdchk_${c.k}" onclick="fdToggleChk('${jsArg(id)}','${jsArg(c.k)}')"><span class="box">✓</span><span><span class="ct">${esc(c.t)}</span><span class="cs">${esc(c.s)}</span></span></label>`).join("")}</div></div>
     <div class="field"><label>Verification comment</label><textarea id="fdVComment" placeholder="Notes for Finance / NGO (required to return or reject)"></textarea></div>`;
-  const foot=`<button class="btn danger" onclick="fdVerify('${id}','reject')">Reject</button><button class="btn" style="background:var(--amber);color:#fff;border-color:var(--amber)" onclick="fdVerify('${id}','return')">Send Back for Correction</button><button class="btn primary" id="fdRecBtn" onclick="fdVerify('${id}','recommend')">Recommend → Finance</button>`;
+  const foot=`<button class="btn danger" onclick="fdVerify('${jsArg(id)}','reject')">Reject</button><button class="btn" style="background:var(--amber);color:#fff;border-color:var(--amber)" onclick="fdVerify('${jsArg(id)}','return')">Send Back for Correction</button><button class="btn primary" id="fdRecBtn" onclick="fdVerify('${jsArg(id)}','recommend')">Recommend → Finance</button>`;
   showModal(modalShell("First-Level Verification · Accounts","Verify · "+esc(d.number), body, foot), true); fdUpdRec(d);
 }
 function fdToggleChk(id,k){ const d=fdById(id); d.checklist[k]=!d.checklist[k]; const e=el("fdchk_"+k); if(e)e.classList.toggle("on",d.checklist[k]); fdSave(); fdUpdRec(d); }
@@ -12209,7 +12226,7 @@ function fdOpenApprove(id){
     ${fdApprovalCard("Verified by Accounts (Vadali)",d.accountsApproval,"violet")}
     <div class="panel" style="margin:6px 0 14px"><div class="panel-h"><h3>Line Items</h3></div><div class="tbl-wrap"><table><thead><tr><th>Particulars</th><th class="num">Amount</th></tr></thead><tbody>${d.lineItems.map(li=>`<tr><td>${esc(li.desc)}</td><td class="num">${fmtRsFull(li.amount)}</td></tr>`).join("")}<tr><td style="text-align:right;font-weight:700">Net Payable</td><td class="num" style="font-weight:800">${fmtRsFull(d.netPayable)}</td></tr></tbody></table></div></div>
     <div class="field"><label>Decision comment</label><textarea id="fdFComment" placeholder="Comment (required for rejection / clarification)"></textarea></div>`;
-  const foot=`<button class="btn danger" onclick="fdApprove('${id}','reject')">Final Rejection</button><button class="btn" style="background:var(--amber);color:#fff;border-color:var(--amber)" onclick="fdApprove('${id}','clarify')">Request Clarification</button><button class="btn" onclick="fdApprove('${id}','sendback')">Send Back to Accounts</button><button class="btn green" onclick="fdApprove('${id}','approve')">Approve Fund Release ✓</button>`;
+  const foot=`<button class="btn danger" onclick="fdApprove('${jsArg(id)}','reject')">Final Rejection</button><button class="btn" style="background:var(--amber);color:#fff;border-color:var(--amber)" onclick="fdApprove('${jsArg(id)}','clarify')">Request Clarification</button><button class="btn" onclick="fdApprove('${jsArg(id)}','sendback')">Send Back to Accounts</button><button class="btn green" onclick="fdApprove('${jsArg(id)}','approve')">Approve Fund Release ✓</button>`;
   showModal(modalShell("Final Approval Authority · Finance","Final Review · "+esc(d.number), body, foot), true);
 }
 function fdApprove(id,act){
@@ -12226,14 +12243,14 @@ function fdApprove(id,act){
 function fdReleaseView(){
   const pays=FD.payments.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)); const approved=FD.notes.filter(d=>d.status==="Approved");
   return `<div class="kpi-grid">${fdKpi("green","✓","Total Released",fmtRs(fdSum(pays.filter(p=>p.status==="Paid"),p=>p.amount)),pays.filter(p=>p.status==="Paid").length+" payments")}${fdKpi("amber","◷","Pending Release",fmtRs(fdSum(pays.filter(p=>p.status==="Pending"),p=>p.amount)),pays.filter(p=>p.status==="Pending").length+" in progress")}${fdKpi("accent","₹","Approved Awaiting",fmtRs(fdSum(approved,d=>d.netPayable)),approved.length+" notes")}${fdKpi("blue","#","Payment Records",pays.length,"this FY")}</div>
-  ${approved.length?`<div class="panel" style="margin-bottom:16px"><div class="panel-h"><h3>Approved — Awaiting Fund Release</h3></div><div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>Beneficiary</th><th class="num">Amount</th><th>Approved</th><th></th></tr></thead><tbody>${approved.map(d=>`<tr><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(d.paymentTo==="Vendor"?(d.vendor.name||"Vendor"):fdNgoFull(d.ngoId))}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td style="font-size:11.5px">${fdDate(d.financeApproval&&d.financeApproval.at)}</td><td style="text-align:right">${fdCanRelease()?`<button class="btn green sm" onclick="fdOpenRelease('${d.id}')">₹ Release</button>`:""}</td></tr>`).join("")}</tbody></table></div></div>`:""}
-  <div class="panel"><div class="panel-h"><h3>Payment Records</h3></div><div class="tbl-wrap"><table><thead><tr><th>Payment ID</th><th>DN No.</th><th>Beneficiary</th><th class="num">Amount</th><th>Mode / UTR</th><th>Status</th></tr></thead><tbody>${pays.length?pays.map(p=>`<tr style="cursor:pointer" onclick="openFDN('${p.noteId}')"><td class="mono" style="font-size:11.5px"><b>${esc(p.number)}</b><div style="font-size:10.5px;color:var(--ink-3)">${fdDate(p.date)}</div></td><td class="mono" style="font-size:11.5px">${esc(p.dnNumber)}</td><td>${esc(p.beneficiary)}<div style="font-size:10.5px;color:var(--ink-3)">${esc(p.beneficiaryType)}</div></td><td class="num">${fmtRsFull(p.amount)}</td><td>${esc(p.mode)}<div style="font-size:10.5px;color:var(--ink-3)" class="mono">${esc(p.utr||"—")}</div></td><td><span class="badge ${p.status==="Paid"?"green":p.status==="Failed"?"red":"amber"}">${esc(p.status)}</span></td></tr>`).join(""):`<tr><td colspan="6"><div class="empty"><div class="mk">₹</div><p>No payments recorded yet.</p></div></td></tr>`}</tbody></table></div></div>`;
+  ${approved.length?`<div class="panel" style="margin-bottom:16px"><div class="panel-h"><h3>Approved — Awaiting Fund Release</h3></div><div class="tbl-wrap"><table><thead><tr><th>DN No.</th><th>Beneficiary</th><th class="num">Amount</th><th>Approved</th><th></th></tr></thead><tbody>${approved.map(d=>`<tr><td class="mono" style="font-size:11.5px"><b>${esc(d.number)}</b></td><td>${esc(d.paymentTo==="Vendor"?(d.vendor.name||"Vendor"):fdNgoFull(d.ngoId))}</td><td class="num">${fmtRsFull(d.netPayable)}</td><td style="font-size:11.5px">${fdDate(d.financeApproval&&d.financeApproval.at)}</td><td style="text-align:right">${fdCanRelease()?`<button class="btn green sm" onclick="fdOpenRelease('${jsArg(d.id)}')">₹ Release</button>`:""}</td></tr>`).join("")}</tbody></table></div></div>`:""}
+  <div class="panel"><div class="panel-h"><h3>Payment Records</h3></div><div class="tbl-wrap"><table><thead><tr><th>Payment ID</th><th>DN No.</th><th>Beneficiary</th><th class="num">Amount</th><th>Mode / UTR</th><th>Status</th></tr></thead><tbody>${pays.length?pays.map(p=>`<tr style="cursor:pointer" onclick="openFDN('${jsArg(p.noteId)}')"><td class="mono" style="font-size:11.5px"><b>${esc(p.number)}</b><div style="font-size:10.5px;color:var(--ink-3)">${fdDate(p.date)}</div></td><td class="mono" style="font-size:11.5px">${esc(p.dnNumber)}</td><td>${esc(p.beneficiary)}<div style="font-size:10.5px;color:var(--ink-3)">${esc(p.beneficiaryType)}</div></td><td class="num">${fmtRsFull(p.amount)}</td><td>${esc(p.mode)}<div style="font-size:10.5px;color:var(--ink-3)" class="mono">${esc(p.utr||"—")}</div></td><td><span class="badge ${p.status==="Paid"?"green":p.status==="Failed"?"red":"amber"}">${esc(p.status)}</span></td></tr>`).join(""):`<tr><td colspan="6"><div class="empty"><div class="mk">₹</div><p>No payments recorded yet.</p></div></td></tr>`}</tbody></table></div></div>`;
 }
 function fdOpenRelease(id){
   if(!fdCanRelease()){ toast("Only Finance can release funds"); return; }
   const d=fdById(id); if(!d)return; closeModal(); const ngo=ngoById(d.ngoId)||{}; const ben=d.paymentTo==="Vendor"?d.vendor:(ngo.bank||{}); const benName=d.paymentTo==="Vendor"?(d.vendor.name||"Vendor"):fdNgoFull(d.ngoId);
   const body=`<div class="fbanner green" style="margin-bottom:14px">Beneficiary: ${esc(benName)} · A/c ${esc(ben.ac||"—")} · ${esc(ben.ifsc||"")} ${esc(ben.bank||"")}</div><div class="fgrid2"><div class="field"><label>Amount (₹)</label><input id="fdpAmt" type="number" value="${d.netPayable}"></div><div class="field"><label>Payment Date</label><input id="fdpDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Payment Mode</label><select id="fdpMode"><option>NEFT</option><option>RTGS</option><option>IMPS</option><option>Cheque</option><option>Bank Transfer</option></select></div><div class="field"><label>UTR / Transaction No.</label><input id="fdpUtr" placeholder="e.g. UTR123456789012"></div><div class="field"><label>Bank Reference</label><input id="fdpRef" placeholder="Bank ref / cheque no."></div><div class="field"><label>Status</label><select id="fdpStatus"><option>Paid</option><option>Pending</option><option>Failed</option></select></div><div class="field" style="grid-column:1/-1"><label>Remarks</label><textarea id="fdpRemarks" placeholder="Optional"></textarea></div></div>`;
-  showModal(modalShell("Fund Release · "+esc(d.number),"Record Fund Release", body,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn green" onclick="fdRelease('${id}')">Record &amp; Release ✓</button>`), true);
+  showModal(modalShell("Fund Release · "+esc(d.number),"Record Fund Release", body,`<button class="btn" onclick="closeModal()">Cancel</button><button class="btn green" onclick="fdRelease('${jsArg(id)}')">Record &amp; Release ✓</button>`), true);
 }
 function fdRelease(id){
   if(!fdCanRelease()){ toast("Not permitted"); return; }
@@ -12263,7 +12280,7 @@ function fdUsersAdmin(){
     <td class="mono" style="font-size:11.5px">@${esc(u.username||"—")}</td>
     <td><span class="badge" style="background:${FD_ROLES[u.role].color}22;color:${FD_ROLES[u.role].color}">${esc(FD_ROLES[u.role].label)}</span></td>
     <td style="font-size:11.5px">${u.role==="NGO"?((u.ngoIds||[]).map(fdNgoName).join(", ")||'<span style="color:var(--red)">none assigned</span>'):'<span style="color:var(--ink-3)">— all —</span>'}</td>
-    <td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdUserForm('${u.id}')">Edit</button><button class="btn ghost sm" style="color:var(--red)" onclick="fdUserDelete('${u.id}')">Remove</button></td>
+    <td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdUserForm('${jsArg(u.id)}')">Edit</button><button class="btn ghost sm" style="color:var(--red)" onclick="fdUserDelete('${jsArg(u.id)}')">Remove</button></td>
   </tr>`).join("")}</tbody></table></div></div>`;
 }
 function fdUserForm(editId){
@@ -12276,7 +12293,7 @@ function fdUserForm(editId){
   <div class="field" id="fuNgoWrap" style="margin-top:12px;display:${(u?u.role:'NGO')==='NGO'?'block':'none'}"><label>Assigned NGOs <span style="text-transform:none;font-weight:400">— NGO users see only these</span></label>
     <div class="fgrid2" style="gap:6px">${ngos.length?ngos.map(n=>`<label class="fcheck" style="padding:8px 10px;margin:0"><input type="checkbox" class="fuNgo" value="${n.id}" ${u&&(u.ngoIds||[]).includes(n.id)?'checked':''} style="width:auto"> <span class="ct" style="font-size:12px">${esc(n.short||n.name)}</span></label>`).join(""):'<div class="hint">No NGOs exist yet — add them on the Partner NGOs page first.</div>'}</div>
   </div>`;
-  showModal(modalShell(editId?"Edit user":"New user", editId?"Edit FDNMS user":"Add an FDNMS user", body,`${editId?`<button class="btn danger" style="margin-right:auto" onclick="fdUserDelete('${editId}')">Remove</button>`:''}<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdUserSave('${editId||''}')">${editId?'Save changes':'Add user'}</button>`));
+  showModal(modalShell(editId?"Edit user":"New user", editId?"Edit FDNMS user":"Add an FDNMS user", body,`${editId?`<button class="btn danger" style="margin-right:auto" onclick="fdUserDelete('${jsArg(editId)}')">Remove</button>`:''}<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdUserSave('${jsArg(editId||'')}')">${editId?'Save changes':'Add user'}</button>`));
 }
 function fdToggleNgoPick(role){ const w=el("fuNgoWrap"); if(w)w.style.display=(role==="NGO")?"block":"none"; }
 function fdUserSave(editId){
@@ -12298,7 +12315,7 @@ function fdUserDelete(id){
 /* ---------- REPOSITORY ---------- */
 function fdRepoView(){
   const notes=fdVisibleNotes().filter(d=>d.status!=="Draft"||fdRole()==="NGO");
-  return `<div class="fgrid3">${notes.length?notes.slice().reverse().map(d=>{ const pay=d.paymentId?fdPayById(d.paymentId):null; const fc=1+d.docs.length+(d.accountsApproval?1:0)+(d.financeApproval?1:0)+(pay?1:0); return `<div class="panel" style="cursor:pointer" onclick="openFDN('${d.id}')"><div style="padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:24px">🗀</span><div><div class="mono" style="font-weight:700">${esc(d.number)}</div><div style="font-size:11px;color:var(--ink-3)">${esc(fdNgoName(d.ngoId))}</div></div></div>${fdPill(d.status)}<div style="margin-top:10px;font-size:11.5px;color:var(--ink-2)">${fc} document(s) · ${fmtRsFull(d.netPayable)}</div><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"><span class="badge gray">Debit Note</span>${d.docs.map(x=>`<span class="badge gray">${esc(x.type)}</span>`).join("")}${d.accountsApproval?'<span class="badge violet">Accounts Approval</span>':""}${d.financeApproval?'<span class="badge green">Finance Approval</span>':""}${pay?'<span class="badge green">Payment Proof</span>':""}</div></div></div>`; }).join(""):`<div class="empty" style="grid-column:1/-1"><div class="mk">🗀</div><p>No folders yet.</p></div>`}</div>`;
+  return `<div class="fgrid3">${notes.length?notes.slice().reverse().map(d=>{ const pay=d.paymentId?fdPayById(d.paymentId):null; const fc=1+d.docs.length+(d.accountsApproval?1:0)+(d.financeApproval?1:0)+(pay?1:0); return `<div class="panel" style="cursor:pointer" onclick="openFDN('${jsArg(d.id)}')"><div style="padding:14px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="font-size:24px">🗀</span><div><div class="mono" style="font-weight:700">${esc(d.number)}</div><div style="font-size:11px;color:var(--ink-3)">${esc(fdNgoName(d.ngoId))}</div></div></div>${fdPill(d.status)}<div style="margin-top:10px;font-size:11.5px;color:var(--ink-2)">${fc} document(s) · ${fmtRsFull(d.netPayable)}</div><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"><span class="badge gray">Debit Note</span>${d.docs.map(x=>`<span class="badge gray">${esc(x.type)}</span>`).join("")}${d.accountsApproval?'<span class="badge violet">Accounts Approval</span>':""}${d.financeApproval?'<span class="badge green">Finance Approval</span>':""}${pay?'<span class="badge green">Payment Proof</span>':""}</div></div></div>`; }).join(""):`<div class="empty" style="grid-column:1/-1"><div class="mk">🗀</div><p>No folders yet.</p></div>`}</div>`;
 }
 
 /* ---------- SEARCH ---------- */
@@ -12397,22 +12414,22 @@ function fdSalaryView(){
   const hist=FD.salaryCycles.filter(c=>c.ngoId===ngoId).sort((a,b)=>b.month.localeCompare(a.month));
   const C=(r,i,c,field,right)=> cyc
     ? `<td class="${right?'xla xr':'xla'}" style="font-size:11px">${field==="amount"?fmtRsFull(fdSalAmt(r)):esc(r[field]||"")}</td>`
-    : `<td class="xlc ${right?'xr':''}"><input data-r="${i}" data-c="${c}" ${field==="amount"?'inputmode="decimal"':''} value="${field==="amount"?fdSalAmt(r):esc(r[field]||"")}" onkeydown="fdSalKey(event,${i},${c})" onpaste="fdSalPaste(event,${i},${c})" onchange="fdSalEdit(${i},'${field}',this.value)"></td>`;
+    : `<td class="xlc ${right?'xr':''}"><input data-r="${i}" data-c="${c}" ${field==="amount"?'inputmode="decimal"':''} value="${field==="amount"?fdSalAmt(r):esc(r[field]||"")}" onkeydown="fdSalKey(event,${i},${c})" onpaste="fdSalPaste(event,${i},${c})" onchange="fdSalEdit(${i},'${jsArg(field)}',this.value)"></td>`;
   return `
   <div class="panel" style="margin-bottom:14px"><div style="padding:12px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
     ${ngos.length>1?`<div class="field" style="min-width:220px"><label>NGO</label><select onchange="FD_SAL_NGO=this.value;render()">${ngos.map(n=>`<option value="${n.id}" ${n.id===ngoId?'selected':''}>${esc(n.name)}</option>`).join("")}</select></div>`:`<div><div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700">NGO</div><b>${esc(fdNgoFull(ngoId))}</b></div>`}
     <div class="field"><label>Salary Month</label><input type="month" value="${month}" onchange="FD_SAL_MONTH=this.value;render()"></div>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
       ${profOk?'':'<span class="badge amber">Set NGO bank profile first →</span>'}
-      <button class="btn sm" onclick="fdSalProfileForm('${ngoId}')">⚙ NGO Profile &amp; Signatories</button>
+      <button class="btn sm" onclick="fdSalProfileForm('${jsArg(ngoId)}')">⚙ NGO Profile &amp; Signatories</button>
     </div>
   </div></div>
 
   ${cyc?`<div class="fbanner green">✓ Salary for <b>&nbsp;${esc(fdSalMonthLong(month))}&nbsp;</b> processed on ${fdDate(cyc.createdAt)} · Scroll ID <b>&nbsp;${esc(cyc.scrollNo)}&nbsp;</b> · ${fmtRsFull(cyc.total)}
     <span style="margin-left:auto;display:flex;gap:8px">
-      <button class="btn sm" onclick="openFDN('${cyc.dnId}')">View Debit Note ${esc((fdById(cyc.dnId)||{}).number||"")}</button>
-      <button class="btn sm" onclick="fdSalPrintDN('${cyc.id}')">🖨 Debit Note PDF</button>
-      <button class="btn sm" onclick="fdSalPrintScroll('${cyc.id}')">🖨 Payment Scroll PDF</button>
+      <button class="btn sm" onclick="openFDN('${jsArg(cyc.dnId)}')">View Debit Note ${esc((fdById(cyc.dnId)||{}).number||"")}</button>
+      <button class="btn sm" onclick="fdSalPrintDN('${jsArg(cyc.id)}')">🖨 Debit Note PDF</button>
+      <button class="btn sm" onclick="fdSalPrintScroll('${jsArg(cyc.id)}')">🖨 Payment Scroll PDF</button>
     </span></div>`:""}
 
   <div class="panel" style="margin-bottom:14px">
@@ -12433,10 +12450,10 @@ function fdSalaryView(){
   <div class="fgrid2">
     <div class="panel"><div class="panel-h"><h3>Employee Master</h3><span class="note">${fdSalEmps(ngoId).length} on record · auto-fills every month · updated on each processing</span></div>
       <div class="tbl-wrap"><table><thead><tr><th>Name of the Payee</th><th class="num">Amount in Rs.</th><th>Status</th><th></th></tr></thead>
-      <tbody>${fdSalEmps(ngoId).length?fdSalEmps(ngoId).map(e=>`<tr><td><b>${esc(e.name)}</b><div style="font-size:10.5px;color:var(--ink-3)" class="mono">${esc(e.ac||"—")} · ${esc(e.ifsc||"")}</div></td><td class="num">${fmtRsFull(fdSalAmt(e))}</td><td>${e.active!==false?'<span class="badge green">Active</span>':'<span class="badge gray">Inactive</span>'}</td><td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdSalToggle('${e.id}')">${e.active!==false?'Deactivate':'Activate'}</button><button class="btn ghost sm" style="color:var(--red)" onclick="fdEmpDelete('${e.id}')">Remove</button></td></tr>`).join(""):`<tr><td colspan="4"><div class="empty" style="padding:16px"><p>Master fills automatically when you process the first month.</p></div></td></tr>`}</tbody></table></div></div>
+      <tbody>${fdSalEmps(ngoId).length?fdSalEmps(ngoId).map(e=>`<tr><td><b>${esc(e.name)}</b><div style="font-size:10.5px;color:var(--ink-3)" class="mono">${esc(e.ac||"—")} · ${esc(e.ifsc||"")}</div></td><td class="num">${fmtRsFull(fdSalAmt(e))}</td><td>${e.active!==false?'<span class="badge green">Active</span>':'<span class="badge gray">Inactive</span>'}</td><td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdSalToggle('${jsArg(e.id)}')">${e.active!==false?'Deactivate':'Activate'}</button><button class="btn ghost sm" style="color:var(--red)" onclick="fdEmpDelete('${jsArg(e.id)}')">Remove</button></td></tr>`).join(""):`<tr><td colspan="4"><div class="empty" style="padding:16px"><p>Master fills automatically when you process the first month.</p></div></td></tr>`}</tbody></table></div></div>
     <div class="panel"><div class="panel-h"><h3>Salary History</h3><span class="note">${hist.length} cycle(s) · records are never deleted</span></div>
       <div class="tbl-wrap"><table><thead><tr><th>Month</th><th>Scroll</th><th class="num">Payees</th><th class="num">Total</th><th>Debit Note</th><th></th></tr></thead>
-      <tbody>${hist.length?hist.map(c=>{ const d=fdById(c.dnId); return `<tr><td><b>${esc(fdSalMonthLong(c.month))}</b></td><td class="mono" style="font-size:11px">${esc(c.scrollNo)}</td><td class="num">${c.rows.length}</td><td class="num">${fmtRsFull(c.total)}</td><td>${d?`<a style="cursor:pointer" onclick="openFDN('${d.id}')" class="mono">${esc(d.number)}</a><div>${fdPill(d.status)}</div>`:"—"}</td><td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdSalPrintDN('${c.id}')">DN</button><button class="btn ghost sm" onclick="fdSalPrintScroll('${c.id}')">Scroll</button></td></tr>`; }).join(""):`<tr><td colspan="6"><div class="empty" style="padding:16px"><p>No processed cycles yet.</p></div></td></tr>`}</tbody></table></div></div>
+      <tbody>${hist.length?hist.map(c=>{ const d=fdById(c.dnId); return `<tr><td><b>${esc(fdSalMonthLong(c.month))}</b></td><td class="mono" style="font-size:11px">${esc(c.scrollNo)}</td><td class="num">${c.rows.length}</td><td class="num">${fmtRsFull(c.total)}</td><td>${d?`<a style="cursor:pointer" onclick="openFDN('${jsArg(d.id)}')" class="mono">${esc(d.number)}</a><div>${fdPill(d.status)}</div>`:"—"}</td><td style="text-align:right;white-space:nowrap"><button class="btn ghost sm" onclick="fdSalPrintDN('${jsArg(c.id)}')">DN</button><button class="btn ghost sm" onclick="fdSalPrintScroll('${jsArg(c.id)}')">Scroll</button></td></tr>`; }).join(""):`<tr><td colspan="6"><div class="empty" style="padding:16px"><p>No processed cycles yet.</p></div></td></tr>`}</tbody></table></div></div>
   </div>`;
 }
 /* ---------------- sheet behaviours ---------------- */
@@ -12479,7 +12496,7 @@ function fdSalProfileForm(ngoId){
     <div class="field"><label>Verified by</label><input id="prVer" value="${esc(p.verified)}"></div>
   </div>`;
   showModal(modalShell("NGO profile","Profile & Signatories — "+esc(fdNgoFull(ngoId)), body,
-    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdSalProfileSave('${ngoId}')">Save</button>`));
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="fdSalProfileSave('${jsArg(ngoId)}')">Save</button>`));
 }
 function fdSalProfileSave(ngoId){
   const p=fdSalProfile(ngoId);

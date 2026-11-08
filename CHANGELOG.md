@@ -1,5 +1,20 @@
 # Changelog
 
+## V75.2 — 2026-11-08
+### Fixed (security)
+- Saved text can no longer run as code. A name, note or ID with an
+  apostrophe or code in it used to be able to break out of a button's
+  click action. Every value inside a click action now goes through a new
+  jsArg() helper (193 places).
+- Links saved in the app (Drive links on debit notes, documents, OKRs)
+  open only if they start with http:// or https://. Anything else, such as
+  a javascript: link, becomes a dead link (10 places, new safeHref()).
+- Date and month formatters now show non-date text as plain text.
+- NGO short name in the "Mark … as …" prompt and the partnership tag are
+  now escaped.
+### Changed
+- Offline cache bumped to sahkar-v75-3 so phones pick up the fix.
+
 ## V75.1 — 2026-11-08
 ### Removed
 - An old, unused offline seed of real partner OKR rows (with Drive links)
