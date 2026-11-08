@@ -2668,12 +2668,15 @@ function cacheClear(){
 
 /* ---- first-ever run: write a clean skeleton to RTDB ---- */
 async function cloudSeedIfEmpty(){
-  const metaRef = fb.db.ref("tracker/meta");
-  const snap = await metaRef.once("value");
-  if(snap.exists()) return false;          // already initialised — nothing to do
+  /* V75.5: a missing meta alone no longer counts as "empty". Seed only when
+     no part of the tracker and no ngoData exists.
+     Reads at most one child per part, not the whole data. */
+  const snaps = await Promise.all(DB_PARTS.map(p=>fb.db.ref("tracker/"+p).limitToFirst(1).once("value"))
+      .concat([fb.db.ref("ngoData").limitToFirst(1).once("value")]));
+  if(snaps.some(sn=>sn.exists())) return false;   // something is there — never overwrite
   const skeleton = skeletonData();
   const updates = {};
-  DB_PARTS.forEach(part=>{ updates["tracker/"+part] = skeleton[part]; });
+  DB_PARTS.forEach(part=>{ if(skeleton[part]!==undefined) updates["tracker/"+part] = skeleton[part]; });
   await fb.db.ref().update(updates);
   return true;
 }
@@ -2703,41 +2706,18 @@ function cloudListen(){
     const handler = snap=>{
       if(!snap.exists()) return;
       if(!DB){ return; }   // DB not assigned yet — ignore until loadDB() finishes
-      let incoming = snap.val();
-      // Coerce array collections that Firebase may return as keyed objects
-      if(["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs","teamMbo"].includes(part)){
-        incoming = toArr(incoming);
-      }
-      // coerce arrays nested inside records too
-      if(part==="users"){
-        incoming.forEach(u=>{ u.ngoIds = toArr(u.ngoIds); });
-      }
-      if(part==="budgets" && incoming && typeof incoming==="object"){
-        Object.keys(incoming).forEach(k=>normalizeBudgetRec(incoming[k]));
-      }
-      if(part==="debits"){
-        incoming.forEach(d=>{
-          if(d.scrolls!==undefined) d.scrolls = toArr(d.scrolls);
-          if(d.history!==undefined) d.history = toArr(d.history);
-        });
-      }
-      if(part==="dailyLogs"){
-        incoming.forEach(r=>{
-          if(r){ if(r.comments!==undefined) r.comments = toArr(r.comments);
-                 if(!r.hours || typeof r.hours!=="object" || Array.isArray(r.hours)) r.hours = {}; }
-        });
-      }
-      if(part==="bigBets"){
-        incoming.forEach(b=>{
-          if(b && (!b.months || typeof b.months!=="object" || Array.isArray(b.months)))
-            b.months = {};
-        });
-      }
+      let incoming = normalizePart(part, snap.val());
       const inJson = JSON.stringify(incoming);
       // ignore the echo of our own just-written change
       if(inJson === _lastSynced[part]) return;
       _applyingRemote = true;
-      DB[part] = incoming;
+      /* V75.5: keep this device's changes that are not saved yet */
+      const base0 = (_lastSynced[part] && _lastSynced[part]!=="__force__") ? JSON.parse(_lastSynced[part]) : undefined;
+      const mineNow = DB[part];
+      if(base0!==undefined && !jsonEq(mineNow, base0)){
+        const m = mergePart(base0, mineNow, incoming);
+        DB[part] = (m===MERGE_CONFLICT) ? incoming : m;
+      } else DB[part] = incoming;
       _lastSynced[part] = inJson;
       _applyingRemote = false;
       cacheSave();
@@ -2820,6 +2800,97 @@ function canWritePart(part){
   return true;
 }
 function canWriteNgoData(){ return !!ME && ME.role!=="Viewer" && ME.role!=="NGO"; }
+/* ---- V75.5: merge on save ----
+   Each list (debits, NGOs, OKRs...) used to be written whole, so a save
+   could wipe out a change someone else made a moment earlier, or while
+   this device was offline. Now a save works out what THIS device changed
+   since it last heard from the server (rows added, removed, and the
+   fields edited in each row) and applies only that onto the server's
+   current copy, inside a transaction, so nothing in between is lost.
+   Two people editing the SAME field of the same row: the later save wins. */
+const MERGE_CONFLICT = { conflict:true };
+function jsonClone(v){ return v===undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+function jsonEq(a, b){ return JSON.stringify(a)===JSON.stringify(b); }
+function isPlainObj(v){ return !!v && typeof v==="object" && !Array.isArray(v); }
+function isRowList(v){
+  if(!Array.isArray(v)) return false;
+  const ids = new Set();
+  for(const r of v){ if(!isPlainObj(r) || r.id==null || ids.has(String(r.id))) return false; ids.add(String(r.id)); }
+  return true;
+}
+/* one record: the fields I changed since base go onto their copy */
+function mergeRec(b, m, t){
+  if(jsonEq(b, m)) return t;                     // I didn't touch it
+  if(m===undefined) return undefined;            // I deleted it
+  if(b===undefined) return t===undefined ? m : (isPlainObj(t) && isPlainObj(m) ? mergeRec({}, m, t) : m);
+  if(t===undefined) return undefined;            // they deleted it: their delete stands
+  if(!isPlainObj(b) || !isPlainObj(m) || !isPlainObj(t)) return m;
+  const out = Object.assign({}, t);
+  new Set(Object.keys(b).concat(Object.keys(m))).forEach(k=>{
+    if(!jsonEq(b[k], m[k])){ if(m[k]===undefined) delete out[k]; else out[k] = m[k]; }
+  });
+  return out;
+}
+/* a whole list or map: base = what I last saw, mine = now, theirs = server now */
+function mergePart(base, mine, theirs){
+  if(jsonEq(base, mine)) return theirs;
+  if(theirs==null || jsonEq(base, theirs)) return mine;
+  if(Array.isArray(mine) || Array.isArray(base) || Array.isArray(theirs)){
+    const B = base || [], M = mine || [], T = theirs || [];
+    if(!isRowList(B) || !isRowList(M) || !isRowList(T)) return MERGE_CONFLICT;
+    const by = a=>{ const m = new Map(); a.forEach(r=>m.set(String(r.id), r)); return m; };
+    const bm = by(B), mm = by(M), tm = by(T), out = [];
+    T.forEach(r=>{ const id = String(r.id); const v = mergeRec(bm.get(id), mm.get(id), r); if(v!==undefined) out.push(v); });
+    M.forEach(r=>{ const id = String(r.id); if(!tm.has(id) && !bm.has(id)) out.push(r); });   // my new rows
+    return out;
+  }
+  if(isPlainObj(mine) && isPlainObj(theirs) && (base==null || isPlainObj(base))){
+    const B = base || {}, out = Object.assign({}, theirs);
+    new Set(Object.keys(B).concat(Object.keys(mine))).forEach(k=>{
+      const v = mergeRec(B[k], mine[k], theirs[k]);
+      if(v===undefined) delete out[k]; else out[k] = v;
+    });
+    return out;
+  }
+  return MERGE_CONFLICT;
+}
+/* V75.5: the same clean-up for every copy of a list read from the server */
+function normalizePart(part, raw){
+  let incoming = raw;
+  if(incoming==null) return (["meta","budgets","scorecards","flagged"].indexOf(part)>=0) ? null : [];
+  // Coerce array collections that Firebase may return as keyed objects
+  if(["users","ngos","bigBets","debits","documents","tasks","mbo","refFiles","dailyLogs","teamMbo"].includes(part)){
+    incoming = toArr(incoming);
+  }
+  // coerce arrays nested inside records too
+  if(part==="users"){
+    incoming.forEach(u=>{ u.ngoIds = toArr(u.ngoIds); });
+  }
+  if(part==="budgets" && incoming && typeof incoming==="object"){
+    Object.keys(incoming).forEach(k=>normalizeBudgetRec(incoming[k]));
+  }
+  if(part==="debits"){
+    incoming.forEach(d=>{
+      if(d.scrolls!==undefined) d.scrolls = toArr(d.scrolls);
+      if(d.history!==undefined) d.history = toArr(d.history);
+    });
+  }
+  if(part==="dailyLogs"){
+    incoming.forEach(r=>{
+      if(r){ if(r.comments!==undefined) r.comments = toArr(r.comments);
+             if(!r.hours || typeof r.hours!=="object" || Array.isArray(r.hours)) r.hours = {}; }
+    });
+  }
+  if(part==="bigBets"){
+    incoming.forEach(b=>{
+      if(b && (!b.months || typeof b.months!=="object" || Array.isArray(b.months)))
+        b.months = {};
+    });
+  }
+  return incoming;
+}
+
+let _saveRun = null, _saveAgain = false;
 async function saveDB(){
   if(!DB) return false;
   cacheSave();
@@ -2830,42 +2901,72 @@ async function saveDB(){
     return false;
   }
   if(ME && ME.role==="NGO") return ngoPortalSave();
-  let ok = true;
-  const updates = {}, pending = {};   // pending = the new _lastSynced values, applied only on success
-  const pendingRows = {};
+  /* one save at a time; a save asked for meanwhile runs right after */
+  if(_saveRun){ _saveAgain = true; return _saveRun; }
+  _saveRun = (async ()=>{
+    let ok;
+    do { _saveAgain = false; ok = await saveDBOnce(); } while(ok && _saveAgain);
+    return ok;
+  })();
+  try{ return await _saveRun; } finally { _saveRun = null; }
+}
+async function saveDBOnce(){
+  let ok = true, ngosChanged = false;
+  const conflicts = [];
   try{
-    DB_PARTS.forEach(part=>{
-      if(NGO_SPLIT_PARTS.indexOf(part)>=0) return;   // V73: stored per NGO, below
-      if(!canWritePart(part)) return;                // V75.4: the rules would refuse it
-      const val = DB[part] ?? skeletonData()[part];
-      const cur = JSON.stringify(val);
-      if(cur !== _lastSynced[part]){
-        updates["tracker/"+part] = val;
-        pending[part] = cur;
+    for(const part of DB_PARTS){
+      if(NGO_SPLIT_PARTS.indexOf(part)>=0) continue;   // V73: stored per NGO, below
+      if(!canWritePart(part)) continue;                // V75.4: the rules would refuse it
+      const mine = jsonClone(DB[part] ?? skeletonData()[part]);
+      if(JSON.stringify(mine) === _lastSynced[part]) continue;
+      const forced = _lastSynced[part]==="__force__";  // restore from backup: replace
+      const base = (!forced && _lastSynced[part]!==undefined) ? JSON.parse(_lastSynced[part]) : undefined;
+      let conflict = false;
+      const res = await fb.db.ref("tracker/"+part).transaction(raw=>{
+        conflict = false;
+        if(forced || base===undefined) return mine;
+        const m = mergePart(base, mine, normalizePart(part, raw));
+        if(m===MERGE_CONFLICT){ conflict = true; return; }
+        return jsonClone(m);
+      }, undefined, false);
+      const server = normalizePart(part, res.snapshot.val());
+      const sJson = JSON.stringify(server);
+      if(!res.committed){
+        /* could not be merged: take the server copy and say so */
+        if(conflict) conflicts.push(part);
+        DB[part] = server; _lastSynced[part] = sJson;
+        continue;
       }
-    });
-    /* the NGO's name, readable by its own login */
-    if(updates["tracker/ngos"]) (DB.ngos||[]).forEach(n=>{
-      if(n && n.id) updates["ngoData/"+fbKey(n.id)+"/profile"] = { id:n.id, short:n.short||"", name:n.name||"" };
-    });
-    NGO_SPLIT_PARTS.forEach(p=>{ pendingRows[p] = canWriteNgoData() ? splitRowUpdates(p, updates, DB[p], _lastRows[p]) : _lastRows[p]; });
-    if(Object.keys(updates).length){
-      await fb.db.ref().update(updates);
+      /* keep anything edited on this device while the save was running */
+      const now = DB[part];
+      if(jsonEq(now, mine)) DB[part] = server;
+      else { const m2 = mergePart(mine, now, server); DB[part] = (m2===MERGE_CONFLICT) ? now : m2; }
+      _lastSynced[part] = sJson;
+      if(part==="ngos") ngosChanged = true;
     }
-    // write confirmed — NOW it is safe to mark these parts as synced
-    Object.keys(pending).forEach(p=>{ _lastSynced[p] = pending[p]; });
+    const updates = {}, pendingRows = {};
+    if(canWriteNgoData()){
+      /* the NGO's name, readable by its own login */
+      if(ngosChanged) (DB.ngos||[]).forEach(n=>{
+        if(n && n.id) updates["ngoData/"+fbKey(n.id)+"/profile"] = { id:n.id, short:n.short||"", name:n.name||"" };
+      });
+      NGO_SPLIT_PARTS.forEach(p=>{ pendingRows[p] = splitRowUpdates(p, updates, DB[p], _lastRows[p]); });
+    } else NGO_SPLIT_PARTS.forEach(p=>{ pendingRows[p] = _lastRows[p]; });
+    if(Object.keys(updates).length) await fb.db.ref().update(updates);
     NGO_SPLIT_PARTS.forEach(p=>{ _lastRows[p] = pendingRows[p]; });
+    cacheSave();
   }catch(e){
     ok = false;
     console.error("save failed", e);
-    // _lastSynced is intentionally NOT updated — the change stays "dirty"
-    // so the next saveDB() retries the write instead of silently dropping it.
+    // the change stays "dirty" so the next saveDB() retries it
+  }
+  if(conflicts.length){
+    toast("Someone else changed this at the same time — please check it and redo your last change");
+    try{ render(); }catch(e){}
   }
   if(!ok && SAVE_OK) toast("⚠ Couldn't sync — your last change will retry automatically");
   SAVE_OK = ok;
   setConnState(ok);
-  // a failed write leaves the change "dirty" in _lastSynced; schedule a retry
-  // so it isn't stranded until the next manual edit.
   if(!ok) scheduleSaveRetry();
   return ok;
 }
@@ -4582,7 +4683,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75.4</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Sahkar V75.5</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -11904,6 +12005,26 @@ function maybeWeeklyBackup(){
     }catch(e){ console.warn("weekly auto-backup failed", e); }
   }, 1500);
 }
+/* V75.5: what a restorable backup must look like. Returns a short reason, or "" if fine. */
+function backupProblem(d){
+  if(!d || typeof d!=="object" || Array.isArray(d)) return "not a tracker backup";
+  const MAPS = ["meta","budgets","scorecards","flagged"];
+  for(const p of DB_PARTS){
+    const v = d[p];
+    if(v===undefined || v===null) continue;
+    if(MAPS.indexOf(p)>=0){ if(typeof v!=="object" || Array.isArray(v)) return p+" has the wrong shape"; continue; }
+    if(!Array.isArray(v)) return p+" is not a list";
+    const ids = new Set();
+    for(const r of v){
+      if(!r || typeof r!=="object" || Array.isArray(r)) return p+" has a broken row";
+      if(r.id===undefined || r.id===null || r.id==="") return p+" has a row without an id";
+      if(ids.has(String(r.id))) return p+" has a repeated id";
+      ids.add(String(r.id));
+    }
+  }
+  if(!Array.isArray(d.users) || !d.users.some(u=>u && u.role==="PM")) return "it has no Program Manager user";
+  return "";
+}
 function importBackup(input){
   if(ME.role!=="PM") return;
   const file = input.files && input.files[0];
@@ -11913,12 +12034,21 @@ function importBackup(input){
     let data;
     try{ data = JSON.parse(reader.result); }
     catch(e){ toast("That file isn't a valid backup"); return; }
-    if(!data || !Array.isArray(data.users)){ toast("That file doesn't look like a tracker backup"); return; }
+    const bad = backupProblem(data);
+    if(bad){ toast("That file can't be restored: "+bad); return; }
+    const cnt = d=>({ users:(d.users||[]).length, ngos:(d.ngos||[]).length, debits:(d.debits||[]).length,
+                      mbo:(d.mbo||[]).length, tasks:(d.tasks||[]).length, teamMbo:(d.teamMbo||[]).length });
+    const now = cnt(DB), nw = cnt(data);
+    const shrink = Object.keys(now).filter(k=>now[k]>=10 && nw[k] < now[k]/2);
+    const rows = Object.keys(now).map(k=>`<tr><td>${k}</td><td style="text-align:right">${now[k]}</td><td style="text-align:right${shrink.indexOf(k)>=0?";color:var(--red);font-weight:700":""}">${nw[k]}</td></tr>`).join("");
     confirmAction("Restore from this backup?",
       `This replaces <b>all current live data</b> with the contents of the backup
-       file. Everyone's tracker will update. This cannot be undone — make sure
-       you have a current backup first.`,
+       file. Everyone's tracker will update. A copy of the current data is
+       downloaded first.
+       <table style="margin:10px 0;border-collapse:collapse;width:100%"><tr><th style="text-align:left">Records</th><th style="text-align:right">Now</th><th style="text-align:right">In backup</th></tr>${rows}</table>
+       ${shrink.length ? `<b style="color:var(--red)">Warning: the backup has far fewer ${shrink.join(", ")} than the live data. Check that this is the right file.</b>` : ""}`,
       async ()=>{
+        exportBackup(true);   // V75.5: keep a copy of what is about to be replaced
         const keep = DB;
         DB = migrateDB(data);
         try{ await reconcileLogins(); }

@@ -1,5 +1,26 @@
 # Changelog
 
+## V75.5 — 2026-11-08
+### Fixed (data safety)
+- Two people saving at the same time no longer wipe each other out. A save
+  now merges with what is on the server: different rows, and different
+  fields of the same row, are both kept. If the same field was changed, the
+  later save wins. If a list can't be merged safely, nothing is overwritten:
+  the app shows "Someone else changed this at the same time" and loads the
+  server copy.
+- Edits made while offline are merged on reconnect instead of replacing
+  changes others made in the meantime. Rows added by the email-capture
+  script are kept.
+- First-time setup only fills a completely empty database. A missing
+  settings entry can no longer reset the tracker, and an empty database
+  can now be set up (before, setup failed and the app went offline).
+- Restore from backup now checks the file first (right shape, every row
+  has a unique id, a PM user exists), shows record counts now vs in the
+  backup, warns in red when the backup has far fewer records, and
+  downloads a copy of the current data before replacing it.
+### Changed
+- Offline cache bumped to sahkar-v75-6.
+
 ## V75.4 — 2026-11-08
 ### Changed
 - Saving now sends only the lists your role is allowed to change: only the
