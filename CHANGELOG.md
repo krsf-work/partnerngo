@@ -1,5 +1,14 @@
 # Changelog
 
+## V76.1 — 2026-11-08
+### Changed
+- The sign-in card no longer shows the "NGO OKRs, my OKRs, budgets and
+  debit notes" line.
+### Fixed
+- The security policy now lets the database's fallback connection (used on
+  networks that block WebSockets) open its hidden frame.
+- Offline cache bumped to pulse-v76-2.
+
 ## V76 — 2026-11-08
 ### Changed
 - The app is renamed **Pulse** (it was Sahkar), with the new Pulse logo on
