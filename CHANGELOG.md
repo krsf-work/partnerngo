@@ -1,5 +1,12 @@
 # Changelog
 
+## V75.1 — 2026-11-08
+### Removed
+- An old, unused offline seed of real partner OKR rows (with Drive links)
+  is gone from index.html and demo.html. These files are public, and the
+  data was never shown: real OKRs live only in the database. Nothing in
+  the app changes for users.
+
 ## V75 — 2026-11-04
 ### Changed
 - New look. Colour now means something: red for overdue, amber for today,
