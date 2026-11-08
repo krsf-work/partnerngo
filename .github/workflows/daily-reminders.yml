@@ -23,13 +23,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Actions are pinned to exact commits (v4.4.0) so a moved tag cannot change them.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
+      # Exact versions and checksums come from push/package-lock.json;
+      # package install scripts are not run.
       - name: Install firebase-admin
         working-directory: push
-        run: npm install --no-save --no-audit --no-fund firebase-admin@12.7.0
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Send reminders
         run: node push/send-daily.js
         env:

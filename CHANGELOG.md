@@ -1,5 +1,17 @@
 # Changelog
 
+## V75.2.1 — 2026-11-08 (reminder job only; the app is unchanged)
+### Fixed (security)
+- The 9 am reminder job installs firebase-admin from a committed lockfile
+  (push/package-lock.json: exact versions and checksums for all 167
+  packages) with `npm ci --ignore-scripts`. A newly published bad version
+  of any package can no longer slip in on its own.
+- GitHub Actions are pinned to exact commits, and checkout no longer keeps
+  its GitHub token on disk.
+### Removed
+- A debug step that re-read the push list and put a live access token in
+  a web address. The public log now shows counts only.
+
 ## V75.2 — 2026-11-08
 ### Fixed (security)
 - Saved text can no longer run as code. A name, note or ID with an
