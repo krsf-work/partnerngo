@@ -24,6 +24,7 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" href="icon-192.png" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<script>window.__pulseInstall=null;addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pulseInstall=e;if(typeof v7InstallRefresh==='function')v7InstallRefresh();});addEventListener('appinstalled',function(){window.__pulseInstall=null;if(typeof v7InstallRefresh==='function')v7InstallRefresh();});</script>
 
 <meta name="theme-color" content="#5b3fc0" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -1266,9 +1267,10 @@ window.FIREBASE_CONFIG = null;   // demo: no database
 @keyframes introPop{to{opacity:1;transform:none}}
 #introGreet{font-size:clamp(46px,11vw,104px);line-height:1.05;color:#fff;white-space:nowrap;text-align:center;min-height:1.1em}
 #introGreet .ink{display:inline-block}
-#introGreet.g-draw .ink{-webkit-clip-path:inset(0 100% -22% 0);clip-path:inset(0 100% -22% 0)}
+#introGreet.g-draw .ink{-webkit-clip-path:inset(-40% 100% -22% 0);clip-path:inset(-40% 100% -22% 0)}
 #introGreet.g-draw.play .ink{animation:introDraw 1.05s cubic-bezier(.6,.1,.25,1) forwards}
-@keyframes introDraw{to{-webkit-clip-path:inset(0 -20% -22% 0);clip-path:inset(0 -20% -22% 0)}}
+@keyframes introDraw{to{-webkit-clip-path:inset(-40% -20% -22% 0);clip-path:inset(-40% -20% -22% 0)}}
+#introGreet.f-guj .ink{padding-top:.14em}
 #introGreet.f-hello{font-family:'SahkarScript',cursive;font-weight:700}
 #introGreet.f-deva{font-family:'HandDeva','Nirmala UI','Noto Sans Devanagari',sans-serif;font-weight:700}
 #introGreet.f-guj{font-family:'HandGuj','Nirmala UI','Noto Sans Gujarati',sans-serif;font-weight:600}
@@ -4375,6 +4377,44 @@ function v4OpenItem(kind, id){
   if(kind==="task") return v4TaskSheet(id);
   if(kind==="ngokr") return v4KrSheet(id);
 }
+/* V77.2: install Pulse as an app */
+const V7_INSTALL_HIDE = "sahkar_install_hide_";
+function v7InstallKind(){
+  try{ if(matchMedia("(display-mode: standalone)").matches || navigator.standalone) return ""; }catch(e){}
+  if(window.__pulseInstall) return "prompt";
+  const ua = navigator.userAgent || "";
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  if(ios) return "ios";
+  return "";
+}
+function v7InstallCard(){
+  const k = v7InstallKind(); if(!k || !ME) return "";
+  try{ if(localStorage.getItem(V7_INSTALL_HIDE+ME.id)) return ""; }catch(e){}
+  return `<div class="v-remind" style="margin-bottom:14px">${vi("sparkle")}
+    <div><b>Install Pulse on this ${/Mobi|iPhone|Android/.test(navigator.userAgent)?"phone":"device"}</b>Open it from your home screen.</div>
+    <button class="v-btn sm primary" onclick="v7Install()">Install</button>
+    <button class="v-iconbtn" onclick="v7HideInstall()" aria-label="Dismiss">${vi("x","sm")}</button>
+  </div>`;
+}
+function v7HideInstall(){ try{ localStorage.setItem(V7_INSTALL_HIDE+ME.id, "1"); }catch(e){} render(); }
+function v7InstallRefresh(){ if(ME && (CUR_PAGE==="home" || CUR_PAGE==="more")) render(); }
+async function v7Install(){
+  const k = v7InstallKind();
+  if(k==="prompt"){
+    const ev = window.__pulseInstall; window.__pulseInstall = null;
+    try{ ev.prompt(); const r = await ev.userChoice; if(r && r.outcome==="accepted") toast("Pulse is being added to your home screen"); }catch(e){}
+    render(); return;
+  }
+  if(k==="ios"){
+    v4OpenSheet("Install Pulse", `<div class="v-list">
+      <div class="v-row"><div class="v-navic">1</div><div class="v-row-main"><div class="v-row-t">Open this page in Safari</div><div class="v-row-s">Other browsers on iPhone can't install apps</div></div></div>
+      <div class="v-row"><div class="v-navic">2</div><div class="v-row-main"><div class="v-row-t">Tap the Share button</div><div class="v-row-s">The square with an arrow pointing up</div></div></div>
+      <div class="v-row"><div class="v-navic">3</div><div class="v-row-main"><div class="v-row-t">Tap "Add to Home Screen"</div><div class="v-row-s">Then tap Add</div></div></div>
+    </div>`);
+    return;
+  }
+  toast("Pulse is already installed, or this browser can't install apps");
+}
 function v4RemindCard(){
   if(!("Notification" in window) || Notification.permission!=="default") return "";
   try{ if(localStorage.getItem(V4_REMIND_HIDE+ME.id)) return ""; }catch(e){}
@@ -4734,6 +4774,7 @@ function pageV4Home(){
     <h1>${v4Greeting()}, <span>${esc(v4First(ME.name))}</span></h1>
     ${v4DayBar(c, doneN)}
   </div>
+  ${v7InstallCard()}
   ${ME.role==="PM" && !f ? v7Overview() + v4Sec("Needs your attention") : ""}
   ${v4RemindCard()}
   ${filter}
@@ -4770,7 +4811,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.1</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.2</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -5304,6 +5345,7 @@ function pageV4More(){
   const myRows = v4RowsOf(ME.id), mm = v4DefaultMonth(myRows);
   const myKr = myRows.filter(r=>r.month===mm && r.type==="kr");
   const rows = [
+    v7InstallKind() ? v4NavRow("sparkle", "Install Pulse", "Add it to your home screen", "v7Install()") : "",
     has("daily") ? v4NavRow("cal", "Daily sheet", "Hours and daily log", "go('daily')") : "",
     has("docs") ? v4NavRow("folder", "Documents", "Agreements and files", "go('docs')") : "",
     perm ? v4NavRow("bell", "Deadline reminders", perm, "v4OpenNotifs()") : "",

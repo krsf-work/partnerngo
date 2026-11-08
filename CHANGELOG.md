@@ -1,5 +1,16 @@
 # Changelog
 
+## V77.2 — 2026-11-09
+### Added
+- "Install Pulse" card at the top of Today/Overview, and an Install row on
+  Me, wherever the app can be installed. On Android and desktop it opens the
+  browser's install box; on iPhone it shows the Share → Add to Home Screen
+  steps. The card can be dismissed and hides once Pulse is installed.
+### Fixed
+- The welcome greeting no longer cuts off the top of Gujarati letters
+  (the sign on તે in નમસ્તે); the Gujarati word also sits slightly lower.
+- Offline cache bumped to pulse-v77-3.
+
 ## V77.1 — 2026-11-09
 ### Changed
 - The menu's third item is now OKRs (key results and action items) instead
