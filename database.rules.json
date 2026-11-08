@@ -4,11 +4,22 @@
     ".write": false,
     "tracker": {
       ".read": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
-      ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true"
+      "users": {
+        ".write": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'PM'"
+      },
+      "teamMbo": {
+        ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true"
+      },
+      "dailyLogs": {
+        ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true"
+      },
+      "$part": {
+        ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true && root.child('roles').child(auth.uid).child('role').val() !== 'Viewer'"
+      }
     },
     "ngoData": {
       ".read": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
-      ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true",
+      ".write": "auth != null && root.child('roles').child(auth.uid).child('team').val() === true && root.child('roles').child(auth.uid).child('role').val() !== 'Viewer'",
       "$ngoId": {
         ".read": "auth != null && root.child('roles').child(auth.uid).child('role').val() === 'NGO' && root.child('roles').child(auth.uid).child('ngoId').val() === $ngoId",
         "mbo": {

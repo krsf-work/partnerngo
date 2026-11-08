@@ -30,7 +30,8 @@ async function signUp(email){
 (async ()=>{
   const pm = await signUp('pm@x.test'), lead = await signUp('lead@x.test'),
         ngo1 = await signUp('ngo1@x.test'), ngo2 = await signUp('ngo2@x.test'),
-        nobody = await signUp('nobody@x.test');
+        nobody = await signUp('nobody@x.test'),
+        viewer = await signUp('viewer@x.test'), accounts = await signUp('accounts@x.test');
   await admin('PUT', '', {
     tracker: { users:[{ id:'pm', role:'PM' }], ngos:[{ id:'n1' }, { id:'n2' }], debits:[{ id:'d1', amount:5 }] },
     ngoData: {
@@ -42,6 +43,8 @@ async function signUp(email){
     roles: {
       [pm.uid]:   { team:true,  role:'PM',        userId:'pm' },
       [lead.uid]: { team:true,  role:'Programme', userId:'l' },
+      [viewer.uid]:   { team:true, role:'Viewer',   userId:'v' },
+      [accounts.uid]: { team:true, role:'Accounts', userId:'a' },
       [ngo1.uid]: { team:false, role:'NGO', ngoId:'n1', userId:'u1' },
       [ngo2.uid]: { team:false, role:'NGO', ngoId:'n2', userId:'u2' }
     },
@@ -69,6 +72,25 @@ async function signUp(email){
   R('lead cannot make itself PM',                  await as(lead.tok,'PUT','roles/'+lead.uid+'/role','"PM"'), 401);
   R('lead cannot change logins',                   await as(lead.tok,'PUT','logins/sesta','"lead@x.test"'), 401);
   R('lead reads its own role',                     await as(lead.tok,'GET','roles/'+lead.uid), 200);
+
+  // V75.4: only the PM changes the user list; a Viewer writes only personal lists
+  R('lead cannot change the user list',            await as(lead.tok,'PUT','tracker/users/0/role','"PM"'), 401);
+  R('lead cannot replace the user list',           await as(lead.tok,'PUT','tracker/users',[{ id:'l', role:'PM' }]), 401);
+  R('lead cannot write the whole tracker',         await as(lead.tok,'PUT','tracker',{ debits:[] }), 401);
+  R('lead app save without users still works',     await as(lead.tok,'PATCH','',{ 'tracker/debits':[{ id:'d1', amount:8 }], 'tracker/teamMbo':[], 'ngoData/n1/profile':{ id:'n1', short:'One' } }), 200);
+  R('lead save that includes users is refused',    await as(lead.tok,'PATCH','',{ 'tracker/debits':[{ id:'d1', amount:9 }], 'tracker/users':[] }), 401);
+  R('accounts writes debits',                      await as(accounts.tok,'PUT','tracker/debits/0/amount','10'), 200);
+  R('accounts cannot change the user list',        await as(accounts.tok,'PUT','tracker/users/0/role','"Viewer"'), 401);
+  R('viewer reads tracker',                        await as(viewer.tok,'GET','tracker'), 200);
+  R('viewer reads ngoData',                        await as(viewer.tok,'GET','ngoData'), 200);
+  R('viewer cannot write debits',                  await as(viewer.tok,'PUT','tracker/debits/0/amount','0'), 401);
+  R('viewer cannot write ngos',                    await as(viewer.tok,'PUT','tracker/ngos',[]), 401);
+  R('viewer cannot write the user list',           await as(viewer.tok,'PUT','tracker/users',[]), 401);
+  R('viewer cannot write ngoData',                 await as(viewer.tok,'PUT','ngoData/n1/mbo/k1/status','"Done"'), 401);
+  R('viewer writes own OKR ticks (teamMbo)',       await as(viewer.tok,'PUT','tracker/teamMbo',[{ id:'m1', ownerId:'v', status:'Done' }]), 200);
+  R('viewer writes daily logs',                    await as(viewer.tok,'PUT','tracker/dailyLogs',[{ id:'dl1', aplId:'v' }]), 200);
+  R('PM writes the user list',                     await as(pm.tok,'PUT','tracker/users',[{ id:'pm', role:'PM' }, { id:'l', role:'Programme' }]), 200);
+  R('PM writes debits',                            await as(pm.tok,'PUT','tracker/debits/0/amount','11'), 200);
 
   // PM
   R('PM reads roles',                              await as(pm.tok,'GET','roles'), 200);
