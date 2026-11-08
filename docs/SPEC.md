@@ -1,7 +1,7 @@
-# Sahkar — product spec (V74)
+# Pulse — product spec (V74; renamed from Sahkar in V76)
 
 ## Purpose and users
-Sahkar is the KRSF Partnership Program's work app. Team members (Partnership
+Pulse (formerly Sahkar) is the KRSF Partnership Program's work app. Team members (Partnership
 Leads, Associate Partnership Leads, the Program Manager) use it mostly on a
 phone, sometimes on a laptop. Partner NGOs have their own phone-only view
 (V72/V73) and are unchanged by this release apart from styling.

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "description": "Sahkar 9 am reminder job. Installed by the workflow with: npm ci --ignore-scripts",
+  "description": "Pulse 9 am reminder job. Installed by the workflow with: npm ci --ignore-scripts",
   "engines": { "node": ">=20" },
   "dependencies": {
     "firebase-admin": "12.7.0"

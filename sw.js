@@ -1,7 +1,7 @@
-/* Sahkar service worker — network-first so the app is always fresh when online,
+/* Pulse service worker — network-first so the app is always fresh when online,
    and still opens (from cache) when offline. Bump CACHE on each release. */
-const CACHE = 'sahkar-v75-7';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE = 'pulse-v76-1';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -32,7 +32,7 @@ self.addEventListener('fetch', e => {
   );
 });
 
-/* V74: tapping a deadline reminder opens Sahkar (or brings it forward) */
+/* V74: tapping a deadline reminder opens Pulse (or brings it forward) */
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   // V75.6: only ever open a page of this site
@@ -56,7 +56,7 @@ self.addEventListener('push', e => {
   const opts = { body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png',
                  tag: d.tag || 'sahkar-daily', renotify: true, data: { url: d.url || './' } };
   e.waitUntil(
-    self.registration.showNotification(d.title || 'Sahkar', opts).then(() => {
+    self.registration.showNotification(d.title || 'Pulse', opts).then(() => {
       if (d.count && self.navigator && self.navigator.setAppBadge) return self.navigator.setAppBadge(+d.count).catch(() => {});
     })
   );

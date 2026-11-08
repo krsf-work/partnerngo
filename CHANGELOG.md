@@ -1,5 +1,16 @@
 # Changelog
 
+## V76 — 2026-11-08
+### Changed
+- The app is renamed **Pulse** (it was Sahkar), with the new Pulse logo on
+  the sign-in screen, sidebar, intro splash, home-screen icons and browser
+  tab. The demo, reminders and downloaded login list use the new name too.
+- New home-screen icons, including a padded version for Android's round
+  icons and an iPhone home-screen icon.
+- Nothing changes for sign-in, data or settings: the address stays the same
+  and internal names are kept, so every device keeps its session.
+- Offline cache renamed to pulse-v76-1.
+
 ## V75.6 — 2026-11-08
 ### Security
 - The page now has a Content-Security-Policy. Scripts may only come from

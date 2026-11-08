@@ -1,4 +1,4 @@
-/* Sahkar · 9 am deadline reminder.
+/* Pulse · 9 am deadline reminder.
    Runs every morning from .github/workflows/daily-reminders.yml.
 
    For every phone that turned reminders on (push/{auth uid}/{key} = {token}),
