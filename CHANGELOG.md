@@ -1,5 +1,20 @@
 # Changelog
 
+## V77.4 — 2026-11-09
+### Added
+- Upload on the OKRs page (Program Manager): pick whose OKRs (yourself
+  included), choose the MBO / OKR spreadsheet, check the preview, then
+  Import. Nothing is saved before Import. After importing, the page opens
+  on that person and month.
+### Changed
+- The OKRs page picks the person and the month from two compact pickers
+  instead of rows of buttons; the "Tap an objective…" hint is gone.
+- Objective and key-result text is a little smaller and lighter.
+### Fixed
+- A spreadsheet whose sheet isn't named MBO/OKR (for example "Sheet1") is
+  now read when it is laid out like an MBO, instead of being skipped.
+- Offline cache bumped to pulse-v77-5.
+
 ## V77.3 — 2026-11-09
 ### Changed
 - On phones the bottom bar now sits flush on the bottom edge (solid white,

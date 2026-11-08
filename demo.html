@@ -1861,7 +1861,7 @@ body.v5-anim .v-grp:nth-of-type(2){animation-delay:.05s}body.v5-anim .v-grp:nth-
 /* ---------- rows ---------- */
 .v-item{gap:14px}
 .v-item.tap:active{background:color-mix(in srgb,var(--v-primary) 5%,transparent)}
-.v-item-t{font-size:15.5px;font-weight:550;letter-spacing:-.01em;color:var(--v-n900)}
+.v-item-t{font-size:14.5px;font-weight:500;letter-spacing:0;color:var(--v-n900)}
 .v-item-t span{background:linear-gradient(currentColor,currentColor) 0 58%/0 1.5px no-repeat;transition:background-size .35s var(--ease-out),color .3s}
 .v-item.done .v-item-t{text-decoration:none;color:var(--v-n400)}
 .v-item.done .v-item-t span{background-size:100% 1.5px}
@@ -1895,7 +1895,16 @@ body.v5-anim .v-grp:nth-of-type(2){animation-delay:.05s}body.v5-anim .v-grp:nth-
 .v-obj .v-item{border-top:0;padding:13px 16px;position:relative}
 .v-obj-b{border-top:1px solid var(--v-line);background:linear-gradient(180deg,#fbfaff,var(--v-surface) 40px)}
 button.v-obj-h{padding:16px;gap:14px}
-.v-obj-t{font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--v-n900)}
+.v-obj-t{font-size:14.5px;font-weight:600;letter-spacing:0;line-height:1.45;color:var(--v-n800)}
+.v7-pick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.v7-sel{position:relative;flex:1 1 0;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:12px;background:var(--v-surface);box-shadow:0 1px 2px rgba(30,22,70,.06);border:1px solid var(--v-line);color:var(--v-n600);min-width:0;max-width:100%}
+.v7-sel select{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;font-size:13.5px;font-weight:600;color:var(--v-n900);padding:0 2px;min-width:0;flex:1;width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.v7-sel select:focus{outline:none}
+.v7-sel:focus-within{border-color:var(--v-primary)}
+.v7-pick{flex-wrap:nowrap}
+.v7-up{flex:none;height:38px}
+@media (max-width:480px){.v7-up{width:38px;padding:0;justify-content:center}.v7-up .v7-upt{display:none}}
+.v-sumline b{font-size:17px!important;font-weight:700!important}
 .v-obj-p{font-size:12.5px;font-weight:700;color:var(--v-n500);font-variant-numeric:tabular-nums}
 .v5-ring{--p:0;width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;
   background:conic-gradient(var(--v-primary) calc(var(--p)*1%),var(--v-n200) 0);transition:background .4s}
@@ -4812,7 +4821,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.3</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.4</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -5081,12 +5090,15 @@ function pageV4MyOkr(){
                    late: cur.filter(r=>r.status!=="Done" && r.deadline && v4DaysTo(r.deadline)<0).length };
   return `
   <div class="v-head"><div><h1>${isMe ? "My OKRs" : esc(person.name)}</h1>
-      <p>${isMe ? "Your monthly key results and action items" : esc(person.title||"")+" · view only"}</p></div>
+      <p>${isMe ? "Your key results and action items" : esc(person.title||"Partnership Lead")}</p></div>
     <div class="v-head-act v-hide-m">${add}</div></div>
-  ${people.length>1 ? `<div class="v-chips" style="margin-bottom:10px">${people.map(p=>`<button class="v-chip ${p.id===pid?"on":""}" onclick="v4SetPerson('${jsArg(p.id)}')">${p.id===ME.id?"Me":esc(v4First(p.name))}</button>`).join("")}</div>` : ""}
-  ${months.length ? `<div class="v-chips" style="margin-bottom:16px">${months.map(x=>`<button class="v-chip ${x===m?"on":""}" onclick="v4SetMyMonth('${jsArg(x)}')">${monthLabel(x)}</button>`).join("")}</div>` : ""}
+  ${(people.length>1 || months.length || ME.role==="PM") ? `<div class="v7-pick">
+    ${people.length>1 ? `<label class="v7-sel">${vi("users","sm")}<select aria-label="Person" onchange="v4SetPerson(this.value)">${people.map(p=>`<option value="${esc(p.id)}" ${p.id===pid?"selected":""}>${p.id===ME.id?"Me":esc(p.name)}</option>`).join("")}</select>${vi("chevd","xs")}</label>` : ""}
+    ${months.length ? `<label class="v7-sel">${vi("cal","sm")}<select aria-label="Month" onchange="v4SetMyMonth(this.value)">${months.map(x=>`<option value="${esc(x)}" ${x===m?"selected":""}>${monthLong(x)}</option>`).join("")}</select>${vi("chevd","xs")}</label>` : ""}
+    ${ME.role==="PM" ? `<button class="v-btn sm v7-up" aria-label="Upload OKRs" title="Upload OKRs" onclick="tmOpenUpload('${jsArg(pid)}')">${vi("upload","sm")}<span class="v7-upt"> Upload</span></button>` : ""}
+  </div>` : ""}
   ${!rows.length ? `<div class="v-card">${v4Empty("target", isMe ? "No OKRs yet" : "No OKRs for "+esc(v4First(person.name)),
-      isMe ? "Your monthly MBO sheet appears here once it's imported. You can add your own action items now." : "Nothing imported for this person yet.", add)}</div>` : `
+      isMe ? "Your monthly MBO sheet appears here once it's imported. You can add your own action items now." : (ME.role==="PM" ? "Use Upload to bring in their MBO sheet." : "Nothing imported for this person yet."), add)}</div>` : `
   <div class="v-sumline">
     <div><b>${done} of ${krs.length}</b> key results done${counts.late?` · <span class="late">${counts.late} past deadline</span>`:""}</div>
     ${v4Meter(krs.length ? pct(done, krs.length) : 0, "thin")}
@@ -5095,7 +5107,6 @@ function pageV4MyOkr(){
     <button class="${view==="kr"?"on":""}" onclick="v4SetMyView('kr')">${vi("target","sm")} Key results <span class="n">${krs.length}</span></button>
     <button class="${view==="act"?"on":""}" onclick="v4SetMyView('act')">${vi("checksq","sm")} Action items <span class="n">${acts.length}</span></button>
   </div></div>
-  ${shown.some(r=>r.objective) ? `<div class="v-hint">Tap an objective to open it. Tap a line to tick it.</div>` : ""}
   ${shown.length ? `<div class="v-stagger">${v4ObjGroups(shown,"objNum","objective").map(g=>
     v4ObjCard("m:"+pid+":"+m+":"+view, g, g.rows.map((r,i)=>v4MyRow(r, isMe || ME.role==="PM", !g.text && i===0)).join(""))).join("")}</div>`
     : `<div class="v-card">${v4Empty(view==="kr"?"target":"checksq", view==="kr"?"No key results this month":"No action items this month",
@@ -7473,33 +7484,33 @@ function tmPreviewHtml(res){
   return summary + table + flags + replacing;
 }
 
-function tmOpenUpload(){
+function tmOpenUpload(preId){
   if(ME.role !== "PM"){ toast("Only the programme manager can upload MBOs"); return; }
-  const leads = tmLeads();
+  const leads = [ME].concat(tmLeads().filter(u=>u.id!==ME.id));
   if(!leads.length){ toast("No partnership leads set up yet — add them in Admin first"); return; }
   TM_PENDING = null;
   const body = `
     <div style="font-size:12.5px;color:var(--ink-3);line-height:1.6;margin-bottom:14px">
-      Upload a lead's MBO spreadsheet. Every month block in the file is read, including
+      Upload a monthly MBO / OKR spreadsheet. Every month block in the file is read, including
       the Action Items sheet. The file is read in your browser — nothing is sent anywhere,
       and nothing is saved until you've checked the preview.
     </div>
     <div class="field">
-      <label>Whose MBO is this?</label>
+      <label>Whose OKRs are these?</label>
       <select id="tmOwner" onchange="tmReadFile()">
-        ${leads.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}
+        ${leads.map(u=>`<option value="${esc(u.id)}" ${u.id===preId?"selected":""}>${u.id===ME.id?"Me ("+esc(u.name)+")":esc(u.name)}</option>`).join("")}
       </select>
       <div class="hint">The file itself isn't a reliable guide — some name the lead, some don't.</div>
     </div>
     <div class="field">
-      <label>MBO file (.xlsx, .xls or .csv)</label>
+      <label>OKR / MBO file (.xlsx, .xls or .csv)</label>
       <input type="file" id="tmFile" accept=".xlsx,.xls,.csv" onchange="tmReadFile()">
     </div>
     <div id="tmPreview"></div>`;
   const foot = `
     <button class="btn ghost" onclick="closeModal()">Cancel</button>
     <button class="btn accent" id="tmImportBtn" disabled onclick="tmConfirmImport()">Import</button>`;
-  showModal(modalShell("Team MBO", "Upload a lead's MBO", body, foot), true);
+  showModal(modalShell("OKRs", "Upload an OKR sheet", body, foot), true);
 }
 
 async function tmReadFile(){
@@ -7540,6 +7551,7 @@ async function tmConfirmImport(){
   const res = TM_PENDING;
   DB.teamMbo = tmReplaceMonths(DB.teamMbo||[], res.ownerId, res.months, res.rows);
   TM_PENDING = null;
+  if(CUR_PAGE==="myokr"){ V4.myPerson = res.ownerId; V4.myMonth = res.months.slice().sort().pop(); V4.myView = "kr"; }
   await saveDB();
   closeModal();
   render();
@@ -9049,8 +9061,11 @@ function tmSheetKind(name){
 function tmReadSheets(sheets, ownerId, batchId, todayIso){
   const rows = [], flags = [], monthSet = {}, seen = [];
 
+  /* V77.4: when no sheet is named MBO/OKR/Action Items, read any sheet
+     that is laid out like an MBO (e.g. a file with just "Sheet1") */
+  const anyNamed = (sheets||[]).some(sh => tmSheetKind(sh.name));
   (sheets||[]).forEach(sheet => {
-    const kind = tmSheetKind(sheet.name);
+    const kind = tmSheetKind(sheet.name) || (!anyNamed && tmFindBlocks(sheet.cells||[], "kr").length ? "kr" : null);
     const cells = sheet.cells || [];
     /* Recorded for every sheet, read or not, so a file that yields nothing
        can still show the user what was looked at and why it was passed
