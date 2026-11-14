@@ -4700,9 +4700,10 @@ function v7Overview(){
       ${v7Kpi("Debit notes pending", pend, fmtRs(pendAmt)+" not yet paid", pend?"warn":"", "go('money')")}
       ${v7Kpi("Overdue", c.late, (lateActs ? lateActs+" NGO actions · " : "")+(c.today ? c.today+" due today" : "nothing due today"), c.late?"bad":"", "v4OpenNotifs()")}
     </div>`;
-  const withB = rows.filter(x=>x.st.total).sort((a,b)=>b.st.used-a.st.used);
+  const v7Flag = st => st.used>100 ? 2 : (st.used < pace/2 && st.used < used-5) ? 1 : 0;
+  const withB = rows.filter(x=>x.st.total).sort((a,b)=>(v7Flag(b.st)-v7Flag(a.st)) || (b.st.used-a.st.used));
   const byNgo = withB.slice(0, V4.allBudget ? 999 : 5).map(({n,st})=>{
-      const slow = st.used < pace-30, over = st.used>100;
+      const slow = st.used < pace/2 && st.used < used-5, over = st.used>100;
       return `<div class="v-row tap" role="button" tabindex="0" onclick="V4.ngoTab['${jsArg(n.id)}']='money';go('ngo2','${jsArg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
         ${v4Mono(n)}
         <div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}</div>
@@ -4972,7 +4973,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.6</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.7</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -5533,7 +5534,7 @@ function pageV4More(){
   </div>
   <div class="v-list" style="margin-top:12px">${rows}</div>
   ${tools ? v4Sec("Programme tools") + `<div class="v-grid c2 v-stagger">${tools}</div>` : ""}
-  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.6</div>`;
+  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.7</div>`;
 }
 
 /* V75: the entrance animation plays when a page opens, not on every

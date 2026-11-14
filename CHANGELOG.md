@@ -1,5 +1,11 @@
 # Changelog
 
+## V77.7 — 2026-11-14
+
+### Changed
+- PM Overview: the "Slow" badge now flags only NGOs that have used less than half the budget expected by now and are more than 5 points behind the program as a whole. Before, it flagged every NGO below the expected pace.
+- Flagged NGOs (Over, then Slow) are listed first in "Budget used by NGO", so the top 5 never hides them.
+
 ## V77.6 — 2026-11-14
 
 ### Changed
