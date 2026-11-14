@@ -1187,6 +1187,7 @@ window.FIREBASE_CONFIG = null;   // demo: no database
   @media(max-width:920px){
     .kpi-grid{grid-template-columns:repeat(2,1fr)}
     .grid-2,.grid-3{grid-template-columns:1fr}
+    .grid-2>*,.grid-3>*{grid-column:auto!important;min-width:0}
     .side{position:fixed;z-index:60;transform:translateX(-100%);transition:transform .22s ease}
     .side.open{transform:none;box-shadow:var(--shadow-lg)}
     .hamburger{display:inline-flex}
@@ -4474,7 +4475,7 @@ function v4HomeItem(x){
   const k = V4_KIND[x.kind];
   return v4ItemRow({ kind:x.kind, id:x.id, done:false, can:v4CanComplete(x), title:x.title, urg:x.bucket,
     open:`v4OpenItem('${x.kind}','${v4Arg(x.id)}')`,
-    meta:`<span class="v-due ${v4DueCls(x.due)}">${v4DueLabel(x.due)}</span>${x.ngoId ? v4NgoTag(x.ngoId, x.sub) : `<span class="v5-me">${vi(k.ic,"xs")}${esc(x.sub)}</span>`}${v5KindIc(x.kind)}` });
+    meta:`<span class="v-due ${v4DueCls(x.due)}">${v4DueLabel(x.due)}</span>${x.ngoId ? v4NgoTag(x.ngoId, x.sub) : `<span class="v5-me">${vi(k.ic,"xs")}${esc(x.sub)}</span>`}` });
 }
 /* each NGO gets its own steady colour, so rows are easy to scan */
 const V5_NGO_HUES = [172, 24, 214, 330, 140, 265, 42, 192, 0, 290];
@@ -4702,7 +4703,8 @@ function v7Overview(){
       ${v7Kpi("Debit notes pending", pend, fmtRs(pendAmt)+" not yet paid", pend?"warn":"", "go('money')")}
       ${v7Kpi("Overdue", c.late, (lateActs ? lateActs+" NGO actions · " : "")+(c.today ? c.today+" due today" : "nothing due today"), c.late?"bad":"", "v4OpenNotifs()")}
     </div>`;
-  const byNgo = rows.filter(x=>x.st.total).sort((a,b)=>b.st.used-a.st.used).map(({n,st})=>{
+  const withB = rows.filter(x=>x.st.total).sort((a,b)=>b.st.used-a.st.used);
+  const byNgo = withB.slice(0, V4.allBudget ? 999 : 5).map(({n,st})=>{
       const slow = st.used < pace-30, over = st.used>100;
       return `<div class="v-row tap" role="button" tabindex="0" onclick="V4.ngoTab['${jsArg(n.id)}']='money';go('ngo2','${jsArg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
         ${v4Mono(n)}
@@ -4724,6 +4726,7 @@ function v7Overview(){
   return budgetCard + kpis
     + v4Sec("Budget used by NGO", rows.length)
     + (byNgo ? `<div class="v-list">${byNgo}</div>` : `<div class="v-calm">No budgets on file yet.</div>`)
+    + (withB.length > 5 ? `<button class="v-more" onclick="V4.allBudget=!V4.allBudget;render()">${V4.allBudget ? "Show less" : "Show " + (withB.length-5) + " more"}</button>` : "")
     + (noBudget ? `<div class="v-muted" style="font-size:12px;margin-top:6px">${noBudget} NGO${noBudget===1?" has":"s have"} no budget on file.</div>` : "")
     + (byLead.length ? v4Sec("By Partnership Lead", byLead.length) + `<div class="v-list">${byLead.map(x=>`<div class="v-row">
         <div class="v-avatar">${esc(x.u.avatar||v4Initials(x.u.name))}</div>
@@ -4972,7 +4975,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.5</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.6</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -4981,11 +4984,11 @@ function v4DlRow(x){ return v4HomeItem(x); }
 function v4NgoCard(n, st){
   st = st || v4NgoStats(n.id);
   const act = (n.partnership||"Active")==="Active";
-  const bits = [st.krTotal ? `${st.krDone}/${st.krTotal} KRs` : "No KRs", `${st.open} open`, st.total ? `${st.used}% budget` : ""].filter(Boolean);
+  const bits = [st.open ? `${st.open} open` : "Nothing open", st.total ? `${st.used}% budget used` : ""].filter(Boolean);
   return `<div class="v-row tap" role="button" tabindex="0" onclick="go('ngo2','${jsArg(n.id)}')" onkeydown="if(event.key==='Enter')this.click()">
     ${v4Mono(n)}
     <div class="v-row-main"><div class="v-row-t">${esc(n.short||n.name)}${act ? "" : ` <span class="v-muted" style="font-weight:500">· ${esc(n.partnership)}</span>`}</div>
-      <div class="v-row-s">${bits.join(" · ")}${st.pending ? ` · ${st.pending} DN pending` : ""}</div></div>
+      <div class="v-row-s">${bits.join(" · ")}</div></div>
     <div class="v-row-end">${st.late ? `<span class="v-badge bad">${st.late} late</span>` : ""}${vi("chevr","sm")}</div>
   </div>`;
 }
@@ -5199,7 +5202,8 @@ function v4NgoMoneyTab(n, can, st){
     </div>` : `<div class="v-card">${v4Empty("wallet","No budget on file","Upload the budget book from Finance to see spend against plan.")}</div>`;
   return budgetCard
     + v4Sec("Debit notes", dns.length || null, add)
-    + (dns.length ? `<div class="v-list v-stagger">${dns.slice(0,40).map(d=>v4DnRow(d, can)).join("")}</div>`
+    + (dns.length ? `<div class="v-list v-stagger">${dns.slice(0, V4.allDn===n.id ? 40 : 6).map(d=>v4DnRow(d, can)).join("")}</div>`
+       + (dns.length > 6 ? `<button class="v-more" onclick="V4.allDn=(V4.allDn==='${jsArg(n.id)}'?null:'${jsArg(n.id)}');render()">${V4.allDn===n.id ? "Show less" : "Show " + (Math.min(dns.length,40)-6) + " more"}</button>` : "")
        : `<div class="v-card">${v4Empty("receipt","No debit notes yet", can ? "Add the NGO's first debit note — upload its Excel and the fields fill in." : "Debit notes will appear here.", add)}</div>`);
 }
 function v4DnRow(d, can, showNgo){
@@ -5532,7 +5536,7 @@ function pageV4More(){
   </div>
   <div class="v-list" style="margin-top:12px">${rows}</div>
   ${tools ? v4Sec("Programme tools") + `<div class="v-grid c2 v-stagger">${tools}</div>` : ""}
-  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77</div>`;
+  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.6</div>`;
 }
 
 /* V75: the entrance animation plays when a page opens, not on every

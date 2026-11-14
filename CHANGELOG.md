@@ -1,5 +1,16 @@
 # Changelog
 
+## V77.6 — 2026-11-14
+
+### Changed
+- NGO cards (Home and the NGOs tab) show only open items and budget used. Key-result counts and pending debit notes are on the NGO page.
+- Rows on Home and the Overview no longer end with a small key-result/action icon.
+- PM Overview: "Budget used by NGO" shows the top 5, with "Show more" for the rest.
+- NGO Money tab: the latest 6 debit notes, with "Show more" for the rest.
+
+### Fixed
+- The full NGO record no longer squeezes the Milestones panel into a narrow column on phones.
+
 ## V77.5 — 2026-11-14
 
 ### Added
