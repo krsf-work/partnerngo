@@ -1947,6 +1947,16 @@ button.v-obj-h{padding:16px;gap:14px}
 @keyframes v5-ripple{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.9)}}
 @media (prefers-reduced-motion:reduce){.v5-hero,.v-grp,.v5-bar i{animation:none}.v-item.leave{transition:none}}
 /* V77 overview */
+.v7-fab{position:fixed;right:24px;bottom:28px;z-index:55;width:56px;height:56px;border-radius:50%;border:0;background:var(--v-primary);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(91,63,192,.35);cursor:pointer}
+.v7-fab .i{width:24px;height:24px}
+@media (max-width:767px){.v7-fab{right:16px;bottom:calc(var(--tabbar-h) + var(--safe-b) + 16px)}}
+.v7-qa{display:flex;flex-direction:column;gap:6px;padding-bottom:6px}
+.v7-qa-l{font-size:12.5px;font-weight:600;color:var(--v-n600);margin-top:8px}
+.v7-qa-in{width:100%;border:1px solid var(--v-n300);border-radius:12px;padding:11px 12px;font:inherit;font-size:15px;color:var(--v-n900);background:var(--v-surface)}
+.v7-qa-in:focus{outline:none;border-color:var(--v-primary)}
+textarea.v7-qa-in{resize:vertical;min-height:84px}
+.v7-qa-for{display:flex;align-items:center;gap:10px;font-size:15px;padding:4px 0}
+.v7-qa-go{margin-top:14px;height:46px;justify-content:center}
   .v7-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
   .v7-kpis>.v7-kpi:last-child:nth-child(odd){grid-column:1/-1}
   @media (min-width:900px){.v7-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.v7-kpis>.v7-kpi:last-child:nth-child(odd){grid-column:auto}}
@@ -4723,6 +4733,146 @@ function v7Overview(){
       </div>`).join("")}</div>` : "");
 }
 
+/* ===== V77.5 ===== */
+function v7CanUploadOwn(){ return !!ME && (ME.role==="PM" || ME.role==="APL" || ME.role==="Programme"); }
+function v7PlusDays(iso, n){
+  const d = new Date(iso+"T00:00:00"); d.setDate(d.getDate()+n);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+/* quick NGO action item from Home: NGO, what to do, deadline (7 days) */
+function v7ActNgos(){ return v4MyNgos().filter(n=>canEditNgo(n.id)); }
+function v7QuickAct(){
+  const ngos = v7ActNgos();
+  if(!ngos.length){ toast("You can add action items only for NGOs assigned to you"); return; }
+  const f = V4.homeNgo && V4.homeNgo!=="me" && ngos.some(n=>n.id===V4.homeNgo) ? V4.homeNgo : (ngos.length===1 ? ngos[0].id : "");
+  const fixed = f ? ngoById(f) : null;
+  const body = `<div class="v7-qa">
+    ${fixed ? `<input type="hidden" id="qaNgo" value="${esc(fixed.id)}"><div class="v7-qa-for">${v4Mono(fixed)}<b>${esc(fixed.short||fixed.name)}</b></div>`
+      : `<label class="v7-qa-l" for="qaNgo">NGO</label>
+         <select id="qaNgo" class="v7-qa-in"><option value="">Choose NGO</option>${ngos.map(n=>`<option value="${esc(n.id)}">${esc(n.short||n.name)}</option>`).join("")}</select>`}
+    <label class="v7-qa-l" for="qaTitle">Action item</label>
+    <textarea id="qaTitle" class="v7-qa-in" rows="3" maxlength="300" placeholder="What should the NGO do?"></textarea>
+    <label class="v7-qa-l" for="qaDue">Deadline</label>
+    <input type="date" id="qaDue" class="v7-qa-in" value="${v7PlusDays(TODAY_ISO, 7)}">
+    <button class="v-btn primary v7-qa-go" onclick="v7QuickActSave()">Add action item</button>
+  </div>`;
+  v4OpenSheet("New action item", body);
+  setTimeout(()=>{ const t = el("qaTitle"); if(t) t.focus(); }, 250);
+}
+async function v7QuickActSave(){
+  const ngoId = (el("qaNgo")||{}).value || "";
+  const title = ((el("qaTitle")||{}).value || "").trim();
+  const due = (el("qaDue")||{}).value || "";
+  if(!ngoId){ toast("Choose the NGO"); return; }
+  if(!title){ toast("Write the action item"); return; }
+  if(blockIfCantEditNgo(ngoId)) return;
+  const apl = (DB.users||[]).find(u=>u && (u.role==="APL" || u.role==="Programme") && Array.isArray(u.ngoIds) && u.ngoIds.includes(ngoId));
+  if(!DB.tasks) DB.tasks = [];
+  DB.tasks.push({ id:genId("t"), ngoId, aplId: apl ? apl.id : (ME.role!=="PM" ? ME.id : ""),
+    title, due, status:"Open", priority:"Medium" });
+  await saveDB();
+  v4CloseSheet();
+  render();
+  const n = ngoById(ngoId);
+  toast("Action item added for " + (n ? n.short : "the NGO"));
+}
+
+/* upload an NGO's OKR sheet: same reader as the leads' MBO sheets, with a
+   simple one-header-row reader as fallback; preview first, nothing saved
+   until Import; replaces that NGO's key results for the month(s) read */
+let V7_NGO_UP = null;
+function v7NgoUpload(ngoId){
+  if(blockIfCantEditNgo(ngoId)) return;
+  const n = ngoById(ngoId);
+  V7_NGO_UP = null;
+  const body = `
+    <div style="font-size:12.5px;color:var(--ink-3);line-height:1.6;margin-bottom:14px">
+      Upload ${esc(n ? n.short : "this NGO")}'s monthly OKR / MBO sheet. The file is read in your browser,
+      and nothing is saved until you've checked the preview and pressed Import.
+    </div>
+    <div class="field">
+      <label>OKR / MBO file (.xlsx, .xls or .csv)</label>
+      <input type="file" id="v7NgoFile" accept=".xlsx,.xls,.csv" onchange="v7NgoRead('${jsArg(ngoId)}')">
+    </div>
+    <div class="field">
+      <label>Month, if the sheet doesn't say</label>
+      <select id="v7NgoMonth" onchange="v7NgoRead('${jsArg(ngoId)}')">${FY_MONTHS.map(m=>`<option value="${m}" ${m===TODAY_MONTH?"selected":""}>${monthLong(m)}</option>`).join("")}</select>
+    </div>
+    <div id="v7NgoPrev"></div>`;
+  const foot = `
+    <button class="btn ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn accent" id="v7NgoBtn" disabled onclick="v7NgoImport('${jsArg(ngoId)}')">Import</button>`;
+  showModal(modalShell("OKRs", "Upload " + (n ? n.short : "NGO") + " OKRs", body, foot), true);
+}
+function v7MboStatus(s){ return s==="Done" ? "Done" : s==="Not Done" ? "Not Done" : "Pending"; }
+async function v7NgoRead(ngoId){
+  const inp = el("v7NgoFile"), out = el("v7NgoPrev"), btn = el("v7NgoBtn");
+  if(btn) btn.disabled = true;
+  V7_NGO_UP = null;
+  if(!inp || !inp.files || !inp.files[0]){ if(out) out.innerHTML = ""; return; }
+  if(typeof XLSX === "undefined"){ out.innerHTML = `<div class="tm-pv-empty">The spreadsheet reader didn't load. Check your connection and try again.</div>`; return; }
+  out.innerHTML = `<div class="tm-pv-sum">Reading…</div>`;
+  try{
+    const wb = XLSX.read(await inp.files[0].arrayBuffer(), { type:"array" });
+    const sheets = wb.SheetNames.map(name=>({ name, cells: XLSX.utils.sheet_to_json(wb.Sheets[name], { header:1, defval:"", blankrows:true }) }));
+    const res = tmReadSheets(sheets, ngoId, genId("imp"), TODAY_ISO);
+    let recs = res.rows.filter(r=>r.type==="kr").map(r=>({ month:r.month, objNum: parseInt(r.objNum)||1,
+      objective: r.objective || "(untitled objective)", kr: r.title || "(untitled key result)",
+      timeline: r.deadline || r.deadlineRaw || "", status: v7MboStatus(r.status), comment: r.comment || "", ref: r.ref || "" }));
+    const skippedActs = res.rows.filter(r=>r.type!=="kr").length;
+    if(!recs.length){
+      /* fallback: a plain sheet with the column names in its first row */
+      const defMonth = el("v7NgoMonth").value;
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:"" });
+      rows.forEach(r=>{
+        const objective = String(pickCol(r,["objective","goal"])).trim();
+        const kr = String(pickCol(r,["keyresult","kr","activity","result"])).trim();
+        if(!objective && !kr) return;
+        let month = String(pickCol(r,["month"])).trim();
+        if(!/^\d{4}-\d{2}$/.test(month)) month = defMonth;
+        recs.push({ month, objNum: parseInt(pickCol(r,["objectiveno","objno","objnum","no"]))||1,
+          objective: objective || "(untitled objective)", kr: kr || "(untitled key result)",
+          timeline: String(pickCol(r,["timeline","targetdate","duedate","deadline"])).trim(),
+          status: v7MboStatus(tmNormStatus(pickCol(r,["status"]))),
+          comment: String(pickCol(r,["comment","remark","note"])).trim(), ref: String(pickCol(r,["reference","ref","link"])).trim() });
+      });
+    }
+    if(!recs.length){
+      out.innerHTML = `<div class="tm-pv-empty"><b>Nothing was read, and nothing has been saved.</b><br>
+        The sheet needs a column for the key result (and ideally the objective). A heading such as <i>MBO - October 2026</i> sets the month.</div>`;
+      return;
+    }
+    const months = [...new Set(recs.map(r=>r.month))].sort();
+    const existing = (DB.mbo||[]).filter(r=>r && r.ngoId===ngoId && months.indexOf(r.month)>=0).length;
+    V7_NGO_UP = { ngoId, months, recs };
+    const byM = {}; recs.forEach(r=>{ (byM[r.month] = byM[r.month] || []).push(r); });
+    out.innerHTML = `<div class="tm-pv-sum">Read <b>${recs.length} key result${recs.length===1?"":"s"}</b> for <b>${months.map(monthLong).join(", ")}</b>.</div>`
+      + Object.keys(byM).sort().reverse().map(m=>`<div class="tm-pv-m">${monthLong(m)} — ${byM[m].length}</div>`
+          + byM[m].slice(0,5).map(r=>`<div class="tm-pv-r">${esc(r.kr)}</div>`).join("")
+          + (byM[m].length>5 ? `<div class="tm-pv-more">+ ${byM[m].length-5} more</div>` : "")).join("")
+      + (skippedActs ? `<div class="tm-pv-note">${skippedActs} action item${skippedActs===1?" was":"s were"} in the file and not imported. Add NGO action items with + on Home.</div>` : "")
+      + `<div class="tm-pv-note">${existing ? "Importing replaces the "+existing+" key result"+(existing===1?"":"s")+" already saved for "+(months.length===1?"that month":"those months")+"." : "Nothing is saved for that month yet."} Other months are left alone.</div>`;
+    if(btn) btn.disabled = false;
+  }catch(e){
+    console.error(e);
+    out.innerHTML = `<div class="tm-pv-empty">Couldn't read that file. Is it a valid spreadsheet?</div>`;
+  }
+}
+async function v7NgoImport(ngoId){
+  const up = V7_NGO_UP;
+  if(!up || up.ngoId!==ngoId || !up.recs.length){ toast("Nothing to import"); return; }
+  if(blockIfCantEditNgo(ngoId)) return;
+  const fresh = up.recs.map(r=>stampEdit(Object.assign({ id: genId("mbo"), ngoId, isOther:false }, r)));
+  DB.mbo = (DB.mbo||[]).filter(r=>!(r && r.ngoId===ngoId && up.months.indexOf(r.month)>=0)).concat(fresh);
+  V7_NGO_UP = null;
+  V4.ngoMonth[ngoId] = up.months[up.months.length-1];
+  await saveDB();
+  closeModal();
+  render();
+  const n = ngoById(ngoId);
+  toast(fresh.length + " key result" + (fresh.length===1?"":"s") + " imported for " + (n ? n.short : "the NGO"));
+}
 function pageV4Home(){
   V4.homeAll = V4.homeAll || {};
   const ngos = v4MyNgos();
@@ -4792,6 +4942,7 @@ function pageV4Home(){
   ${rest ? `<button class="v-more" style="margin-top:4px" onclick="v4OpenNotifs('later')">${esc(rest)} ${vi("chevr","sm")}</button>` : ""}
   ${grp("donetoday", "Done today", doneToday, v4DoneItem)}
 
+  ${v7ActNgos().length ? `<button class="v7-fab" onclick="v7QuickAct()" aria-label="Add an action item for an NGO" title="Add an action item for an NGO">${vi("plus")}</button>` : ""}
   ${f || ME.role==="PM" ? "" : v4Sec("Your NGOs", ngos.length) + (ngos.length ? `<div class="v-list">${ngos.map(n=>v4NgoCard(n)).join("")}</div>` : "")}`;
 }
 
@@ -4821,7 +4972,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.4</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.5</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -4964,7 +5115,7 @@ function v4NgoOkrTab(n, can){
   const rows = m ? (DB.mbo||[]).filter(r=>r && r.ngoId===n.id && r.month===m) : [];
   const done = rows.filter(r=>r.status==="Done").length;
   const bets = betsForNgo(n.id);
-  const add = can ? `<button class="v-btn sm primary" onclick="openMboModal('${jsArg(n.id)}')">${vi("plus","sm")} Add key results</button>` : "";
+  const add = can ? `<span style="display:inline-flex;gap:8px;flex-wrap:wrap"><button class="v-btn sm" onclick="v7NgoUpload('${jsArg(n.id)}')">${vi("upload","sm")} Upload</button><button class="v-btn sm primary" onclick="openMboModal('${jsArg(n.id)}')">${vi("plus","sm")} Add key results</button></span>` : "";
   let krHtml;
   if(!months.length){
     krHtml = `<div class="v-card">${v4Empty("target","No key results yet", can ? "Add this month's objectives and key results for "+esc(n.short)+"." : "Key results will appear once the NGO's lead adds them.", add)}</div>`;
@@ -4976,7 +5127,6 @@ function v4NgoOkrTab(n, can){
         <div><b>${done} of ${rows.length}</b> key results done${rows.some(r=>r.status==="Not Done")?` · <span class="late">${rows.filter(r=>r.status==="Not Done").length} not done</span>`:""}</div>
         ${v4Meter(rows.length ? pct(done, rows.length) : 0, "thin")}
       </div>
-      <div class="v-hint">Tap an objective to see its key results. Tap a key result to tick it.</div>
       <div class="v-stagger">${v4ObjGroups(rows,"objNum","objective").map(g=>
         v4ObjCard("n:"+n.id+":"+m, { num:g.num, text:g.text||"Objective", rows:g.rows }, g.rows.map(r=>v4KrRow(r, can)).join(""))).join("")}</div>
       <div class="v-only-m" style="margin-top:4px">${add}</div>`;
@@ -5095,10 +5245,10 @@ function pageV4MyOkr(){
   ${(people.length>1 || months.length || ME.role==="PM") ? `<div class="v7-pick">
     ${people.length>1 ? `<label class="v7-sel">${vi("users","sm")}<select aria-label="Person" onchange="v4SetPerson(this.value)">${people.map(p=>`<option value="${esc(p.id)}" ${p.id===pid?"selected":""}>${p.id===ME.id?"Me":esc(p.name)}</option>`).join("")}</select>${vi("chevd","xs")}</label>` : ""}
     ${months.length ? `<label class="v7-sel">${vi("cal","sm")}<select aria-label="Month" onchange="v4SetMyMonth(this.value)">${months.map(x=>`<option value="${esc(x)}" ${x===m?"selected":""}>${monthLong(x)}</option>`).join("")}</select>${vi("chevd","xs")}</label>` : ""}
-    ${ME.role==="PM" ? `<button class="v-btn sm v7-up" aria-label="Upload OKRs" title="Upload OKRs" onclick="tmOpenUpload('${jsArg(pid)}')">${vi("upload","sm")}<span class="v7-upt"> Upload</span></button>` : ""}
+    ${(ME.role==="PM" || (isMe && v7CanUploadOwn())) ? `<button class="v-btn sm v7-up" aria-label="Upload OKRs" title="Upload OKRs" onclick="tmOpenUpload('${jsArg(pid)}')">${vi("upload","sm")}<span class="v7-upt"> Upload</span></button>` : ""}
   </div>` : ""}
   ${!rows.length ? `<div class="v-card">${v4Empty("target", isMe ? "No OKRs yet" : "No OKRs for "+esc(v4First(person.name)),
-      isMe ? "Your monthly MBO sheet appears here once it's imported. You can add your own action items now." : (ME.role==="PM" ? "Use Upload to bring in their MBO sheet." : "Nothing imported for this person yet."), add)}</div>` : `
+      isMe ? "Use Upload to bring in your MBO sheet, or add your own action items." : (ME.role==="PM" ? "Use Upload to bring in their MBO sheet." : "Nothing imported for this person yet."), add)}</div>` : `
   <div class="v-sumline">
     <div><b>${done} of ${krs.length}</b> key results done${counts.late?` · <span class="late">${counts.late} past deadline</span>`:""}</div>
     ${v4Meter(krs.length ? pct(done, krs.length) : 0, "thin")}
@@ -7485,8 +7635,9 @@ function tmPreviewHtml(res){
 }
 
 function tmOpenUpload(preId){
-  if(ME.role !== "PM"){ toast("Only the programme manager can upload MBOs"); return; }
-  const leads = [ME].concat(tmLeads().filter(u=>u.id!==ME.id));
+  if(!v7CanUploadOwn()){ toast("Only the programme manager and partnership leads can upload OKRs"); return; }
+  /* V77.5: a lead uploads only their own; the PM can pick anyone */
+  const leads = ME.role==="PM" ? [ME].concat(tmLeads().filter(u=>u.id!==ME.id)) : [ME];
   if(!leads.length){ toast("No partnership leads set up yet — add them in Admin first"); return; }
   TM_PENDING = null;
   const body = `
@@ -7549,6 +7700,7 @@ async function tmReadFile(){
 async function tmConfirmImport(){
   if(!TM_PENDING || !TM_PENDING.rows.length){ toast("Nothing to import"); return; }
   const res = TM_PENDING;
+  if(ME.role!=="PM" && res.ownerId!==ME.id){ toast("You can only upload your own OKRs"); return; }
   DB.teamMbo = tmReplaceMonths(DB.teamMbo||[], res.ownerId, res.months, res.rows);
   TM_PENDING = null;
   if(CUR_PAGE==="myokr"){ V4.myPerson = res.ownerId; V4.myMonth = res.months.slice().sort().pop(); V4.myView = "kr"; }

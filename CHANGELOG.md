@@ -1,5 +1,12 @@
 # Changelog
 
+## V77.5 — 2026-11-14
+
+### Added
+- Partnership leads can upload their own OKR / MBO sheet from the OKRs page (the PM can still upload for anyone).
+- Leads can upload an NGO's OKR sheet from that NGO's OKR tab. Key results for the months in the file replace that NGO's key results for those months; action rows are left out.
+- A + button on a lead's Home screen adds an action item for an NGO: pick the NGO, write the item, deadline set to 7 days from today (can be changed). When Home is already filtered to one NGO, that NGO is used.
+
 ## V77.4 — 2026-11-09
 ### Added
 - Upload on the OKRs page (Program Manager): pick whose OKRs (yourself
