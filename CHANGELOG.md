@@ -1,5 +1,12 @@
 # Changelog
 
+## V77.8 — 2026-11-14
+
+### Changed
+- The "9 am reminder" card on Home now shows for the PM and partnership leads until their phone is signed up: when they have never been asked, when notifications are blocked, and when notifications are allowed but the phone isn't registered yet. It sits at the top of Home.
+- When notifications are blocked, Pulse shows step-by-step instructions for that kind of phone (installed app on Android, Chrome on Android, iPhone, computer) and a "Check again" button, on Home and under the bell.
+- Closing the card hides it for 7 days instead of for good.
+
 ## V77.7 — 2026-11-14
 
 ### Changed

@@ -1948,6 +1948,14 @@ button.v-obj-h{padding:16px;gap:14px}
 @keyframes v5-ripple{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.9)}}
 @media (prefers-reduced-motion:reduce){.v5-hero,.v-grp,.v5-bar i{animation:none}.v-item.leave{transition:none}}
 /* V77 overview */
+.v8-steps{margin:6px 0 0;padding-left:20px;font-size:14px;line-height:1.55;color:var(--v-n800)}
+.v8-steps li{margin:4px 0}
+.v8-steps b,.v-remind .v8-steps b{display:inline;font-size:inherit}
+.v-remind .v8-steps{font-size:13px;margin-top:4px}
+.v8-rc{align-items:flex-start}
+.v8-rc-m{flex:1;min-width:0}
+.v8-rc-m b{display:block}
+.v8-rc-b{margin-top:10px}
 .v7-fab{position:fixed;right:24px;bottom:28px;z-index:55;width:56px;height:56px;border-radius:50%;border:0;background:var(--v-primary);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(91,63,192,.35);cursor:pointer}
 .v7-fab .i{width:24px;height:24px}
 @media (max-width:767px){.v7-fab{right:16px;bottom:calc(var(--tabbar-h) + var(--safe-b) + 16px)}}
@@ -4437,15 +4445,56 @@ async function v7Install(){
   toast("Pulse is already installed, or this browser can't install apps");
 }
 function v4RemindCard(){
-  if(!("Notification" in window) || Notification.permission!=="default") return "";
-  try{ if(localStorage.getItem(V4_REMIND_HIDE+ME.id)) return ""; }catch(e){}
-  return `<div class="v-remind">${vi("bell")}
-    <div><b>Get a daily deadline reminder</b>Pulse will nudge you when something is due.</div>
-    <button class="v-btn sm primary" onclick="v4EnableReminders()">Turn on</button>
-    <button class="v-iconbtn" onclick="v4HideRemind()" aria-label="Dismiss">${vi("x","sm")}</button>
+  if(!ME || !v4IsTeam()) return "";
+  if(!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return "";
+  if(v4PushOn()) return "";
+  try{ const until = localStorage.getItem(V8_REMIND_SNOOZE+ME.id); if(until && TODAY_ISO < until) return ""; }catch(e){}
+  const p = Notification.permission;
+  const head = p==="denied" ? "Reminders are blocked on this phone"
+    : p==="granted" ? "One step left for your 9 am reminder" : "Get a 9 am reminder";
+  const text = p==="denied" ? "Allow notifications for Pulse, then tap Check again."
+    : p==="granted" ? "Tap Turn on to connect this phone." : "Every morning: what's due today and what's late, even when Pulse is closed.";
+  const btn = p==="denied" ? `<button class="v-btn sm primary" onclick="v8BlockedSteps()">Show me how</button>`
+    : p==="granted" ? `<button class="v-btn sm primary" onclick="v8RemindGo()">Turn on</button>`
+    : `<button class="v-btn sm primary" onclick="v4EnableReminders()">Turn on</button>`;
+  return `<div class="v-remind v8-rc" style="margin:0 0 14px">${vi("bell")}
+    <div class="v8-rc-m"><b>${head}</b>${text}<div class="v8-rc-b">${btn}</div></div>
+    <button class="v-iconbtn" onclick="v4HideRemind()" aria-label="Not now">${vi("x","sm")}</button>
   </div>`;
 }
-function v4HideRemind(){ try{ localStorage.setItem(V4_REMIND_HIDE+ME.id, "1"); }catch(e){} render(); }
+/* "Not now" hides the card for a week */
+function v4HideRemind(){ try{ localStorage.setItem(V8_REMIND_SNOOZE+ME.id, v7PlusDays(TODAY_ISO, 7)); }catch(e){} render(); }
+const V8_REMIND_SNOOZE = "pulse_remind_snooze:";
+async function v8RemindGo(){
+  toast("Turning on 9 am reminders…");
+  const ok = await v4PushRegister();
+  toast(ok ? "9 am reminders are on for this phone" : "Couldn't turn on: " + (v4PushErr() || "try again"));
+  v4CloseSheet(); render();
+}
+/* step-by-step help for a phone where notifications are blocked */
+function v8StepsHtml(){
+  const ua = navigator.userAgent || "";
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  let app = false; try{ app = matchMedia("(display-mode: standalone)").matches || !!navigator.standalone; }catch(e){}
+  const steps = ios ? ["Open the iPhone <b>Settings</b> app.", "Tap <b>Notifications</b>, then <b>Pulse</b>.", "Switch on <b>Allow Notifications</b>.", "Come back to Pulse and tap <b>Check again</b>."]
+    : android && app ? ["Press and hold the <b>Pulse</b> icon on your home screen.", "Tap <b>App info</b> (or the small ⓘ).", "Tap <b>Notifications</b> and switch them <b>on</b>.", "Come back to Pulse and tap <b>Check again</b>."]
+    : android ? ["In Chrome, tap the <b>⋮</b> menu at the top right.", "Tap <b>ⓘ</b>, then <b>Permissions</b> or <b>Site settings</b>.", "Set <b>Notifications</b> to <b>Allow</b>.", "Tap <b>Check again</b> below."]
+    : ["Click the icon at the left of the address bar.", "Set <b>Notifications</b> to <b>Allow</b>.", "Reload the page, then tap <b>Check again</b>."];
+  return `<ol class="v8-steps">${steps.map(x=>`<li>${x}</li>`).join("")}</ol>`;
+}
+function v8BlockedSteps(){
+  v4OpenSheet("Turn on reminders", `<p class="v-muted" style="margin:0 0 12px;font-size:14px">Notifications for Pulse are switched off on this phone. To get the 9 am reminder:</p>
+    ${v8StepsHtml()}
+    <button class="v-btn primary" style="width:100%;justify-content:center;height:46px;margin-top:16px" onclick="v8CheckAgain()">Check again</button>`);
+}
+async function v8CheckAgain(){
+  if(!("Notification" in window)) return;
+  let p = Notification.permission;
+  if(p==="default"){ try{ p = await Notification.requestPermission(); }catch(e){} }
+  if(p!=="granted"){ toast("Still blocked. Follow the steps, then try again."); return; }
+  await v8RemindGo();
+}
 
 function v4TickBtn(kind, id, done, can){
   return `<button class="v-tick ${done?"on":""}" ${can?"":"disabled"} aria-label="${done?"Mark not done":"Mark done"}"
@@ -4939,8 +4988,8 @@ function pageV4Home(){
     ${v4DayBar(c, doneN)}
   </div>
   ${v7InstallCard()}
-  ${ME.role==="PM" && !f ? v7Overview() + v4Sec("Needs your attention") : ""}
   ${v4RemindCard()}
+  ${ME.role==="PM" && !f ? v7Overview() + v4Sec("Needs your attention") : ""}
   ${filter}
   ${todo || `<div class="v-calm">${vi("check")} ${f ? "Nothing open here." : "You're all caught up this week."}</div>`}
   ${rest ? `<button class="v-more" style="margin-top:4px" onclick="v4OpenNotifs('later')">${esc(rest)} ${vi("chevr","sm")}</button>` : ""}
@@ -4965,7 +5014,7 @@ function v4OpenNotifs(focus){
       : Notification.permission==="default"
       ? `<div class="v-remind" style="margin:0 0 16px">${vi("bell")}<div><b>Turn on reminders</b>A daily summary of what's due.</div>
            <button class="v-btn sm primary" onclick="v4EnableReminders()">Turn on</button></div>`
-      : `<div class="v-remind" style="margin:0 0 16px;background:var(--v-n100)">${vi("bell")}<div><b>Reminders are blocked</b>Allow notifications for this site in your browser settings.</div></div>`;
+      : `<div class="v-remind" style="margin:0 0 16px;background:var(--v-n100)">${vi("bell")}<div><b>Reminders are blocked on this phone</b>${v8StepsHtml()}<button class="v-btn sm primary" style="margin-top:8px" onclick="v8CheckAgain()">Check again</button></div></div>`;
   }
   const body = perm + (list.filter(x=>x.bucket!=="old").length ? groups.map(([b,label])=>{
     const rows = list.filter(x=>x.bucket===b);
@@ -4976,7 +5025,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.7</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.8</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -5537,7 +5586,7 @@ function pageV4More(){
   </div>
   <div class="v-list" style="margin-top:12px">${rows}</div>
   ${tools ? v4Sec("Programme tools") + `<div class="v-grid c2 v-stagger">${tools}</div>` : ""}
-  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.7</div>`;
+  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.8</div>`;
 }
 
 /* V75: the entrance animation plays when a page opens, not on every
