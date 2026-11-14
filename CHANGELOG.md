@@ -1,5 +1,10 @@
 # Changelog
 
+## V77.11 — 2026-11-15
+
+### Changed
+- Key results look different from their objective. Inside an open objective, the key results sit further in and are joined to the objective's circle by a soft curved line, so it is clear which objective they belong to.
+
 ## V77.10 — 2026-11-15
 
 ### Changed

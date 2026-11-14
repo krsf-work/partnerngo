@@ -1958,6 +1958,11 @@ button.v-obj-h{padding:16px;gap:14px}
 @keyframes v5-ripple{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.9)}}
 @media (prefers-reduced-motion:reduce){.v5-hero,.v-grp,.v5-bar i{animation:none}.v-item.leave{transition:none}}
 /* V77 overview */
+.v-obj-b{--kr-line:#cfc5f0}
+.v-obj-b>.v-item{padding-left:60px}
+.v-obj-b>.v-item::before{content:"";position:absolute;left:32px;top:0;width:22px;height:26px;border-left:2px solid var(--kr-line);border-bottom:2px solid var(--kr-line);border-bottom-left-radius:12px;pointer-events:none}
+.v-obj-b>.v-item:not(:last-child){background-image:linear-gradient(var(--kr-line),var(--kr-line));background-size:2px 100%;background-position:32px 0;background-repeat:no-repeat}
+.v-obj .v-obj-b>.v-item + .v-item::after{left:100px}
 .v-obj-t>span{display:block}
 .v-obj:not(.open) .v-obj-t>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .v10-d{display:block;margin-top:4px;font-size:12.5px;font-weight:500;line-height:1.45;color:var(--v-n500);text-decoration:none}
@@ -5125,7 +5130,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.10</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.11</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -5704,7 +5709,7 @@ function pageV4More(){
   </div>
   <div class="v-list" style="margin-top:12px">${rows}</div>
   ${tools ? v4Sec("Programme tools") + `<div class="v-grid c2 v-stagger">${tools}</div>` : ""}
-  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.10</div>`;
+  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.11</div>`;
 }
 
 /* V75: the entrance animation plays when a page opens, not on every
