@@ -1,5 +1,12 @@
 # Changelog
 
+## V77.9 — 2026-11-14
+
+### Added
+- Partner logos. Every NGO tile (NGO cards, Overview, NGO page) shows the NGO's logo when it has one, and the coloured initials otherwise.
+- The PM and an NGO's partnership lead tap the tile on the NGO page to set the logo: pick from the 25 logos on the partnerships slide (logos whose name matches the NGO are suggested first), upload their own image (shrunk to 128 px), or remove it.
+- The 25 slide logos ship as small files in `logos/` (about 4 KB each). Only those files or a small uploaded image are ever shown.
+
 ## V77.8 — 2026-11-14
 
 ### Changed

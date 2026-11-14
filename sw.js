@@ -1,6 +1,6 @@
 /* Pulse service worker — network-first so the app is always fresh when online,
    and still opens (from cache) when offline. Bump CACHE on each release. */
-const CACHE = 'pulse-v77-9';
+const CACHE = 'pulse-v77-10';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './pulse-192.png', './pulse-512.png', './pulse-maskable-512.png', './pulse-apple-touch.png'];
 
 self.addEventListener('install', e => {

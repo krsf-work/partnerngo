@@ -1948,6 +1948,18 @@ button.v-obj-h{padding:16px;gap:14px}
 @keyframes v5-ripple{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.9)}}
 @media (prefers-reduced-motion:reduce){.v5-hero,.v-grp,.v5-bar i{animation:none}.v-item.leave{transition:none}}
 /* V77 overview */
+.v-mono.v9-logo{background:#fff;box-shadow:inset 0 0 0 1px var(--v-line);overflow:hidden;padding:3px}
+.v-mono.v9-logo img{width:100%;height:100%;object-fit:contain;border-radius:inherit;display:block}
+.v9-edit{position:relative;border:0;background:none;padding:0;cursor:pointer;flex:none}
+.v9-cam{position:absolute;right:-5px;bottom:-5px;width:22px;height:22px;border-radius:50%;background:var(--v-surface);box-shadow:0 1px 4px rgba(23,20,43,.2);display:flex;align-items:center;justify-content:center;color:var(--v-n600)}
+.v9-cur{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.v9-cur b{display:block;font-size:15px}
+.v9-cur span{font-size:12.5px;color:var(--v-n600)}
+.v9-h{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--v-n600);margin:16px 0 8px}
+.v9-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.v9-pick{aspect-ratio:1;border:1px solid var(--v-line);border-radius:12px;background:#fff;padding:4px;cursor:pointer}
+.v9-pick img{width:100%;height:100%;object-fit:contain;display:block}
+.v9-pick.on{border:2px solid var(--v-primary)}
 .v8-steps{margin:6px 0 0;padding-left:20px;font-size:14px;line-height:1.55;color:var(--v-n800)}
 .v8-steps li{margin:4px 0}
 .v8-steps b,.v-remind .v8-steps b{display:inline;font-size:inherit}
@@ -4227,7 +4239,77 @@ function v4Empty(ic, title, text, btn, ok){
     <h3>${title}</h3><p>${text}</p>${btn||""}</div>`;
 }
 function v4Mono(n, lg){
+  const src = v9LogoSrc(n);
+  if(src) return `<div class="v-mono v9-logo ${lg?"lg":""}"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"></div>`;
   return `<div class="v-mono ${lg?"lg":""} mc${v4Hue(n.id)}">${esc(v4Initials(n.short||n.name))}</div>`;
+}
+/* ===== V77.9 logos ===== */
+const V9_LOGOS = [
+  ["r1c1","VSSM",["vssm","vicharta"]], ["r1c2","SeSTA",["sesta","seven sisters"]], ["r1c3","Amhi Amchya Arogyasathi",["amhi amchya","arogyasathi","aaa"]],
+  ["r1c4","Navchetna",["navchetna"]], ["r1c5","NEAID",["neaid"]],
+  ["r2c1","OpenLinks Foundation",["openlinks","open links"]], ["r2c2","SRISTI",["sristi"]], ["r2c3","Gram Urja",["gram urja","gramurja"]],
+  ["r2c4","KHOJ",["khoj"]], ["r2c5","VNCS",["vncs","vidarbha nature"]],
+  ["r3c1","KABIL",["kabil"]], ["r3c2","Better Life Foundation",["better life"]], ["r3c3","Bethel",["bethel"]],
+  ["r3c4","Sarjan Foundation",["sarjan"]], ["r3c5","Vigyan Ashram (VATF)",["vigyan ashram","vatf"]],
+  ["r4c1","Lift For Upliftment",["upliftment"]], ["r4c2","Kaarigar Clinic",["kaarigar","karigar"]], ["r4c3","Green V logo",[]],
+  ["r4c4","Round Gujarati logo",[]], ["r4c5","Jivraj Mehta Foundation",["jivraj"]],
+  ["r5c1","Birla Institute (BITS)",["birla","bits"]], ["r5c2","ISDM",["isdm","indian school of development"]], ["r5c3","Seal with a tree",["vidyapith"]],
+  ["r5c4","Majha Ghar Foundation",["majha ghar"]], ["r5c5","Round Marathi logo",[]]
+];
+/* only our own logo files or a small uploaded image are ever shown */
+function v9LogoSrc(n){
+  const v = n && n.logo;
+  if(typeof v !== "string") return "";
+  if(/^logos\/r[1-5]c[1-5]\.webp$/.test(v)) return v;
+  if(v.length < 60000 && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(v)) return v;
+  return "";
+}
+function v9Suggest(n){
+  const hay = " " + ((n.name||"") + " " + (n.short||"")).toLowerCase().replace(/[^a-z0-9]+/g," ") + " ";
+  return V9_LOGOS.filter(l => l[2].some(k => hay.indexOf(" "+k+" ") >= 0));
+}
+function v9LogoSheet(id){
+  const n = ngoById(id); if(!n) return;
+  if(!canEditNgo(id)){ toast("Only the PM and this NGO's lead can change the logo"); return; }
+  const cur = v9LogoSrc(n), sug = v9Suggest(n);
+  const tile = l => `<button class="v9-pick ${n.logo==="logos/"+l[0]+".webp"?"on":""}" onclick="v9SetLogo('${jsArg(id)}','logos/${l[0]}.webp')" aria-label="${esc(l[1])}" title="${esc(l[1])}"><img src="logos/${l[0]}.webp" alt="" loading="lazy"></button>`;
+  v4OpenSheet("Logo for " + (n.short||n.name), `
+    <div class="v9-cur">${v4Mono(n, true)}<div style="flex:1;min-width:0"><b>${esc(n.short||n.name)}</b><span>${cur ? "Logo set" : "No logo yet: showing initials"}</span></div>
+      ${cur ? `<button class="v-btn sm" onclick="v9SetLogo('${jsArg(id)}','')">Remove</button>` : ""}</div>
+    ${sug.length ? `<div class="v9-h">Suggested</div><div class="v9-grid">${sug.map(tile).join("")}</div>` : ""}
+    <div class="v9-h">From the partnerships slide</div>
+    <div class="v9-grid">${V9_LOGOS.map(tile).join("")}</div>
+    <div class="v9-h">Or upload your own</div>
+    <label class="v-btn" style="width:100%;justify-content:center;height:44px;cursor:pointer">${vi("upload","sm")} Choose an image
+      <input type="file" accept="image/*" style="display:none" onchange="v9Upload('${jsArg(id)}', this)"></label>
+    <div class="v-muted" style="font-size:12px;margin-top:6px">A square logo on a white background looks best.</div>`);
+}
+async function v9SetLogo(id, val){
+  const n = ngoById(id); if(!n || !canEditNgo(id)) return;
+  if(val) n.logo = val; else delete n.logo;
+  stampEdit(n);
+  await saveDB();
+  v4CloseSheet(); render();
+  toast(val ? "Logo saved" : "Logo removed");
+}
+function v9Upload(id, input){
+  const f = input.files && input.files[0]; if(!f) return;
+  if(!/^image\//.test(f.type)){ toast("Please choose an image file"); return; }
+  if(f.size > 8*1024*1024){ toast("That image is too large"); return; }
+  const url = URL.createObjectURL(f), img = new Image();
+  img.onload = () => {
+    const S = 128, c = document.createElement("canvas"); c.width = S; c.height = S;
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0,0,S,S);
+    const k = Math.min((S-8)/img.width, (S-8)/img.height), w = img.width*k, h = img.height*k;
+    g.imageSmoothingQuality = "high"; g.drawImage(img, (S-w)/2, (S-h)/2, w, h);
+    URL.revokeObjectURL(url);
+    let d = c.toDataURL("image/webp", 0.85);
+    if(d.indexOf("data:image/webp") !== 0) d = c.toDataURL("image/jpeg", 0.85);
+    if(d.length >= 60000){ toast("Couldn't shrink that image enough"); return; }
+    v9SetLogo(id, d);
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast("Couldn't read that image"); };
+  img.src = url;
 }
 function v4Sec(title, n, link){
   return `<div class="v-sec"><h2>${title}</h2>${n!=null?`<span class="v-sec-n">${n}</span>`:""}${link?`<span class="v-link-wrap" style="margin-left:auto">${link}</span>`:""}</div>`;
@@ -5025,7 +5107,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.8</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.9</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -5115,7 +5197,7 @@ function pageV4Ngo(id){
   else if(tab==="act") body = v4NgoActTab(n, can);
   else body = v4NgoMoneyTab(n, can, st);
   return `
-  <div class="v-ngo-hero">${v4Mono(n, true)}
+  <div class="v-ngo-hero">${can ? `<button class="v9-edit" onclick="v9LogoSheet('${jsArg(id)}')" aria-label="Change logo" title="Change logo">${v4Mono(n, true)}<span class="v9-cam">${vi("upload","xs")}</span></button>` : v4Mono(n, true)}
     <div style="flex:1;min-width:0"><h1>${esc(n.short||n.name)}</h1>
       <p>${esc(n.name && n.name!==n.short ? n.name : "")}${n.state?` <span class="v-badge nodot">${esc(n.state)}</span>`:""}${n.vertical?` <span class="v-badge nodot">${esc(n.vertical)}</span>`:""}
         ${lead?` <span class="v-badge nodot brand">${vi("users","xs")} ${esc(lead.name)}</span>`:""}${can?"":` <span class="v-badge nodot">View only</span>`}</p></div>
@@ -5586,7 +5668,7 @@ function pageV4More(){
   </div>
   <div class="v-list" style="margin-top:12px">${rows}</div>
   ${tools ? v4Sec("Programme tools") + `<div class="v-grid c2 v-stagger">${tools}</div>` : ""}
-  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.8</div>`;
+  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.9</div>`;
 }
 
 /* V75: the entrance animation plays when a page opens, not on every
