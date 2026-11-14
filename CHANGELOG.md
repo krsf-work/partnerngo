@@ -1,5 +1,12 @@
 # Changelog
 
+## V77.10 — 2026-11-15
+
+### Changed
+- Phone bars: the top and bottom phone bars now match the light app background instead of purple (dark while the hello splash shows). Installed apps may take a few days to pick up the new colour.
+- The soft colour wash at the top of each page now runs behind the top bar too, so there is no hard line above the page title. The Key results / Action items strip no longer shows a grey box until you scroll.
+- Long objectives and key results: the main sentence comes first, and progress numbers after it (for example "415/500 farmer adoptions") show as small chips below. A closed objective shows at most 2 lines; tap to open shows it all. Text without numbers shows as before.
+
 ## V77.9 — 2026-11-14
 
 ### Added

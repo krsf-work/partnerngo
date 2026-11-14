@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="pulse-apple-touch.png" />
 <script>window.__pulseInstall=null;addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pulseInstall=e;if(typeof v7InstallRefresh==='function')v7InstallRefresh();});addEventListener('appinstalled',function(){window.__pulseInstall=null;if(typeof v7InstallRefresh==='function')v7InstallRefresh();});</script>
 
-<meta name="theme-color" content="#5b3fc0" />
+<meta name="theme-color" content="#f3f2f8" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="KRSF Pulse" />
@@ -1805,14 +1805,24 @@ button.v-obj-h{width:100%;border:0;background:transparent;text-align:left;font:i
 body,.main{background:var(--v-bg)}
 body{-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01","ss03"}
 
-/* soft aurora behind the top of every page */
+/* soft aurora behind the top of every page (V77.10: behind the top bar too) */
 .content{position:relative;isolation:isolate}
-.content::before{content:"";position:absolute;left:0;right:0;top:-120px;height:420px;z-index:-1;pointer-events:none;
+.main{position:relative;isolation:isolate}
+.content::before{display:none;content:"";position:absolute;left:0;right:0;top:-120px;height:420px;z-index:-1;pointer-events:none;
   background:radial-gradient(60% 55% at 12% 30%,rgba(124,92,240,.16),transparent 70%),
              radial-gradient(45% 50% at 92% 10%,rgba(255,149,92,.16),transparent 70%),
              radial-gradient(50% 50% at 60% 70%,rgba(59,130,246,.08),transparent 70%)}
 .topbar.v-appbar{background:color-mix(in srgb,var(--v-bg) 72%,transparent);backdrop-filter:saturate(1.8) blur(18px);-webkit-backdrop-filter:saturate(1.8) blur(18px);border-bottom:1px solid transparent;transition:border-color .2s,background .2s}
 .topbar.v-appbar.scrolled{border-bottom-color:var(--v-line)}
+.main::before{content:"";position:absolute;left:0;right:0;top:0;height:520px;z-index:-1;pointer-events:none;
+  background:radial-gradient(60% 50% at 12% 38%,rgba(124,92,240,.16),transparent 70%),
+             radial-gradient(45% 45% at 92% 18%,rgba(255,149,92,.16),transparent 70%),
+             radial-gradient(50% 45% at 60% 72%,rgba(59,130,246,.08),transparent 70%);
+  -webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
+.main{background:var(--v-bg)}
+.v-tabs-sticky{background:transparent;transition:background .2s}
+.main:has(.v-appbar.scrolled) .v-tabs-sticky{background:color-mix(in srgb,var(--v-bg) 80%,transparent);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px)}
+.topbar.v-appbar:not(.scrolled):not(.always){background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
 
 /* ---------- Home hero ---------- */
 .v5-hero{margin:6px 0 22px}
@@ -1948,6 +1958,13 @@ button.v-obj-h{padding:16px;gap:14px}
 @keyframes v5-ripple{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.9)}}
 @media (prefers-reduced-motion:reduce){.v5-hero,.v-grp,.v5-bar i{animation:none}.v-item.leave{transition:none}}
 /* V77 overview */
+.v-obj-t>span{display:block}
+.v-obj:not(.open) .v-obj-t>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.v10-d{display:block;margin-top:4px;font-size:12.5px;font-weight:500;line-height:1.45;color:var(--v-n500);text-decoration:none}
+.v10-d.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.v10-d em{font-style:normal;display:inline-block;max-width:100%;padding:3px 10px;border-radius:99px;background:var(--v-n100,#f0eff6);color:var(--v-n600);font-size:12px;font-weight:550;line-height:1.35}
+.v10-d em b{color:var(--v-n900);font-weight:750;font-variant-numeric:tabular-nums}
+.v-item.done .v10-d em b{color:var(--v-n500)}
 .v-mono.v9-logo{background:#fff;box-shadow:inset 0 0 0 1px var(--v-line);overflow:hidden;padding:3px}
 .v-mono.v9-logo img{width:100%;height:100%;object-fit:contain;border-radius:inherit;display:block}
 .v9-edit{position:relative;border:0;background:none;padding:0;cursor:pointer;flex:none}
@@ -2077,8 +2094,9 @@ textarea.v7-qa-in{resize:vertical;min-height:84px}
   if(!sp) return;
   try{ var d=new Date(), today=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); if(localStorage.getItem('sahkar_intro_day')===today) return; localStorage.setItem('sahkar_intro_day', today); }catch(e){}
   var G=[{h:'<span class="ink">hello</span>',c:'g-draw f-hello'},{h:'<span class="ink">નમસ્તે</span>',c:'g-draw f-guj'},{h:'<span class="ink">नमस्कार</span>',c:'g-draw f-deva'},{h:'<span class="ink">নমস্কাৰ</span>',c:'g-draw f-bn'}];
-  function done(){ sp.classList.add('gone'); setTimeout(function(){ sp.style.display='none'; }, 800); }
+  function done(){ sp.classList.add('gone'); var tc=document.querySelector('meta[name=theme-color]'); if(tc) tc.setAttribute('content','#f3f2f8'); setTimeout(function(){ sp.style.display='none'; }, 800); }
   var kill=setTimeout(done, 9000);
+  var tc=document.querySelector('meta[name=theme-color]'); if(tc) tc.setAttribute('content','#171029');
   sp.classList.add('show'); requestAnimationFrame(function(){ lo.classList.add('in'); });
   function show(i){ var g=G[i]; gr.className=g.c; gr.innerHTML=g.h; requestAnimationFrame(function(){ requestAnimationFrame(function(){ gr.classList.add('play'); }); }); setTimeout(function(){ gr.classList.add('exit'); },1100); setTimeout(function(){ if(i<G.length-1) show(i+1); else { clearTimeout(kill); setTimeout(done,150); } },1550); }
   setTimeout(function(){ show(0); }, 650);
@@ -4589,7 +4607,7 @@ function v4ItemRow(o){
   return `<div class="v-item ${o.done?"done":""} ${tap?"tap":""} ${o.urg?"u-"+o.urg:""}" ${tap?`onclick="${tap}"`:""}>
     ${v4TickBtn(o.kind, o.id, o.done, o.can)}
     <div class="v-item-main">
-      <div class="v-item-t"><span>${esc(o.title)}</span></div>
+      <div class="v-item-t">${v10Title(o.title)}</div>
       ${o.meta ? `<div class="v-item-s">${o.meta}</div>` : ""}
       ${o.extra || ""}
     </div>
@@ -5107,7 +5125,7 @@ function v4OpenNotifs(focus){
   + (c.old ? `<div class="v-ngroup">Older, still open · ${c.old}</div>
       <div class="v-list">${list.filter(x=>x.bucket==="old").slice(0,8).map(v4DlRow).join("")}</div>
       ${c.old>8?`<button class="v-btn ghost" style="margin-top:8px" onclick="v4CloseSheet();go('myokr')">Review all in My OKRs</button>`:""}` : "");
-  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.9</div>`);
+  v4OpenSheet("Notifications", body + `<div class="v-muted" style="font-size:11px;text-align:center;margin-top:18px">Pulse V77.10</div>`);
   v4PushCheck();
   if(focus) setTimeout(()=>{ const g = el("v4n-"+focus); if(g) g.scrollIntoView({ behavior:"smooth", block:"start" }); }, 260);
 }
@@ -5220,12 +5238,30 @@ function v4ObjCard(scope, g, rowsHtml){
   return `<div class="v-card v-obj ${open?"open":""}">
     <button class="v-obj-h" aria-expanded="${open}" onclick="v4ObjToggle(this,'${jsArg(key)}')">
       <div class="v5-ring ${all?"ok":""}" style="--p:${g.rows.length ? Math.round(d*100/g.rows.length) : 0}"><b>${all ? vi("check","xs") : esc(g.num||"•")}</b></div>
-      <div class="v-obj-t">${esc(g.text)}</div>
+      <div class="v-obj-t">${v10Title(g.text)}</div>
       <div class="v-obj-p">${d}/${g.rows.length}</div>
       <span class="v-obj-c">${vi("chevd","sm")}</span>
     </button>
     <div class="v-obj-b">${rowsHtml}</div>
   </div>`;
+}
+/* V77.10: split a long objective / key result into the main sentence and
+   its progress numbers, e.g. "… by March 2027. 415/500 farmer adoptions" */
+function v10Title(t){
+  t = String(t||"").trim();
+  let head = t, rest = "";
+  const m = t.match(/^([\s\S]{20,}?[.!?])\s+(?=[A-Z0-9(₹])([\s\S]+)$/);
+  if(m){ head = m[1]; rest = m[2].trim(); }
+  if(!rest) return `<span>${esc(head)}</span>`;
+  const re = /(\d[\d,.]*\s*\/\s*\d[\d,.]*%?)\s*([^\d]*?)(?=\s*\d[\d,.]*\s*\/|$)/g;
+  const chips = []; let x, used = 0;
+  while((x = re.exec(rest)) && chips.length < 6){
+    if(x.index !== used && rest.slice(used, x.index).trim()) break;
+    chips.push(`<em><b>${esc(x[1].replace(/\s+/g,""))}</b> ${esc(x[2].replace(/[\s,;.]+$/,""))}</em>`);
+    used = re.lastIndex; if(x[0] === "") break;
+  }
+  const tail = chips.length && !rest.slice(used).trim() ? chips.join("") : esc(rest);
+  return `<span>${esc(head)}</span><small class="v10-d ${chips.length && tail.indexOf("<em>")===0 ? "chips" : ""}">${tail}</small>`;
 }
 function v4ObjToggle(btn, key){
   V4.objOpen = V4.objOpen || {};
@@ -5668,7 +5704,7 @@ function pageV4More(){
   </div>
   <div class="v-list" style="margin-top:12px">${rows}</div>
   ${tools ? v4Sec("Programme tools") + `<div class="v-grid c2 v-stagger">${tools}</div>` : ""}
-  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.9</div>`;
+  <div class="v-muted" style="text-align:center;font-size:12px;margin-top:32px">Pulse · KRSF Partnership Program · V77.10</div>`;
 }
 
 /* V75: the entrance animation plays when a page opens, not on every
